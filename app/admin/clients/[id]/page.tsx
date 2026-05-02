@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { deleteClient } from '@/actions/clients'
+import { deleteClient, setClientPortalEnabled } from '@/actions/clients'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button'
+import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
 import { formatCurrency, formatDateShort, getProgressPercent, cn } from '@/lib/utils'
 
@@ -36,6 +38,11 @@ export default async function ClientDetailPage({
     'use server'
     await deleteClient(id)
     redirect('/admin/clients')
+  }
+
+  async function toggleClientPortalAction() {
+    'use server'
+    await setClientPortalEnabled(id, !client.client_portal_enabled)
   }
 
   return (
@@ -88,6 +95,46 @@ export default async function ClientDetailPage({
               confirmLabel="Borrar cliente"
               triggerLabel="Borrar"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Client public portal */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-zinc-100 font-semibold">Link general del cliente</h2>
+              <Badge
+                className={
+                  client.client_portal_enabled
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                }
+              >
+                {client.client_portal_enabled ? 'Activo' : 'Inactivo'}
+              </Badge>
+            </div>
+            <p className="text-zinc-500 text-sm">
+              Muestra todas las órdenes del cliente, saldos pendientes y progreso de pagos.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {client.client_portal_enabled && (
+              <CopyLinkButton
+                path={`/c/${client.client_portal_token}`}
+                label="Copiar link general"
+              />
+            )}
+            <form action={toggleClientPortalAction}>
+              <Button
+                type="submit"
+                variant="outline"
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+              >
+                {client.client_portal_enabled ? 'Desactivar link' : 'Activar link'}
+              </Button>
+            </form>
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ export type Client = {
   rfc: string | null
   address: string | null
   notes: string | null
+  client_portal_token: string
+  client_portal_enabled: boolean
   created_at: string
 }
 

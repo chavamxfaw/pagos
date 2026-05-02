@@ -137,7 +137,7 @@ export default async function OrderDetailPage({
         {!isCompleted && (
           <AddPaymentDialog orderId={id} action={addPaymentAction} />
         )}
-        <CopyLinkButton token={typedOrder.token} />
+        <CopyLinkButton path={`/p/${typedOrder.token}`} label="Copiar link de orden" />
         {!isCompleted && (
           <form action={markCompletedAction.bind(null, id)}>
             <Button

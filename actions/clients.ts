@@ -50,6 +50,19 @@ export async function updateClient(id: string, data: ClientData) {
   revalidatePath(`/admin/clients/${id}`)
 }
 
+export async function setClientPortalEnabled(id: string, enabled: boolean) {
+  await requireAuth()
+  const admin = createAdminClient()
+
+  const { error } = await admin
+    .from('clients')
+    .update({ client_portal_enabled: enabled })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/clients/${id}`)
+}
+
 export async function deleteClient(id: string) {
   await requireAuth()
   const admin = createAdminClient()
