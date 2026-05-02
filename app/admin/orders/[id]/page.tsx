@@ -1,0 +1,184 @@
+import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { AddPaymentDialog } from '@/components/admin/AddPaymentDialog'
+import { PaymentTimeline } from '@/components/admin/PaymentTimeline'
+import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
+import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
+import { addPayment } from '@/actions/payments'
+import { deleteOrder, markOrderCompleted } from '@/actions/orders'
+import { formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
+import type { OrderWithClient, Payment } from '@/types'
+
+type PaymentState = { error?: string; success?: boolean } | null
+
+async function addPaymentAction(prevState: PaymentState, formData: FormData): Promise<PaymentState> {
+  'use server'
+  try {
+    await addPayment({
+      order_id: formData.get('order_id') as string,
+      amount: parseFloat(formData.get('amount') as string),
+      concept: formData.get('concept') as string,
+      notes: formData.get('notes') as string || undefined,
+    })
+    return { success: true }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Error al registrar abono' }
+  }
+}
+
+async function markCompletedAction(orderId: string) {
+  'use server'
+  await markOrderCompleted(orderId)
+}
+
+export default async function OrderDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const supabase = await createClient()
+
+  const { data: order } = await supabase
+    .from('orders')
+    .select('*, clients(*)')
+    .eq('id', id)
+    .single()
+
+  if (!order) notFound()
+
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('order_id', id)
+    .order('created_at', { ascending: false })
+
+  const typedOrder = order as OrderWithClient
+  const typedPayments = (payments ?? []) as Payment[]
+  const percent = getProgressPercent(typedOrder.paid_amount, typedOrder.total_amount)
+  const remaining = typedOrder.total_amount - typedOrder.paid_amount
+  const isCompleted = typedOrder.status === 'completed'
+
+  async function deleteOrderAction() {
+    'use server'
+    await deleteOrder(id, typedOrder.client_id)
+    redirect('/admin/orders')
+  }
+
+  return (
+    <div className="p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <Link href="/admin/orders" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+          ← Órdenes
+        </Link>
+      </div>
+
+      {/* Order header */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-xl font-bold text-zinc-50 truncate">{typedOrder.concept}</h1>
+              <StatusBadge status={typedOrder.status} />
+            </div>
+            <Link
+              href={`/admin/clients/${typedOrder.client_id}`}
+              className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm"
+            >
+              {typedOrder.clients.name}
+            </Link>
+            {typedOrder.description && (
+              <p className="text-zinc-500 text-sm mt-2">{typedOrder.description}</p>
+            )}
+            <p className="text-zinc-600 text-xs mt-1">{formatDateShort(typedOrder.created_at)}</p>
+          </div>
+        </div>
+
+        {/* Progress bar — elemento central */}
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-zinc-400">Progreso de pago</span>
+            <span className="text-zinc-300 font-mono font-semibold">{percent}%</span>
+          </div>
+          <div className="h-4 bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                isCompleted ? 'bg-emerald-500' : percent > 0 ? 'bg-emerald-500' : 'bg-zinc-700'
+              }`}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Amounts */}
+        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-800">
+          <div>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Total</p>
+            <p className="text-zinc-200 font-mono font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Pagado</p>
+            <p className="text-emerald-400 font-mono font-semibold">{formatCurrency(typedOrder.paid_amount)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Pendiente</p>
+            <p className={`font-mono font-semibold ${isCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {isCompleted ? '—' : formatCurrency(remaining)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {!isCompleted && (
+          <AddPaymentDialog orderId={id} action={addPaymentAction} />
+        )}
+        <CopyLinkButton token={typedOrder.token} />
+        {!isCompleted && (
+          <form action={markCompletedAction.bind(null, id)}>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 text-xs"
+            >
+              Marcar como completado
+            </Button>
+          </form>
+        )}
+        <DeleteConfirmDialog
+          action={deleteOrderAction}
+          title="Borrar orden"
+          description="Esto eliminará la orden y todos sus abonos registrados. Esta acción no se puede deshacer."
+          confirmLabel="Borrar orden"
+          triggerLabel="Borrar"
+        />
+      </div>
+
+      {/* Payment timeline */}
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
+          Historial de abonos
+          {typedPayments.length > 0 && (
+            <span className="text-zinc-500 font-normal text-sm ml-2">({typedPayments.length})</span>
+          )}
+        </h2>
+        <PaymentTimeline payments={typedPayments} />
+      </div>
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'completed') {
+    return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">Liquidado</Badge>
+  }
+  if (status === 'partial') {
+    return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30">Parcial</Badge>
+  }
+  return <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700">Pendiente</Badge>
+}
