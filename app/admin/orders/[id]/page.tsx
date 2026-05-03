@@ -73,42 +73,42 @@ export default async function OrderDetailPage({
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <Link href="/admin/orders" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+        <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
           ← Órdenes
         </Link>
       </div>
 
       {/* Order header */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6 mb-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-xl font-bold text-zinc-50 truncate">{typedOrder.concept}</h1>
+              <h1 className="text-xl font-bold text-[#1A1F36] truncate">{typedOrder.concept}</h1>
               <StatusBadge status={typedOrder.status} />
             </div>
             <Link
               href={`/admin/clients/${typedOrder.client_id}`}
-              className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm"
+              className="text-[#6B7280] hover:text-[#2ED39A] transition-colors text-sm"
             >
               {typedOrder.clients.name}
             </Link>
             {typedOrder.description && (
-              <p className="text-zinc-500 text-sm mt-2">{typedOrder.description}</p>
+              <p className="text-[#6B7280] text-sm mt-2">{typedOrder.description}</p>
             )}
-            <p className="text-zinc-600 text-xs mt-1">{formatDateShort(typedOrder.created_at)}</p>
+            <p className="text-[#8A94A6] text-xs mt-1">{formatDateShort(typedOrder.created_at)}</p>
           </div>
         </div>
 
         {/* Progress bar — elemento central */}
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-zinc-400">Progreso de pago</span>
-            <span className="text-zinc-300 font-mono font-semibold">{percent}%</span>
+            <span className="text-[#6B7280]">Progreso de pago</span>
+            <span className="text-[#1A1F36] font-mono font-semibold">{percent}%</span>
           </div>
-          <div className="h-4 bg-zinc-800 rounded-full overflow-hidden">
+          <div className="h-4 bg-[#E6EAF0] rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                isCompleted ? 'bg-emerald-500' : percent > 0 ? 'bg-emerald-500' : 'bg-zinc-700'
+                isCompleted ? 'bg-[#2ED39A]' : percent > 0 ? 'bg-[#2ED39A]' : 'bg-[#D8DEE8]'
               }`}
               style={{ width: `${percent}%` }}
             />
@@ -116,38 +116,38 @@ export default async function OrderDetailPage({
         </div>
 
         {/* Amounts */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-800">
+        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E6EAF0]">
           <div>
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Total</p>
-            <p className="text-zinc-200 font-mono font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
+            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Total</p>
+            <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Pagado</p>
-            <p className="text-emerald-400 font-mono font-semibold">{formatCurrency(typedOrder.paid_amount)}</p>
+            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Pagado</p>
+            <p className="text-[#2ED39A] font-mono font-semibold">{formatCurrency(typedOrder.paid_amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Pendiente</p>
-            <p className={`font-mono font-semibold ${isCompleted ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Pendiente</p>
+            <p className={`font-mono font-semibold ${isCompleted ? 'text-[#2ED39A]' : 'text-[#F4B740]'}`}>
               {isCompleted ? '—' : formatCurrency(remaining)}
             </p>
           </div>
         </div>
 
         {typedOrder.requires_invoice && (
-          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-zinc-800 pt-4">
+          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[#E6EAF0] pt-4">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Subtotal</p>
-              <p className="text-zinc-300 font-mono font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
+              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Subtotal</p>
+              <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
+              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">
                 IVA {Math.round(typedOrder.tax_rate * 100)}%
               </p>
-              <p className="text-zinc-300 font-mono font-semibold">{formatCurrency(typedOrder.tax_amount)}</p>
+              <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.tax_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Modo factura</p>
-              <p className="text-zinc-300 text-sm">
+              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Modo factura</p>
+              <p className="text-[#1A1F36] text-sm">
                 {typedOrder.tax_mode === 'included' ? 'IVA incluido' : 'IVA agregado'}
               </p>
             </div>
@@ -167,7 +167,7 @@ export default async function OrderDetailPage({
               type="submit"
               variant="outline"
               size="sm"
-              className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 text-xs"
+              className="border-[#D8DEE8] text-[#6B7280] hover:bg-[#E6EAF0] hover:text-[#1A1F36] text-xs"
             >
               Marcar como completado
             </Button>
@@ -184,10 +184,10 @@ export default async function OrderDetailPage({
 
       {/* Payment timeline */}
       <div>
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
+        <h2 className="text-lg font-semibold text-[#1A1F36] mb-4">
           Historial de abonos
           {typedPayments.length > 0 && (
-            <span className="text-zinc-500 font-normal text-sm ml-2">({typedPayments.length})</span>
+            <span className="text-[#6B7280] font-normal text-sm ml-2">({typedPayments.length})</span>
           )}
         </h2>
         <PaymentTimeline payments={typedPayments} />
@@ -198,10 +198,10 @@ export default async function OrderDetailPage({
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'completed') {
-    return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">Liquidado</Badge>
+    return <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30">Liquidado</Badge>
   }
   if (status === 'partial') {
-    return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30">Parcial</Badge>
+    return <Badge className="bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30">Parcial</Badge>
   }
-  return <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700">Pendiente</Badge>
+  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pendiente</Badge>
 }

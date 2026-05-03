@@ -33,7 +33,7 @@ export function PaymentForm({
       <input type="hidden" name="order_id" value={orderId} />
 
       <div className="space-y-2">
-        <Label htmlFor="amount" className="text-zinc-300">Monto del abono (MXN) *</Label>
+        <Label htmlFor="amount" className="text-[#1A1F36]">Monto del abono (MXN) *</Label>
         <Input
           id="amount"
           name="amount"
@@ -42,68 +42,68 @@ export function PaymentForm({
           min="0.01"
           placeholder="0.00"
           required
-          className="bg-zinc-950 border-zinc-800 text-zinc-50 font-mono text-lg"
+          className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono text-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="concept" className="text-zinc-300">Concepto *</Label>
+        <Label htmlFor="concept" className="text-[#1A1F36]">Concepto *</Label>
         <Input
           id="concept"
           name="concept"
           placeholder="Ej: Primer abono, Pago quincenal..."
           required
-          className="bg-zinc-950 border-zinc-800 text-zinc-50"
+          className="bg-white border-[#E6EAF0] text-[#1A1F36]"
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payment_method" className="text-zinc-300">Método de pago *</Label>
+          <Label htmlFor="payment_method" className="text-[#1A1F36]">Método de pago *</Label>
           <Select name="payment_method" defaultValue="transfer" required>
-            <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-50">
+            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
-              <SelectItem value="transfer" className="text-zinc-200 focus:bg-zinc-800">Transferencia</SelectItem>
-              <SelectItem value="cash" className="text-zinc-200 focus:bg-zinc-800">Efectivo</SelectItem>
-              <SelectItem value="card" className="text-zinc-200 focus:bg-zinc-800">Tarjeta</SelectItem>
-              <SelectItem value="check" className="text-zinc-200 focus:bg-zinc-800">Cheque</SelectItem>
-              <SelectItem value="other" className="text-zinc-200 focus:bg-zinc-800">Otro</SelectItem>
+            <SelectContent className="bg-white border-[#E6EAF0]">
+              <SelectItem value="transfer" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Transferencia</SelectItem>
+              <SelectItem value="cash" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Efectivo</SelectItem>
+              <SelectItem value="card" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Tarjeta</SelectItem>
+              <SelectItem value="check" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cheque</SelectItem>
+              <SelectItem value="other" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Otro</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="payment_reference" className="text-zinc-300">Referencia</Label>
+          <Label htmlFor="payment_reference" className="text-[#1A1F36]">Referencia</Label>
           <Input
             id="payment_reference"
             name="payment_reference"
             placeholder="Folio, banco, últimos 4..."
-            className="bg-zinc-950 border-zinc-800 text-zinc-50"
+            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes" className="text-zinc-300">Notas</Label>
+        <Label htmlFor="notes" className="text-[#1A1F36]">Notas</Label>
         <Textarea
           id="notes"
           name="notes"
           placeholder="Transferencia, efectivo, referencia..."
           rows={2}
-          className="bg-zinc-950 border-zinc-800 text-zinc-50 resize-none"
+          className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none"
         />
       </div>
 
       {state?.error && (
-        <p className="text-red-400 text-sm">{state.error}</p>
+        <p className="text-[#EF4444] text-sm">{state.error}</p>
       )}
 
       <Button
         type="submit"
         disabled={pending}
-        className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold"
+        className="w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105"
       >
         {pending ? 'Registrando...' : 'Registrar abono'}
       </Button>

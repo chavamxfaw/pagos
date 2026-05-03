@@ -29,12 +29,12 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-50">Dashboard</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">Resumen general de cobros</p>
+          <h1 className="text-2xl font-semibold text-[#1A1F36]">Dashboard</h1>
+          <p className="text-[#6B7280] text-sm mt-0.5">Resumen general de cobros</p>
         </div>
         <Link
           href="/admin/orders/new"
-          className={cn(buttonVariants(), 'bg-emerald-500 hover:bg-emerald-400 text-black font-semibold self-start sm:self-auto')}
+          className={cn(buttonVariants(), 'bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 self-start sm:self-auto')}
         >
           + Nueva orden
         </Link>
@@ -75,49 +75,49 @@ export default async function DashboardPage() {
       {/* Main content grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Recent orders table */}
-        <div className="xl:col-span-2 bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
-            <h2 className="text-sm font-semibold text-zinc-200">Órdenes recientes</h2>
-            <Link href="/admin/orders" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+        <div className="xl:col-span-2 bg-white border border-[#E6EAF0] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E6EAF0]">
+            <h2 className="text-sm font-semibold text-[#1A1F36]">Órdenes recientes</h2>
+            <Link href="/admin/orders" className="text-xs text-[#2ED39A] hover:text-[#26BA88] transition-colors">
               Ver todas →
             </Link>
           </div>
           {recentOrders.length === 0 ? (
-            <div className="py-16 text-center text-zinc-600">
+            <div className="py-16 text-center text-[#8A94A6]">
               <p className="mb-2">Sin órdenes aún</p>
-              <Link href="/admin/orders/new" className="text-emerald-400 text-sm">Crear primera orden →</Link>
+              <Link href="/admin/orders/new" className="text-[#2ED39A] text-sm">Crear primera orden →</Link>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800/40">
-                  <th className="text-left px-5 py-3 text-[11px] font-medium text-zinc-600 uppercase tracking-wider">Cliente / Concepto</th>
-                  <th className="text-left px-3 py-3 text-[11px] font-medium text-zinc-600 uppercase tracking-wider hidden sm:table-cell">Progreso</th>
-                  <th className="text-right px-5 py-3 text-[11px] font-medium text-zinc-600 uppercase tracking-wider">Estado</th>
+                <tr className="border-b border-[#E6EAF0]">
+                  <th className="text-left px-5 py-3 text-[11px] font-medium text-[#8A94A6] uppercase tracking-wider">Cliente / Concepto</th>
+                  <th className="text-left px-3 py-3 text-[11px] font-medium text-[#8A94A6] uppercase tracking-wider hidden sm:table-cell">Progreso</th>
+                  <th className="text-right px-5 py-3 text-[11px] font-medium text-[#8A94A6] uppercase tracking-wider">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {recentOrders.map((order) => {
                   const pct = getProgressPercent(order.paid_amount, order.total_amount)
                   return (
-                    <tr key={order.id} className="border-b border-zinc-800/30 hover:bg-zinc-900/40 transition-colors">
+                    <tr key={order.id} className="border-b border-[#E6EAF0] hover:bg-white/40 transition-colors">
                       <td className="px-5 py-3.5">
                         <Link href={`/admin/orders/${order.id}`} className="block">
-                          <p className="text-zinc-100 text-sm font-medium hover:text-emerald-400 transition-colors leading-tight">{order.concept}</p>
-                          <p className="text-zinc-500 text-xs mt-0.5">{order.clients.name} · {formatDateShort(order.created_at)}</p>
+                          <p className="text-[#1A1F36] text-sm font-medium hover:text-[#2ED39A] transition-colors leading-tight">{order.concept}</p>
+                          <p className="text-[#6B7280] text-xs mt-0.5">{order.clients.name} · {formatDateShort(order.created_at)}</p>
                         </Link>
                       </td>
                       <td className="px-3 py-3.5 hidden sm:table-cell">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex-1 h-1.5 bg-zinc-800 rounded-full max-w-[100px]">
+                          <div className="flex-1 h-1.5 bg-[#E6EAF0] rounded-full max-w-[100px]">
                             <div
-                              className="h-full bg-emerald-500 rounded-full"
+                              className="h-full bg-[#2ED39A] rounded-full"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="text-zinc-500 text-xs font-mono w-8 shrink-0">{pct}%</span>
+                          <span className="text-[#6B7280] text-xs font-mono w-8 shrink-0">{pct}%</span>
                         </div>
-                        <p className="text-zinc-600 text-xs font-mono mt-0.5">
+                        <p className="text-[#8A94A6] text-xs font-mono mt-0.5">
                           {formatCurrency(order.paid_amount)} / {formatCurrency(order.total_amount)}
                         </p>
                       </td>
@@ -135,8 +135,8 @@ export default async function DashboardPage() {
         {/* Quick actions + summary */}
         <div className="space-y-4">
           {/* Quick actions */}
-          <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-zinc-200 mb-4">Acciones rápidas</h2>
+          <div className="bg-white border border-[#E6EAF0] rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-[#1A1F36] mb-4">Acciones rápidas</h2>
             <div className="space-y-2">
               <QuickAction href="/admin/clients/new" label="Nuevo cliente" icon={<PeopleIcon />} />
               <QuickAction href="/admin/orders/new" label="Nueva orden" icon={<OrdersIcon />} />
@@ -145,26 +145,26 @@ export default async function DashboardPage() {
           </div>
 
           {/* Status breakdown */}
-          <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-zinc-200 mb-4">Distribución de órdenes</h2>
+          <div className="bg-white border border-[#E6EAF0] rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-[#1A1F36] mb-4">Distribución de órdenes</h2>
             <div className="space-y-3">
               <StatusRow
                 label="Pendientes"
                 count={allOrders.filter(o => o.status === 'pending').length}
                 total={allOrders.length}
-                color="bg-zinc-500"
+                color="bg-[#6B7280]"
               />
               <StatusRow
                 label="Parciales"
                 count={allOrders.filter(o => o.status === 'partial').length}
                 total={allOrders.length}
-                color="bg-amber-500"
+                color="bg-[#F4B740]"
               />
               <StatusRow
                 label="Liquidadas"
                 count={completedOrders.length}
                 total={allOrders.length}
-                color="bg-emerald-500"
+                color="bg-[#2ED39A]"
               />
             </div>
           </div>
@@ -188,46 +188,46 @@ function StatCard({
 }) {
   const iconBg = {
     blue:    'bg-blue-500/10 text-blue-400',
-    amber:   'bg-amber-500/10 text-amber-400',
-    emerald: 'bg-emerald-500/10 text-emerald-400',
-    rose:    'bg-rose-500/10 text-rose-400',
+    amber:   'bg-[#F4B740]/10 text-[#F4B740]',
+    emerald: 'bg-[#2ED39A]/10 text-[#2ED39A]',
+    rose:    'bg-[#EF4444]/10 text-[#EF4444]',
   }[color]
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5">
+    <div className="bg-white border border-[#E6EAF0] rounded-xl p-5">
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider leading-tight">{label}</p>
+        <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wider leading-tight">{label}</p>
         <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
           {icon}
         </div>
       </div>
-      <p className={cn('text-2xl font-bold text-zinc-50 leading-none', mono && 'font-mono text-xl')}>
+      <p className={cn('text-2xl font-bold text-[#1A1F36] leading-none', mono && 'font-mono text-xl')}>
         {value}
       </p>
-      {sub && <p className="text-zinc-600 text-xs mt-1.5">{sub}</p>}
+      {sub && <p className="text-[#8A94A6] text-xs mt-1.5">{sub}</p>}
     </div>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'completed') {
-    return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[11px]">Liquidado</Badge>
+    return <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/20 text-[11px]">Liquidado</Badge>
   }
   if (status === 'partial') {
-    return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[11px]">Parcial</Badge>
+    return <Badge className="bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/20 text-[11px]">Parcial</Badge>
   }
-  return <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700 text-[11px]">Pendiente</Badge>
+  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8] text-[11px]">Pendiente</Badge>
 }
 
 function QuickAction({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors text-sm text-zinc-300 hover:text-zinc-50"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white hover:bg-[#E6EAF0] transition-colors text-sm text-[#1A1F36] hover:text-[#1A1F36]"
     >
-      <span className="text-zinc-500 w-4 h-4">{icon}</span>
+      <span className="text-[#6B7280] w-4 h-4">{icon}</span>
       {label}
-      <svg className="w-3 h-3 ml-auto text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3 h-3 ml-auto text-[#8A94A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
     </Link>
@@ -239,10 +239,10 @@ function StatusRow({ label, count, total, color }: { label: string; count: numbe
   return (
     <div>
       <div className="flex justify-between text-xs mb-1.5">
-        <span className="text-zinc-400">{label}</span>
-        <span className="text-zinc-500 font-mono">{count}</span>
+        <span className="text-[#6B7280]">{label}</span>
+        <span className="text-[#6B7280] font-mono">{count}</span>
       </div>
-      <div className="h-1.5 bg-zinc-800 rounded-full">
+      <div className="h-1.5 bg-[#E6EAF0] rounded-full">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
       </div>
     </div>

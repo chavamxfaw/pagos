@@ -25,13 +25,13 @@ export function AddPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
-        <Button className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold">
+        <Button className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105">
           + Agregar abono
         </Button>
       } />
-      <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
+      <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-zinc-50">Registrar abono</DialogTitle>
+          <DialogTitle className="text-[#1A1F36]">Registrar abono</DialogTitle>
         </DialogHeader>
         <PaymentForm
           action={action}

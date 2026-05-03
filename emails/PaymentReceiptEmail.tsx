@@ -5,6 +5,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Row,
@@ -53,97 +54,104 @@ export function PaymentReceiptEmail({
   const remaining = totalAmount - paidAmount
   const percent = Math.min(100, Math.round((paidAmount / totalAmount) * 100))
   const isCompleted = paidAmount >= totalAmount
-  const statusLink = `${appUrl}/p/${token}`
+  const normalizedAppUrl = appUrl.replace(/\/$/, '')
+  const statusLink = `${normalizedAppUrl}/p/${token}`
+  const logoUrl = `${normalizedAppUrl}/otla-white.png`
 
   return (
     <Html>
       <Head />
-      <Preview>Recibo de abono — {concept}</Preview>
+      <Preview>OTLA · Recibo de abono - {concept}</Preview>
       <Body style={body}>
         <Container style={container}>
-          <Heading style={h1}>Recibo de abono</Heading>
-          <Text style={greeting}>Hola {clientName},</Text>
-          <Text style={text}>
-            Registramos un abono para tu orden: <strong>{concept}</strong>
-          </Text>
-
-          {/* Monto del abono */}
-          <Section style={amountBox}>
-            <Text style={amountLabel}>Monto abonado</Text>
-            <Text style={amountValue}>{fmt(paymentAmount)}</Text>
-            <Text style={amountDate}>{fmtDate(paymentDate)}</Text>
+          <Section style={brandHeader}>
+            <Img src={logoUrl} alt="OTLA" width="150" style={logo} />
           </Section>
 
-          <Hr style={hr} />
-
-          {/* Resumen de saldo */}
-          <Row>
-            <Section style={summaryRow}>
-              <Text style={summaryLabel}>Total de la orden</Text>
-              <Text style={summaryValue}>{fmt(totalAmount)}</Text>
-            </Section>
-            <Section style={summaryRow}>
-              <Text style={summaryLabel}>Total pagado</Text>
-              <Text style={{ ...summaryValue, color: '#10b981' }}>{fmt(paidAmount)}</Text>
-            </Section>
-            <Section style={summaryRow}>
-              <Text style={summaryLabel}>Saldo restante</Text>
-              <Text style={{ ...summaryValue, color: isCompleted ? '#10b981' : '#f59e0b' }}>
-                {isCompleted ? '¡Liquidado!' : fmt(remaining)}
-              </Text>
-            </Section>
-          </Row>
-
-          {/* Barra de progreso (HTML tables para compatibilidad) */}
-          <Section style={{ margin: '24px 0' }}>
-            <Text style={{ ...summaryLabel, marginBottom: '8px' }}>Progreso: {percent}%</Text>
-            <table width="100%" cellPadding={0} cellSpacing={0}>
-              <tr>
-                <td
-                  width={`${percent}%`}
-                  style={{
-                    height: '12px',
-                    backgroundColor: '#10b981',
-                    borderRadius: percent === 100 ? '6px' : '6px 0 0 6px',
-                  }}
-                />
-                {percent < 100 && (
-                  <td
-                    width={`${100 - percent}%`}
-                    style={{
-                      height: '12px',
-                      backgroundColor: '#27272a',
-                      borderRadius: '0 6px 6px 0',
-                    }}
-                  />
-                )}
-              </tr>
-            </table>
-          </Section>
-
-          {isCompleted && (
-            <Section style={completedBanner}>
-              <Text style={completedText}>¡Tu orden está completamente liquidada! Gracias.</Text>
-            </Section>
-          )}
-
-          <Hr style={hr} />
-
-          <Text style={text}>
-            Puedes ver tu estado de cuenta actualizado en cualquier momento:
-          </Text>
-          <Link href={statusLink} style={button}>
-            Ver mi estado de cuenta
-          </Link>
-
-          {isCompleted && (
-            <Text style={footerNote}>
-              Nota: este enlace estará disponible por 30 días a partir de la fecha de liquidación.
+          <Section style={content}>
+            <Heading style={h1}>Recibo de abono</Heading>
+            <Text style={greeting}>Hola {clientName},</Text>
+            <Text style={text}>
+              Registramos un abono para tu orden: <strong>{concept}</strong>
             </Text>
-          )}
 
-          <Hr style={hr} />
-          <Text style={footer}>Cobros · Sistema de pagos</Text>
+            <Section style={amountBox}>
+              <Text style={amountLabel}>Monto abonado</Text>
+              <Text style={amountValue}>{fmt(paymentAmount)}</Text>
+              <Text style={amountDate}>{fmtDate(paymentDate)}</Text>
+            </Section>
+
+            <Hr style={hr} />
+
+            <Row>
+              <Section style={summaryRow}>
+                <Text style={summaryLabel}>Total</Text>
+                <Text style={summaryValue}>{fmt(totalAmount)}</Text>
+              </Section>
+              <Section style={summaryRow}>
+                <Text style={summaryLabel}>Pagado</Text>
+                <Text style={{ ...summaryValue, color: '#2ED39A' }}>{fmt(paidAmount)}</Text>
+              </Section>
+              <Section style={summaryRow}>
+                <Text style={summaryLabel}>Restante</Text>
+                <Text style={{ ...summaryValue, color: isCompleted ? '#2ED39A' : '#F4B740' }}>
+                  {isCompleted ? 'Liquidado' : fmt(remaining)}
+                </Text>
+              </Section>
+            </Row>
+
+            <Section style={progressSection}>
+              <Text style={{ ...summaryLabel, marginBottom: '8px' }}>Progreso: {percent}%</Text>
+              <table width="100%" cellPadding={0} cellSpacing={0}>
+                <tbody>
+                  <tr>
+                    <td
+                      width={`${percent}%`}
+                      style={{
+                        height: '12px',
+                        backgroundColor: '#6C5CE7',
+                        borderRadius: percent === 100 ? '999px' : '999px 0 0 999px',
+                      }}
+                    />
+                    {percent < 100 && (
+                      <td
+                        width={`${100 - percent}%`}
+                        style={{
+                          height: '12px',
+                          backgroundColor: '#E6EAF0',
+                          borderRadius: '0 999px 999px 0',
+                        }}
+                      />
+                    )}
+                  </tr>
+                </tbody>
+              </table>
+            </Section>
+
+            {isCompleted && (
+              <Section style={completedBanner}>
+                <Text style={completedText}>Tu orden está completamente liquidada. Gracias.</Text>
+              </Section>
+            )}
+
+            <Hr style={hr} />
+
+            <Text style={text}>
+              Puedes ver tu estado de cuenta actualizado en cualquier momento:
+            </Text>
+            <Link href={statusLink} style={button}>
+              Ver mi estado de cuenta
+            </Link>
+
+            {isCompleted && (
+              <Text style={footerNote}>
+                Nota: este enlace estará disponible por 30 días a partir de la fecha de liquidación.
+              </Text>
+            )}
+
+            <Hr style={hr} />
+            <Text style={footer}>OTLA · Control de pagos</Text>
+          </Section>
         </Container>
       </Body>
     </Html>
@@ -151,58 +159,76 @@ export function PaymentReceiptEmail({
 }
 
 const body = {
-  backgroundColor: '#09090b',
+  backgroundColor: '#F5F7FB',
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  margin: '0',
 }
 
 const container = {
   margin: '40px auto',
-  padding: '40px',
   maxWidth: '560px',
-  backgroundColor: '#18181b',
-  borderRadius: '12px',
-  border: '1px solid #27272a',
+  backgroundColor: '#FFFFFF',
+  borderRadius: '24px',
+  border: '1px solid #E6EAF0',
+  overflow: 'hidden',
+}
+
+const brandHeader = {
+  backgroundImage: 'linear-gradient(135deg, #6C5CE7 0%, #4A8BFF 100%)',
+  backgroundColor: '#4A8BFF',
+  padding: '28px 24px',
+  textAlign: 'center' as const,
+}
+
+const logo = {
+  display: 'block',
+  margin: '0 auto',
+}
+
+const content = {
+  padding: '34px',
 }
 
 const h1 = {
-  color: '#fafafa',
+  color: '#1A1F36',
   fontSize: '24px',
   fontWeight: '700',
-  margin: '0 0 24px',
+  margin: '0 0 18px',
+  textAlign: 'center' as const,
 }
 
 const greeting = {
-  color: '#a1a1aa',
+  color: '#1A1F36',
   fontSize: '16px',
   margin: '0 0 8px',
 }
 
 const text = {
-  color: '#d4d4d8',
+  color: '#6B7280',
   fontSize: '14px',
   lineHeight: '1.6',
   margin: '0 0 16px',
 }
 
 const amountBox = {
-  backgroundColor: '#09090b',
-  borderRadius: '8px',
+  backgroundColor: '#F9FBFE',
+  borderRadius: '16px',
   padding: '24px',
   textAlign: 'center' as const,
-  border: '1px solid #10b981',
+  border: '1px solid #E6EAF0',
   margin: '24px 0',
 }
 
 const amountLabel = {
-  color: '#a1a1aa',
+  color: '#6B7280',
   fontSize: '12px',
   textTransform: 'uppercase' as const,
-  letterSpacing: '0.05em',
+  letterSpacing: '0.04em',
   margin: '0 0 4px',
 }
 
 const amountValue = {
-  color: '#10b981',
+  color: '#2ED39A',
   fontSize: '36px',
   fontWeight: '700',
   fontFamily: 'monospace',
@@ -210,13 +236,13 @@ const amountValue = {
 }
 
 const amountDate = {
-  color: '#71717a',
+  color: '#8A94A6',
   fontSize: '12px',
   margin: '8px 0 0',
 }
 
 const hr = {
-  borderColor: '#27272a',
+  borderColor: '#E6EAF0',
   margin: '24px 0',
 }
 
@@ -227,31 +253,35 @@ const summaryRow = {
 }
 
 const summaryLabel = {
-  color: '#71717a',
+  color: '#6B7280',
   fontSize: '11px',
   textTransform: 'uppercase' as const,
-  letterSpacing: '0.05em',
+  letterSpacing: '0.04em',
   margin: '0 0 4px',
 }
 
 const summaryValue = {
-  color: '#fafafa',
+  color: '#1A1F36',
   fontSize: '16px',
   fontWeight: '600',
   fontFamily: 'monospace',
   margin: '0',
 }
 
+const progressSection = {
+  margin: '24px 0',
+}
+
 const completedBanner = {
-  backgroundColor: '#052e16',
-  borderRadius: '8px',
+  backgroundColor: '#EAFBF5',
+  borderRadius: '12px',
   padding: '16px',
-  border: '1px solid #10b981',
+  border: '1px solid #BDF3DE',
   margin: '16px 0',
 }
 
 const completedText = {
-  color: '#10b981',
+  color: '#129B70',
   fontSize: '14px',
   fontWeight: '600',
   margin: '0',
@@ -260,10 +290,10 @@ const completedText = {
 
 const button = {
   display: 'block',
-  backgroundColor: '#10b981',
+  backgroundColor: '#4A8BFF',
   color: '#fff',
   padding: '12px 24px',
-  borderRadius: '8px',
+  borderRadius: '12px',
   textDecoration: 'none',
   fontWeight: '600',
   fontSize: '14px',
@@ -272,14 +302,14 @@ const button = {
 }
 
 const footerNote = {
-  color: '#52525b',
+  color: '#8A94A6',
   fontSize: '11px',
   textAlign: 'center' as const,
   margin: '8px 0',
 }
 
 const footer = {
-  color: '#52525b',
+  color: '#A2ABBA',
   fontSize: '12px',
   textAlign: 'center' as const,
   margin: '0',

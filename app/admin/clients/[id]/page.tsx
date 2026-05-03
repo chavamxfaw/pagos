@@ -48,43 +48,43 @@ export default async function ClientDetailPage({
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <Link href="/admin/clients" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+        <Link href="/admin/clients" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
           ← Clientes
         </Link>
       </div>
 
       {/* Client header */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-50">{client.name}</h1>
+            <h1 className="text-2xl font-bold text-[#1A1F36]">{client.name}</h1>
             {client.company && (
-              <p className="text-emerald-400/80 text-sm font-medium mt-0.5">{client.company}</p>
+              <p className="text-[#2ED39A]/80 text-sm font-medium mt-0.5">{client.company}</p>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-              <p className="text-zinc-400 text-sm">{client.email}</p>
-              {client.phone && <p className="text-zinc-500 text-sm">{client.phone}</p>}
+              <p className="text-[#6B7280] text-sm">{client.email}</p>
+              {client.phone && <p className="text-[#6B7280] text-sm">{client.phone}</p>}
             </div>
             {(client.rfc || client.address) && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                {client.rfc && <p className="text-zinc-600 text-xs font-mono">RFC: {client.rfc}</p>}
-                {client.address && <p className="text-zinc-600 text-xs">{client.address}</p>}
+                {client.rfc && <p className="text-[#8A94A6] text-xs font-mono">RFC: {client.rfc}</p>}
+                {client.address && <p className="text-[#8A94A6] text-xs">{client.address}</p>}
               </div>
             )}
             {client.notes && (
-              <p className="text-zinc-500 text-sm mt-3 border-t border-zinc-800 pt-3">{client.notes}</p>
+              <p className="text-[#6B7280] text-sm mt-3 border-t border-[#E6EAF0] pt-3">{client.notes}</p>
             )}
           </div>
           <div className="flex gap-2 shrink-0">
             <Link
               href={`/admin/clients/${id}/edit`}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-zinc-700 text-zinc-300 hover:bg-zinc-800')}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0]')}
             >
               Editar
             </Link>
             <Link
               href={`/admin/orders/new?client=${id}`}
-              className={cn(buttonVariants({ size: 'sm' }), 'bg-emerald-500 hover:bg-emerald-400 text-black font-semibold')}
+              className={cn(buttonVariants({ size: 'sm' }), 'bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105')}
             >
               + Nueva orden
             </Link>
@@ -100,22 +100,22 @@ export default async function ClientDetailPage({
       </div>
 
       {/* Client public portal */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-6">
+      <div className="bg-white border border-[#E6EAF0] rounded-xl p-5 mb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-zinc-100 font-semibold">Link general del cliente</h2>
+              <h2 className="text-[#1A1F36] font-semibold">Link general del cliente</h2>
               <Badge
                 className={
                   client.client_portal_enabled
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                    ? 'bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30'
+                    : 'bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]'
                 }
               >
                 {client.client_portal_enabled ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-[#6B7280] text-sm">
               Muestra todas las órdenes del cliente, saldos pendientes y progreso de pagos.
             </p>
           </div>
@@ -130,7 +130,7 @@ export default async function ClientDetailPage({
               <Button
                 type="submit"
                 variant="outline"
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+                className="border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36]"
               >
                 {client.client_portal_enabled ? 'Desactivar link' : 'Activar link'}
               </Button>
@@ -142,7 +142,7 @@ export default async function ClientDetailPage({
       {/* Active orders */}
       {activeOrders.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-zinc-200 mb-3">
+          <h2 className="text-lg font-semibold text-[#1A1F36] mb-3">
             Órdenes activas ({activeOrders.length})
           </h2>
           <div className="space-y-3">
@@ -150,23 +150,23 @@ export default async function ClientDetailPage({
               const percent = getProgressPercent(order.paid_amount, order.total_amount)
               return (
                 <Link key={order.id} href={`/admin/orders/${order.id}`} className="block">
-                  <div className="bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-xl p-4 transition-colors">
+                  <div className="bg-white border border-[#E6EAF0] hover:border-[#C9D4E5] rounded-xl p-4 transition-colors">
                     <div className="flex justify-between items-start mb-2">
-                      <p className="text-zinc-100 font-medium">{order.concept}</p>
+                      <p className="text-[#1A1F36] font-medium">{order.concept}</p>
                       <Badge
                         className={
                           order.status === 'partial'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                            : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                            ? 'bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30'
+                            : 'bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]'
                         }
                       >
                         {order.status === 'partial' ? 'Parcial' : 'Pendiente'}
                       </Badge>
                     </div>
-                    <div className="h-1.5 bg-zinc-800 rounded-full mb-2">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percent}%` }} />
+                    <div className="h-1.5 bg-[#E6EAF0] rounded-full mb-2">
+                      <div className="h-full bg-[#2ED39A] rounded-full" style={{ width: `${percent}%` }} />
                     </div>
-                    <div className="flex justify-between text-xs font-mono text-zinc-500">
+                    <div className="flex justify-between text-xs font-mono text-[#6B7280]">
                       <span>{formatCurrency(order.paid_amount)} / {formatCurrency(order.total_amount)}</span>
                       <span>{percent}%</span>
                     </div>
@@ -181,23 +181,23 @@ export default async function ClientDetailPage({
       {/* Completed orders */}
       {completedOrders.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-zinc-500 mb-3">
+          <h2 className="text-lg font-semibold text-[#6B7280] mb-3">
             Órdenes liquidadas ({completedOrders.length})
           </h2>
           <div className="space-y-2">
             {completedOrders.map((order) => (
               <Link key={order.id} href={`/admin/orders/${order.id}`} className="block">
-                <div className="bg-zinc-950 border border-zinc-800/50 hover:border-zinc-700 rounded-xl p-4 transition-colors">
+                <div className="bg-white border border-[#E6EAF0] hover:border-[#D8DEE8] rounded-xl p-4 transition-colors">
                   <div className="flex justify-between items-center">
-                    <p className="text-zinc-400">{order.concept}</p>
+                    <p className="text-[#6B7280]">{order.concept}</p>
                     <div className="flex items-center gap-3">
-                      <span className="text-zinc-500 text-sm font-mono">{formatCurrency(order.total_amount)}</span>
-                      <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                      <span className="text-[#6B7280] text-sm font-mono">{formatCurrency(order.total_amount)}</span>
+                      <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30">
                         Liquidado
                       </Badge>
                     </div>
                   </div>
-                  <p className="text-zinc-600 text-xs mt-1">{formatDateShort(order.created_at)}</p>
+                  <p className="text-[#8A94A6] text-xs mt-1">{formatDateShort(order.created_at)}</p>
                 </div>
               </Link>
             ))}
@@ -206,9 +206,9 @@ export default async function ClientDetailPage({
       )}
 
       {!orders?.length && (
-        <div className="text-center py-16 text-zinc-600">
+        <div className="text-center py-16 text-[#8A94A6]">
           <p className="mb-2">Sin órdenes aún</p>
-          <Link href={`/admin/orders/new?client=${id}`} className="text-emerald-400 hover:text-emerald-300 text-sm">
+          <Link href={`/admin/orders/new?client=${id}`} className="text-[#2ED39A] hover:text-[#26BA88] text-sm">
             Crear primera orden →
           </Link>
         </div>

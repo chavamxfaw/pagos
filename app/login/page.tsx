@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -32,16 +33,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB] px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-[#E6EAF0] bg-white p-8 shadow-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-heading font-bold text-zinc-50 tracking-widest uppercase mb-1">CHCV</h1>
-          <p className="text-sm text-zinc-500">Panel de administración</p>
+          <Image src="/otla-logo.png" alt="OTLA" width={160} height={127} className="mx-auto mb-4 h-24 w-auto object-contain" priority />
+          <p className="text-sm text-[#6B7280]">Panel de administración</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">Correo electrónico</Label>
+            <Label htmlFor="email" className="text-[#1A1F36]">Correo electrónico</Label>
             <Input
               id="email"
               type="email"
@@ -49,12 +50,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+              className="bg-white border-[#E6EAF0] text-[#1A1F36] placeholder:text-[#8A94A6]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">Contraseña</Label>
+            <Label htmlFor="password" className="text-[#1A1F36]">Contraseña</Label>
             <Input
               id="password"
               type="password"
@@ -62,16 +63,16 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+              className="bg-white border-[#E6EAF0] text-[#1A1F36] placeholder:text-[#8A94A6]"
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-[#EF4444] text-sm">{error}</p>}
 
           <Button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold"
+            className="w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105"
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>

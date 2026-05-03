@@ -23,11 +23,11 @@ export function CopyLinkButton({
     <Button
       variant="outline"
       onClick={handleCopy}
-      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+      className="border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36]"
     >
       {copied ? (
         <>
-          <svg className="w-4 h-4 text-emerald-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-[#2ED39A] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           ¡Copiado!

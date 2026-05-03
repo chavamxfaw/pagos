@@ -19,18 +19,18 @@ export default async function OrdersPage() {
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-50">Órdenes</h1>
-          <p className="text-zinc-500 text-sm mt-1">{typedOrders.length} órdenes en total</p>
+          <h1 className="text-2xl font-bold text-[#1A1F36]">Órdenes</h1>
+          <p className="text-[#6B7280] text-sm mt-1">{typedOrders.length} órdenes en total</p>
         </div>
-        <Link href="/admin/orders/new" className={cn(buttonVariants(), "bg-emerald-500 hover:bg-emerald-400 text-black font-semibold self-start sm:self-auto")}>
+        <Link href="/admin/orders/new" className={cn(buttonVariants(), "bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 self-start sm:self-auto")}>
           + Nueva orden
         </Link>
       </div>
 
       {!typedOrders.length ? (
-        <div className="text-center py-20 text-zinc-600">
+        <div className="text-center py-20 text-[#8A94A6]">
           <p className="text-lg mb-2">Sin órdenes aún</p>
-          <Link href="/admin/orders/new" className="text-emerald-400 hover:text-emerald-300 text-sm">
+          <Link href="/admin/orders/new" className="text-[#2ED39A] hover:text-[#26BA88] text-sm">
             Crear primera orden →
           </Link>
         </div>

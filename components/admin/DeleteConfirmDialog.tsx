@@ -35,21 +35,21 @@ export function DeleteConfirmDialog({
             type="button"
             variant="destructive"
             size="sm"
-            className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            className="border-red-500/20 text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-red-300"
           >
             <Trash2 />
             {triggerLabel}
           </Button>
         }
       />
-      <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-50 sm:max-w-md">
+      <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-zinc-50">{title}</DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogTitle className="text-[#1A1F36]">{title}</DialogTitle>
+          <DialogDescription className="text-[#6B7280]">
             {description}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="border-zinc-800 bg-zinc-950/80">
+        <DialogFooter className="border-[#E6EAF0] bg-white/90">
           <DialogClose render={<Button type="button" variant="outline" />}>
             Cancelar
           </DialogClose>
@@ -70,7 +70,7 @@ function DeleteSubmitButton({ label }: { label: string }) {
       type="submit"
       variant="destructive"
       disabled={pending}
-      className="w-full sm:w-auto bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+      className="w-full sm:w-auto bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 hover:text-red-300"
     >
       {pending ? 'Borrando...' : label}
     </Button>

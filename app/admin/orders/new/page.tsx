@@ -42,14 +42,14 @@ export default async function NewOrderPage({
     return (
       <div className="p-6 md:p-8 max-w-2xl mx-auto">
         <div className="mb-8">
-          <Link href="/admin/orders" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+          <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
             ← Órdenes
           </Link>
-          <h1 className="text-2xl font-bold text-zinc-50 mt-2">Nueva orden</h1>
+          <h1 className="text-2xl font-bold text-[#1A1F36] mt-2">Nueva orden</h1>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
-          <p className="text-zinc-400 mb-4">Necesitas al menos un cliente para crear una orden.</p>
-          <Link href="/admin/clients/new" className="text-emerald-400 hover:text-emerald-300">
+        <div className="bg-white border border-[#E6EAF0] rounded-xl p-8 text-center">
+          <p className="text-[#6B7280] mb-4">Necesitas al menos un cliente para crear una orden.</p>
+          <Link href="/admin/clients/new" className="text-[#2ED39A] hover:text-[#26BA88]">
             Crear primer cliente →
           </Link>
         </div>
@@ -60,13 +60,13 @@ export default async function NewOrderPage({
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
       <div className="mb-8">
-        <Link href="/admin/orders" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+        <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
           ← Órdenes
         </Link>
-        <h1 className="text-2xl font-bold text-zinc-50 mt-2">Nueva orden</h1>
+        <h1 className="text-2xl font-bold text-[#1A1F36] mt-2">Nueva orden</h1>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6">
         <OrderForm
           action={createOrderAction}
           clients={clients}

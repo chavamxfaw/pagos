@@ -21,8 +21,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CHCV",
-  description: "Sistema de control de pagos",
+  title: "OTLA",
+  description: "Control de pagos",
   robots: {
     index: false,
     follow: false,
@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${jakarta.variable} ${mono.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${jakarta.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

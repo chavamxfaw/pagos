@@ -47,14 +47,14 @@ export default async function EditClientPage({
       <div className="mb-7">
         <Link
           href={`/admin/clients/${id}`}
-          className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+          className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors"
         >
           ← {client.name}
         </Link>
-        <h1 className="text-2xl font-heading font-semibold text-zinc-50 mt-2">Editar cliente</h1>
+        <h1 className="text-2xl font-heading font-semibold text-[#1A1F36] mt-2">Editar cliente</h1>
       </div>
 
-      <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6">
+      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6">
         <ClientForm
           action={updateClientAction}
           defaultValues={client}
