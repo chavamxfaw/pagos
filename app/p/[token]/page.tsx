@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CalendarDays, CheckCircle2, Clock3, ReceiptText, WalletCards } from 'lucide-react'
 import { getPublicOrder } from '@/lib/public-orders'
-import { cn, formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
+import { cn, formatCurrency, formatDateShort, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
+import { PublicShareActions } from '@/components/public/PublicShareActions'
 
 export default async function PublicOrderPage({
   params,
@@ -58,6 +59,20 @@ export default async function PublicOrderPage({
             <MiniMetric label="Pagado" value={formatCurrency(order.paid_amount)} tone="paid" icon={<CheckCircle2 className="size-4" />} />
             <MiniMetric label={isCompleted ? 'Estado' : 'Pendiente'} value={isCompleted ? 'Liquidado' : formatCurrency(remaining)} tone={isCompleted ? 'paid' : 'pending'} icon={isCompleted ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />} />
           </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-white bg-white p-4 shadow-[0_14px_34px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/80">
+          <PublicShareActions
+            title={`Estado de cuenta OTLA - ${order.concept}`}
+            text={[
+              `Estado de cuenta OTLA de ${order.clients.name}`,
+              `Orden: ${order.concept}`,
+              `Total: ${formatCurrency(order.total_amount)}`,
+              `Pagado: ${formatCurrency(order.paid_amount)}`,
+              isCompleted ? 'Estado: Liquidado' : `Pendiente: ${formatCurrency(remaining)}`,
+              `Progreso: ${percent}%`,
+            ].join('\n')}
+          />
         </div>
 
         {/* Completed banner */}
@@ -163,7 +178,11 @@ export default async function PublicOrderPage({
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-[#1A1F36] text-sm font-medium">{payment.concept}</p>
-                        <p className="text-[#8A94A6] text-xs">{formatDateShort(payment.paid_at ?? payment.created_at)}</p>
+                        <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-[#8A94A6]">
+                          <span>{formatDateShort(payment.paid_at ?? payment.created_at)}</span>
+                          <span>{getPaymentMethodLabel(payment.payment_method)}</span>
+                          {payment.payment_reference && <span>Ref: {payment.payment_reference}</span>}
+                        </div>
                       </div>
                       <span className="text-[#2ED39A] font-mono text-sm font-semibold shrink-0 ml-2">
                         +{formatCurrency(payment.amount)}

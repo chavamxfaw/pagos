@@ -8,7 +8,7 @@ import { PaymentTimeline } from '@/components/admin/PaymentTimeline'
 import { PaymentActions } from '@/components/admin/PaymentActions'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
-import { addPayment, deletePayment, updatePayment } from '@/actions/payments'
+import { addPayment, deletePayment, resendPaymentReceipt, updatePayment } from '@/actions/payments'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
 import { sendOrderReminder } from '@/actions/reminders'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
@@ -55,6 +55,11 @@ async function updatePaymentAction(paymentId: string, prevState: PaymentState, f
 async function deletePaymentAction(paymentId: string, orderId: string) {
   'use server'
   await deletePayment(paymentId, orderId)
+}
+
+async function resendPaymentReceiptAction(paymentId: string) {
+  'use server'
+  await resendPaymentReceipt(paymentId)
 }
 
 async function markCompletedAction(orderId: string) {
@@ -255,6 +260,8 @@ export default async function OrderDetailPage({
               orderId={id}
               updateAction={updatePaymentAction.bind(null, payment.id)}
               deleteAction={deletePaymentAction.bind(null, payment.id, id)}
+              resendReceiptAction={resendPaymentReceiptAction.bind(null, payment.id)}
+              canResendReceipt={Boolean(typedOrder.clients.email)}
             />
           )}
         />

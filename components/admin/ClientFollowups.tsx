@@ -35,26 +35,40 @@ export function ClientFollowups({
         <h2 className="mt-1 text-xl font-bold text-[#1A1F36]">Notas de cobranza</h2>
       </div>
 
-      <form action={formAction} className="mb-6 grid gap-3">
-        <div className="grid gap-3 sm:grid-cols-[170px_1fr_170px]">
-          <Select name="note_type" defaultValue="note">
-            <SelectTrigger className="bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-white border-[#E6EAF0]">
-              <SelectItem value="note">Nota</SelectItem>
-              <SelectItem value="call">Llamada</SelectItem>
-              <SelectItem value="promise">Promesa de pago</SelectItem>
-              <SelectItem value="reminder">Recordatorio</SelectItem>
-              <SelectItem value="invoice">Factura</SelectItem>
-            </SelectContent>
-          </Select>
+      <form action={formAction} className="mb-6 space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="content" className="sr-only">Nota</Label>
-            <Textarea id="content" name="content" required rows={2} placeholder="Ej: prometió pagar el viernes..." className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none" />
+            <Label className="text-sm text-[#6B7280]">Tipo</Label>
+            <Select name="note_type" defaultValue="note">
+              <SelectTrigger className="h-11 bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-white border-[#E6EAF0]">
+                <SelectItem value="note">Nota</SelectItem>
+                <SelectItem value="call">Llamada</SelectItem>
+                <SelectItem value="promise">Promesa de pago</SelectItem>
+                <SelectItem value="reminder">Recordatorio</SelectItem>
+                <SelectItem value="invoice">Factura</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Input type="date" name="follow_up_date" className="bg-white border-[#E6EAF0] text-[#1A1F36]" aria-label="Fecha de seguimiento" />
+          <div className="space-y-2">
+            <Label htmlFor="follow_up_date" className="text-sm text-[#6B7280]">Fecha de seguimiento</Label>
+            <Input id="follow_up_date" type="date" name="follow_up_date" className="h-11 bg-white border-[#E6EAF0] text-[#1A1F36]" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="content" className="text-sm text-[#6B7280]">Nota</Label>
+          <Textarea
+            id="content"
+            name="content"
+            required
+            rows={4}
+            placeholder="Ej: prometió pagar el viernes..."
+            className="min-h-28 w-full bg-white border-[#E6EAF0] text-[#1A1F36] resize-y"
+          />
         </div>
         {state?.error && <p className="text-sm text-[#EF4444]">{state.error}</p>}
-        <Button type="submit" disabled={pending} className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto">
+        <Button type="submit" disabled={pending} className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105">
           {pending ? 'Guardando...' : 'Agregar seguimiento'}
         </Button>
       </form>

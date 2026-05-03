@@ -19,6 +19,41 @@ type InvoiceFilter = 'all' | 'invoice' | 'no_invoice'
 type PaymentFilter = 'all' | PaymentMethod
 type SortMode = 'recent' | 'pending_amount' | 'total_amount' | 'client'
 
+const statusFilterLabels: Record<StatusFilter, string> = {
+  active: 'Activas',
+  all: 'Todas',
+  pending: 'Pendientes',
+  partial: 'Parciales',
+  completed: 'Liquidadas',
+  overdue: 'Vencidas',
+  due_soon: 'Por vencer',
+  paused: 'Pausadas',
+  disputed: 'En disputa',
+  cancelled: 'Canceladas',
+}
+
+const invoiceFilterLabels: Record<InvoiceFilter, string> = {
+  all: 'Factura: todas',
+  invoice: 'Con factura',
+  no_invoice: 'Sin factura',
+}
+
+const paymentFilterLabels: Record<PaymentFilter, string> = {
+  all: 'Pago: todos',
+  transfer: 'Transferencia',
+  cash: 'Efectivo',
+  card: 'Tarjeta',
+  check: 'Cheque',
+  other: 'Otro',
+}
+
+const sortLabels: Record<SortMode, string> = {
+  recent: 'Más recientes',
+  pending_amount: 'Mayor pendiente',
+  total_amount: 'Mayor total',
+  client: 'Cliente A-Z',
+}
+
 const taxModeLabels: Record<string, string> = {
   none: 'Sin factura',
   included: 'IVA incluido',
@@ -168,7 +203,9 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
         </div>
 
         <Select value={clientId} onValueChange={(value) => value && setClientId(value)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue>{clientId === 'all' ? 'Todos los clientes' : clients.find(([id]) => id === clientId)?.[1]}</SelectValue>
+          </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Todos los clientes</SelectItem>
             {clients.map(([id, name]) => (
@@ -178,7 +215,9 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
         </Select>
 
         <Select value={status} onValueChange={(value) => setStatus(value as StatusFilter)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue>{statusFilterLabels[status]}</SelectValue>
+          </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="active" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Activas</SelectItem>
             <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Todas</SelectItem>
@@ -194,7 +233,9 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
         </Select>
 
         <Select value={invoice} onValueChange={(value) => setInvoice(value as InvoiceFilter)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue>{invoiceFilterLabels[invoice]}</SelectValue>
+          </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Factura: todas</SelectItem>
             <SelectItem value="invoice" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Con factura</SelectItem>
@@ -203,7 +244,9 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
         </Select>
 
         <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentFilter)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue>{paymentFilterLabels[paymentMethod]}</SelectValue>
+          </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Pago: todos</SelectItem>
             <SelectItem value="transfer" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Transferencia</SelectItem>
@@ -224,7 +267,9 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
         <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="h-10 bg-white border-[#E6EAF0] text-[#1A1F36]" aria-label="Desde" />
         <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="h-10 bg-white border-[#E6EAF0] text-[#1A1F36]" aria-label="Hasta" />
         <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue>{sortLabels[sort]}</SelectValue>
+          </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="recent" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Más recientes</SelectItem>
             <SelectItem value="pending_amount" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Mayor pendiente</SelectItem>
@@ -249,7 +294,7 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
           <p className="text-sm">Ajusta la búsqueda o cambia los filtros.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredOrders.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
@@ -274,9 +319,9 @@ function OrderCard({ order }: { order: OrderRow }) {
   const timing = getOrderTiming(order)
 
   return (
-    <Link href={`/admin/orders/${order.id}`} className="block">
-      <div className="bg-white border border-[#E6EAF0] hover:border-[#C9D4E5] rounded-xl p-4 transition-colors">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <Link href={`/admin/orders/${order.id}`} className="block h-full">
+      <div className="flex h-full flex-col rounded-xl border border-[#E6EAF0] bg-white p-4 transition-colors hover:border-[#C9D4E5] hover:shadow-[0_14px_34px_rgba(26,31,54,0.06)]">
+        <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[#1A1F36] font-medium truncate">{order.concept}</p>
             <p className="text-[#6B7280] text-sm truncate">{order.clients.name}</p>
@@ -285,26 +330,37 @@ function OrderCard({ order }: { order: OrderRow }) {
               {timing.label && <span className={timing.key === 'overdue' ? 'text-[#EF4444]' : 'text-[#F4B740]'}>{timing.label}</span>}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
-            <span className="text-[#1A1F36] text-sm font-mono hidden sm:block">{formatCurrency(order.total_amount)}</span>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <span className="text-[#1A1F36] text-sm font-mono">{formatCurrency(order.total_amount)}</span>
             <StatusBadge status={order.status} />
           </div>
         </div>
 
-        <div className="h-1.5 bg-[#E6EAF0] rounded-full mb-2">
+        <div className="h-1.5 bg-[#E6EAF0] rounded-full mb-3">
           <div className="h-full rounded-full bg-[#2ED39A] transition-all" style={{ width: `${percent}%` }} />
         </div>
 
-        <div className="flex justify-between text-xs font-mono text-[#6B7280]">
-          <span>{formatCurrency(order.paid_amount)} pagado</span>
+        <div className="mt-auto grid gap-2 text-xs font-mono text-[#6B7280]">
+          <div className="flex justify-between gap-3">
+            <span>Pagado</span>
+            <span className="text-[#1A1F36]">{formatCurrency(order.paid_amount)}</span>
+          </div>
           {!['completed', 'cancelled'].includes(order.status) ? (
-            <span className="text-[#F4B740]">{formatCurrency(remaining)} pendiente</span>
+            <div className="flex justify-between gap-3">
+              <span>Pendiente</span>
+              <span className="text-[#F4B740]">{formatCurrency(remaining)}</span>
+            </div>
           ) : (
-            <span className="text-[#2ED39A]">{getOrderStatusLabel(order.status)}</span>
+            <div className="flex justify-between gap-3">
+              <span>Estado</span>
+              <span className="text-[#2ED39A]">{getOrderStatusLabel(order.status)}</span>
+            </div>
           )}
         </div>
 
-        <p className="text-xs text-[#A2ABBA] mt-1">Emitida {formatDateShort(order.issued_at ?? order.created_at)}</p>
+        <p className="mt-3 border-t border-[#E6EAF0] pt-3 text-xs text-[#A2ABBA]">
+          Emitida {formatDateShort(order.issued_at ?? order.created_at)}
+        </p>
       </div>
     </Link>
   )

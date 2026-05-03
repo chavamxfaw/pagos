@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit3, Trash2 } from 'lucide-react'
+import { Edit3, Mail, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogClose,
@@ -23,11 +23,15 @@ export function PaymentActions({
   orderId,
   updateAction,
   deleteAction,
+  resendReceiptAction,
+  canResendReceipt,
 }: {
   payment: Payment
   orderId: string
   updateAction: (prevState: State, formData: FormData) => Promise<State>
   deleteAction: (formData: FormData) => Promise<void>
+  resendReceiptAction: (formData: FormData) => Promise<void>
+  canResendReceipt: boolean
 }) {
   const [editOpen, setEditOpen] = useState(false)
 
@@ -60,6 +64,20 @@ export function PaymentActions({
           />
         </DialogContent>
       </Dialog>
+
+      <form action={resendReceiptAction}>
+        <Button
+          type="submit"
+          variant="outline"
+          size="icon"
+          disabled={!canResendReceipt}
+          className="size-8 border-[#E6EAF0] text-[#6B7280] hover:bg-[#F8FAFF] hover:text-[#1A1F36] disabled:cursor-not-allowed disabled:opacity-35"
+          aria-label={canResendReceipt ? 'Reenviar recibo' : 'Cliente sin correo'}
+          title={canResendReceipt ? 'Reenviar recibo' : 'Cliente sin correo'}
+        >
+          <Mail className="size-3.5" />
+        </Button>
+      </form>
 
       <Dialog>
         <DialogTrigger

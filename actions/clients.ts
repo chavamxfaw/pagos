@@ -26,12 +26,17 @@ function normalizeClientData(data: ClientData) {
     ...data,
     name: data.name.trim(),
     email: data.email?.trim() || null,
-    phone: data.phone?.trim() || null,
+    phone: normalizePhone(data.phone),
     company: data.company?.trim() || null,
     rfc: data.rfc?.trim() || null,
     address: data.address?.trim() || null,
     notes: data.notes?.trim() || null,
   }
+}
+
+function normalizePhone(phone?: string | null) {
+  const digits = phone?.replace(/\D/g, '') ?? ''
+  return digits || null
 }
 
 export async function createClient_action(data: ClientData) {

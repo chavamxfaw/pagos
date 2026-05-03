@@ -160,6 +160,58 @@ export async function updatePayment(paymentId: string, data: {
   return payment
 }
 
+export async function resendPaymentReceipt(paymentId: string) {
+  await requireAuth()
+  const admin = createAdminClient()
+
+  const { data: payment, error } = await admin
+    .from('payments')
+    .select('*, orders(*, clients(*))')
+    .eq('id', paymentId)
+    .single()
+
+  if (error || !payment) {
+    throw new Error(error?.message ?? 'Abono no encontrado')
+  }
+
+  const order = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders
+  const client = Array.isArray(order.clients) ? order.clients[0] : order.clients
+
+  if (!client.email) {
+    throw new Error('El cliente no tiene correo registrado')
+  }
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: client.email,
+    subject: `Recibo de abono — ${order.concept}`,
+    react: PaymentReceiptEmail({
+      clientName: client.name,
+      concept: order.concept,
+      paymentAmount: payment.amount,
+      paymentDate: payment.paid_at ?? payment.created_at,
+      paidAmount: order.paid_amount,
+      totalAmount: order.total_amount,
+      token: order.token,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+    }),
+  })
+
+  await logActivity(admin, {
+    entity_type: 'payment',
+    entity_id: paymentId,
+    client_id: order.client_id,
+    order_id: order.id,
+    payment_id: paymentId,
+    event_type: 'payment_receipt_resent',
+    message: `Recibo reenviado a ${client.email} para ${order.concept}`,
+    metadata: { email: client.email, amount: payment.amount },
+  })
+
+  revalidatePath(`/admin/orders/${order.id}`)
+  revalidatePath(`/admin/clients/${order.client_id}`)
+}
+
 function getValidPaidAt(value?: string) {
   const today = getTodayDateString()
   if (!value) return today

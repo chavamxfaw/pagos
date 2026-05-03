@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { CheckCircle2, Clock3, FileText, Layers3, WalletCards } from 'lucide-react'
 import { getPublicClientPortal } from '@/lib/public-clients'
 import { cn, formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
+import { PublicShareActions } from '@/components/public/PublicShareActions'
 import type { PublicClientOrder } from '@/lib/public-clients'
 
 export default async function PublicClientPage({
@@ -66,6 +67,19 @@ export default async function PublicClientPage({
               />
             </div>
           </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-white bg-white p-4 shadow-[0_14px_34px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/80">
+          <PublicShareActions
+            title={`Estado de cuenta OTLA - ${portal.client.name}`}
+            text={[
+              `Estado de cuenta OTLA de ${portal.client.name}`,
+              `Total: ${formatCurrency(totalAmount)}`,
+              `Pagado: ${formatCurrency(paidAmount)}`,
+              `Pendiente: ${formatCurrency(pendingAmount)}`,
+              `Progreso: ${percent}%`,
+            ].join('\n')}
+          />
         </div>
 
         {activeOrders.length > 0 && (
