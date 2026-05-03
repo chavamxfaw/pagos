@@ -5,7 +5,12 @@ import { OrdersFilterList } from '@/components/admin/OrdersFilterList'
 import { cn } from '@/lib/utils'
 import type { OrderWithClient } from '@/types'
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
+  const resolvedSearchParams = await searchParams
   const supabase = await createClient()
 
   const { data: orders } = await supabase
@@ -35,7 +40,7 @@ export default async function OrdersPage() {
           </Link>
         </div>
       ) : (
-        <OrdersFilterList orders={typedOrders} />
+        <OrdersFilterList orders={typedOrders} initialStatus={resolvedSearchParams.status} />
       )}
     </div>
   )

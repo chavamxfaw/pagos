@@ -79,10 +79,16 @@ function downloadCsv(filename: string, rows: (string | number | boolean | null |
   URL.revokeObjectURL(url)
 }
 
-export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
+export function OrdersFilterList({
+  orders,
+  initialStatus,
+}: {
+  orders: OrderRow[]
+  initialStatus?: string
+}) {
   const [query, setQuery] = useState('')
   const [clientId, setClientId] = useState('all')
-  const [status, setStatus] = useState<StatusFilter>('active')
+  const [status, setStatus] = useState<StatusFilter>(getInitialStatus(initialStatus))
   const [invoice, setInvoice] = useState<InvoiceFilter>('all')
   const [paymentMethod, setPaymentMethod] = useState<PaymentFilter>('all')
   const [sort, setSort] = useState<SortMode>('recent')
@@ -302,6 +308,11 @@ export function OrdersFilterList({ orders }: { orders: OrderRow[] }) {
       )}
     </div>
   )
+}
+
+function getInitialStatus(value?: string): StatusFilter {
+  if (value && value in statusFilterLabels) return value as StatusFilter
+  return 'active'
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

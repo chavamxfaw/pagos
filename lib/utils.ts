@@ -55,6 +55,18 @@ export function getTodayDateString(): string {
   }).format(new Date())
 }
 
+export function addDaysToDateString(date: string, days: number): string {
+  const [year, month, day] = date.split('-').map(Number)
+  const value = new Date(year, month - 1, day)
+  value.setDate(value.getDate() + days)
+
+  const nextYear = value.getFullYear()
+  const nextMonth = String(value.getMonth() + 1).padStart(2, '0')
+  const nextDay = String(value.getDate()).padStart(2, '0')
+
+  return `${nextYear}-${nextMonth}-${nextDay}`
+}
+
 export function getProgressPercent(paid: number, total: number): number {
   if (total <= 0) return 0
   return Math.min(100, Math.round((paid / total) * 100))
