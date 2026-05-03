@@ -210,7 +210,7 @@ export function OrdersFilterList({ orders }: { orders: OrderWithClient[] }) {
           variant="outline"
           onClick={exportOrders}
           disabled={!filteredOrders.length}
-          className="h-10 border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0]"
+          className="h-10 w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] lg:w-auto"
         >
           <Download className="size-4" />
           Exportar CSV
@@ -255,7 +255,7 @@ function OrderCard({ order }: { order: OrderWithClient }) {
   return (
     <Link href={`/admin/orders/${order.id}`} className="block">
       <div className="bg-white border border-[#E6EAF0] hover:border-[#C9D4E5] rounded-xl p-4 transition-colors">
-        <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[#1A1F36] font-medium truncate">{order.concept}</p>
             <p className="text-[#6B7280] text-sm truncate">{order.clients.name}</p>
@@ -265,7 +265,7 @@ function OrderCard({ order }: { order: OrderWithClient }) {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
             <span className="text-[#1A1F36] text-sm font-mono hidden sm:block">
               {formatCurrency(order.total_amount)}
             </span>

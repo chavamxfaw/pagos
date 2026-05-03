@@ -34,7 +34,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/admin/orders/new"
-          className={cn(buttonVariants(), 'bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 self-start sm:self-auto')}
+          className={cn(buttonVariants(), 'w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto')}
         >
           + Nueva orden
         </Link>

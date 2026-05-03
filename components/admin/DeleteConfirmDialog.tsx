@@ -35,7 +35,7 @@ export function DeleteConfirmDialog({
             type="button"
             variant="destructive"
             size="sm"
-            className="border-red-500/20 text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-red-300"
+            className="w-full justify-center border-red-500/20 text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-red-300 sm:w-auto"
           >
             <Trash2 />
             {triggerLabel}

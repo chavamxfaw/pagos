@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { CalendarDays, CheckCircle2, Clock3, ReceiptText, WalletCards } from 'lucide-react'
 import { getPublicOrder } from '@/lib/public-orders'
-import { formatCurrency, formatDate, getProgressPercent } from '@/lib/utils'
+import { cn, formatCurrency, formatDate, getProgressPercent } from '@/lib/utils'
 
 export default async function PublicOrderPage({
   params,
@@ -19,43 +20,48 @@ export default async function PublicOrderPage({
   const isCompleted = order.status === 'completed'
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] px-4 py-8">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-[#F5F7FB] px-4 py-6 md:py-10">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 flex items-center justify-center">
+          <Image src="/otla-logo.png" alt="OTLA" width={148} height={118} className="h-14 w-auto object-contain" priority />
+        </div>
 
-        {/* Header */}
-        <div className="mb-6 overflow-hidden rounded-3xl border border-[#E6EAF0] bg-white shadow-sm">
-          <div className="flex justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-6">
-            <Image src="/otla-white.png" alt="OTLA" width={180} height={143} className="h-16 w-auto object-contain" priority />
-          </div>
-          <div className="px-6 py-7 text-center">
-            <p className="text-[#6B7280] text-sm mb-1">Estado de cuenta</p>
-            <h1 className="text-2xl font-bold text-[#1A1F36] mb-1">
-              {/* No exponemos email ni teléfono del cliente */}
+        <div className="mb-6 overflow-hidden rounded-[28px] border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
+          <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-8 text-center md:px-10">
+            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-white/16 text-white ring-1 ring-white/25">
+              {isCompleted ? <CheckCircle2 className="size-8" /> : <WalletCards className="size-8" />}
+            </div>
+            <p className="mb-2 text-sm font-medium text-white/72">Estado de cuenta</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               {order.clients.name}
             </h1>
-            <p className="text-[#6B7280]">{order.concept}</p>
+            <p className="mt-2 text-sm font-medium text-white/72">{order.concept}</p>
+          </div>
+
+          <div className="grid gap-4 p-5 sm:grid-cols-3 md:p-6">
+            <MiniMetric label="Total" value={formatCurrency(order.total_amount)} icon={<ReceiptText className="size-4" />} />
+            <MiniMetric label="Pagado" value={formatCurrency(order.paid_amount)} tone="paid" icon={<CheckCircle2 className="size-4" />} />
+            <MiniMetric label={isCompleted ? 'Estado' : 'Pendiente'} value={isCompleted ? 'Liquidado' : formatCurrency(remaining)} tone={isCompleted ? 'paid' : 'pending'} icon={isCompleted ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />} />
           </div>
         </div>
 
         {/* Completed banner */}
         {isCompleted && (
-          <div className="mb-6 rounded-xl border border-[#2ED39A]/30 bg-[#2ED39A]/10 p-5 text-center">
-            <div className="text-3xl mb-2">✅</div>
-            <h2 className="text-[#2ED39A] font-bold text-lg">
-              ¡Pago completado!
-            </h2>
-            <p className="text-[#2ED39A]/70 text-sm mt-1">
+          <div className="mb-6 rounded-2xl border border-[#BDF3DE] bg-[#EAFBF5] p-5 text-center shadow-sm">
+            <CheckCircle2 className="mx-auto mb-2 size-8 text-[#2ED39A]" />
+            <h2 className="text-lg font-bold text-[#129B70]">Pago completado</h2>
+            <p className="mt-1 text-sm text-[#129B70]/75">
               Gracias {order.clients.name}, tu saldo está liquidado.
             </p>
           </div>
         )}
 
         {/* Main progress card */}
-        <div className="bg-white border border-[#E6EAF0] rounded-2xl p-6 mb-6 shadow-sm">
+        <div className="mb-6 rounded-[28px] border border-white bg-white p-6 shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
           {/* Big amounts */}
           <div className="text-center mb-6">
-            <p className="text-[#6B7280] text-sm mb-1">Has pagado</p>
-            <p className="text-4xl font-bold text-[#2ED39A] font-mono">
+            <p className="text-sm font-medium text-[#6B7280] mb-1">Has pagado</p>
+            <p className="font-mono text-4xl font-bold tracking-tight text-[#2ED39A] md:text-5xl">
               {formatCurrency(order.paid_amount)}
             </p>
             <p className="text-[#6B7280] text-sm mt-1">
@@ -65,7 +71,7 @@ export default async function PublicOrderPage({
 
           {/* Big progress bar */}
           <div className="mb-4">
-            <div className="h-6 bg-[#E6EAF0] rounded-full overflow-hidden">
+            <div className="h-7 overflow-hidden rounded-full bg-[#E6EAF0] shadow-inner">
               <div
                 className="h-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] rounded-full transition-all duration-700 flex items-center justify-end pr-2"
                 style={{ width: `${Math.max(percent, percent > 0 ? 8 : 0)}%` }}
@@ -99,7 +105,7 @@ export default async function PublicOrderPage({
           </div>
 
           {order.requires_invoice && (
-            <div className="grid grid-cols-3 gap-3 pt-4 mt-4 border-t border-[#E6EAF0]">
+            <div className="mt-4 grid grid-cols-1 gap-3 border-t border-[#E6EAF0] pt-4 sm:grid-cols-3">
               <div className="text-center">
                 <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Subtotal</p>
                 <p className="text-[#1A1F36] font-mono text-sm">{formatCurrency(order.subtotal_amount)}</p>
@@ -122,10 +128,13 @@ export default async function PublicOrderPage({
 
         {/* Payment history */}
         {typedPayments.length > 0 && (
-          <div className="bg-white border border-[#E6EAF0] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-[#1A1F36] font-semibold mb-4">
-              Historial de abonos
-            </h2>
+          <div className="rounded-[28px] border border-white bg-white p-6 shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#6C5CE7]">
+                <CalendarDays className="size-5" />
+              </div>
+              <h2 className="font-semibold text-[#1A1F36]">Historial de abonos</h2>
+            </div>
             <div className="space-y-0">
               {typedPayments.map((payment, idx) => (
                 <div key={payment.id} className="flex gap-3">
@@ -157,6 +166,41 @@ export default async function PublicOrderPage({
           OTLA · Control de pagos
         </p>
       </div>
+    </div>
+  )
+}
+
+function MiniMetric({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string
+  value: string
+  icon: React.ReactNode
+  tone?: 'paid' | 'pending'
+}) {
+  return (
+    <div className="rounded-2xl border border-[#E6EAF0] bg-[#F8FAFF] p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className={cn(
+            'flex size-8 items-center justify-center rounded-lg',
+            tone === 'paid'
+              ? 'bg-[#EAFBF5] text-[#2ED39A]'
+              : tone === 'pending'
+                ? 'bg-[#FFF7E6] text-[#F4B740]'
+                : 'bg-[#EEF2FF] text-[#6C5CE7]'
+          )}
+        >
+          {icon}
+        </span>
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</p>
+      </div>
+      <p className={cn('truncate font-mono text-sm font-bold text-[#1A1F36]', tone === 'paid' && 'text-[#2ED39A]', tone === 'pending' && 'text-[#F4B740]')}>
+        {value}
+      </p>
     </div>
   )
 }

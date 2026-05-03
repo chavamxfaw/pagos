@@ -23,7 +23,7 @@ export function CopyLinkButton({
     <Button
       variant="outline"
       onClick={handleCopy}
-      className="border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36]"
+      className="w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36] sm:w-auto"
     >
       {copied ? (
         <>

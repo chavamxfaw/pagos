@@ -46,7 +46,7 @@ export default async function ClientDetailPage({
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-4 md:p-8">
       <div className="mb-6">
         <Link href="/admin/clients" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
           ← Clientes
@@ -54,9 +54,9 @@ export default async function ClientDetailPage({
       </div>
 
       {/* Client header */}
-      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6 mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+      <div className="mb-6 rounded-xl border border-[#E6EAF0] bg-white p-5 sm:p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#1A1F36]">{client.name}</h1>
             {client.company && (
               <p className="text-[#2ED39A]/80 text-sm font-medium mt-0.5">{client.company}</p>
@@ -75,16 +75,16 @@ export default async function ClientDetailPage({
               <p className="text-[#6B7280] text-sm mt-3 border-t border-[#E6EAF0] pt-3">{client.notes}</p>
             )}
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="grid w-full grid-cols-1 gap-2 min-[430px]:grid-cols-3 sm:w-auto sm:grid-cols-none sm:flex sm:shrink-0">
             <Link
               href={`/admin/clients/${id}/edit`}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0]')}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto')}
             >
               Editar
             </Link>
             <Link
               href={`/admin/orders/new?client=${id}`}
-              className={cn(buttonVariants({ size: 'sm' }), 'bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105')}
+              className={cn(buttonVariants({ size: 'sm' }), 'w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto')}
             >
               + Nueva orden
             </Link>
@@ -119,7 +119,7 @@ export default async function ClientDetailPage({
               Muestra todas las órdenes del cliente, saldos pendientes y progreso de pagos.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full grid-cols-1 gap-2 min-[430px]:grid-cols-2 sm:w-auto sm:flex sm:flex-wrap">
             {client.client_portal_enabled && (
               <CopyLinkButton
                 path={`/c/${client.client_portal_token}`}
@@ -130,7 +130,7 @@ export default async function ClientDetailPage({
               <Button
                 type="submit"
                 variant="outline"
-                className="border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36]"
+                className="w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] hover:text-[#1A1F36] sm:w-auto"
               >
                 {client.client_portal_enabled ? 'Desactivar link' : 'Activar link'}
               </Button>
@@ -151,7 +151,7 @@ export default async function ClientDetailPage({
               return (
                 <Link key={order.id} href={`/admin/orders/${order.id}`} className="block">
                   <div className="bg-white border border-[#E6EAF0] hover:border-[#C9D4E5] rounded-xl p-4 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <p className="text-[#1A1F36] font-medium">{order.concept}</p>
                       <Badge
                         className={
@@ -188,9 +188,9 @@ export default async function ClientDetailPage({
             {completedOrders.map((order) => (
               <Link key={order.id} href={`/admin/orders/${order.id}`} className="block">
                 <div className="bg-white border border-[#E6EAF0] hover:border-[#D8DEE8] rounded-xl p-4 transition-colors">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-[#6B7280]">{order.concept}</p>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className="text-[#6B7280] text-sm font-mono">{formatCurrency(order.total_amount)}</span>
                       <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30">
                         Liquidado

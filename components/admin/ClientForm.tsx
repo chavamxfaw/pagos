@@ -72,7 +72,7 @@ export function ClientForm({
         <p className="text-[#EF4444] text-sm bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-lg px-4 py-2">{state.error}</p>
       )}
 
-      <Button type="submit" disabled={pending} className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105">
+      <Button type="submit" disabled={pending} className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto">
         {pending ? 'Guardando...' : submitLabel}
       </Button>
     </form>

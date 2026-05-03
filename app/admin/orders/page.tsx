@@ -22,7 +22,7 @@ export default async function OrdersPage() {
           <h1 className="text-2xl font-bold text-[#1A1F36]">Órdenes</h1>
           <p className="text-[#6B7280] text-sm mt-1">{typedOrders.length} órdenes en total</p>
         </div>
-        <Link href="/admin/orders/new" className={cn(buttonVariants(), "bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 self-start sm:self-auto")}>
+        <Link href="/admin/orders/new" className={cn(buttonVariants(), "w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto")}>
           + Nueva orden
         </Link>
       </div>

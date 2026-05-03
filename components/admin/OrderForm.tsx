@@ -177,7 +177,7 @@ export function OrderForm({
       <Button
         type="submit"
         disabled={pending}
-        className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105"
+        className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto"
       >
         {pending ? 'Creando...' : 'Crear orden'}
       </Button>

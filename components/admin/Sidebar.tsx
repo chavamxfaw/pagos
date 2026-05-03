@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Home, LogOut, Menu, Package, Users, X } from 'lucide-react'
+import { Home, LogOut, Menu, Package, Rocket, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -55,16 +55,16 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all',
         isActive
-          ? 'bg-white/12 text-white font-medium shadow-sm'
+          ? 'bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-[0_12px_28px_rgba(74,139,255,0.28)]'
           : 'text-white/65 hover:bg-white/8 hover:text-white'
       )}
     >
-      <span className={cn(isActive ? 'text-[#2ED39A]' : 'text-white/45')}>
+      <span className={cn(isActive ? 'text-white' : 'text-white/45')}>
         {item.icon}
       </span>
       {item.label}
       {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#2ED39A]" />
+        <span className="ml-auto size-1.5 rounded-full bg-white/80" />
       )}
     </Link>
   )
@@ -72,20 +72,26 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
 
 export function Sidebar({ userEmail }: { userEmail: string }) {
   return (
-    <aside className="flex flex-col w-64 bg-[#1A1F36] border-r border-white/10 shrink-0">
+    <aside className="relative flex w-64 shrink-0 flex-col overflow-hidden border-r border-white/10 bg-[#0F172A]">
+      <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#6C5CE7]/25 blur-3xl" />
+      <div className="pointer-events-none absolute -right-32 bottom-20 h-80 w-80 rounded-full bg-[#4A8BFF]/20 blur-3xl" />
       {/* Logo */}
-      <div className="flex items-center px-5 h-16 border-b border-white/10">
-        <Image src="/otla-white.png" alt="OTLA" width={128} height={102} className="h-10 w-auto object-contain" priority />
+      <div className="relative flex min-h-28 items-center gap-3 border-b border-white/10 px-5">
+        <Image src="/otla-white.png" alt="OTLA" width={148} height={118} className="h-16 w-auto object-contain" priority />
+        <div className="min-w-0 pt-2">
+          <p className="text-xs text-white/55">Control de pagos.</p>
+          <p className="text-xs text-white/55">Claridad en tu camino<span className="ml-1 text-[#6C5CE7]">•</span></p>
+        </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+      <nav className="relative flex-1 space-y-6 overflow-y-auto px-4 py-6">
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-widest">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/38">
               {section.title}
             </p>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {section.items.map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
@@ -95,14 +101,29 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
       </nav>
 
       {/* User */}
-      <div className="px-3 py-4 border-t border-white/10">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/8">
-          <div className="w-7 h-7 rounded-full bg-[#2ED39A]/20 border border-[#2ED39A]/30 flex items-center justify-center shrink-0">
-            <span className="text-[#2ED39A] text-xs font-bold uppercase">
+      <div className="relative border-t border-white/10 px-4 py-4">
+        <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="mb-3 flex items-center gap-2 text-white">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)]">
+              <Rocket className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">OTLA</p>
+              <p className="text-xs text-white/50">Cobros y seguimiento</p>
+            </div>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-3/4 rounded-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)]" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-3 py-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] shadow-lg shadow-[#4A8BFF]/20">
+            <span className="text-xs font-bold uppercase text-white">
               {userEmail[0]}
             </span>
           </div>
-          <p className="text-white/65 text-xs truncate flex-1">{userEmail}</p>
+          <p className="flex-1 truncate text-xs text-white/70">{userEmail}</p>
           <LogoutIcon />
         </div>
       </div>
@@ -147,7 +168,7 @@ function MobileDrawer({
         onClick={onClose}
         aria-label="Cerrar menú"
       />
-      <aside className="absolute inset-y-0 left-0 flex w-[min(20rem,86vw)] flex-col border-r border-white/10 bg-[#1A1F36] shadow-2xl">
+      <aside className="absolute inset-y-0 left-0 flex w-[min(20rem,86vw)] flex-col border-r border-white/10 bg-[#0F172A] shadow-2xl">
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
           <Image src="/otla-white.png" alt="OTLA" width={128} height={102} className="h-10 w-auto object-contain" priority />
           <button

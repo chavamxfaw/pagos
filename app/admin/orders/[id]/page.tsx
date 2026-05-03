@@ -71,7 +71,7 @@ export default async function OrderDetailPage({
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-4 md:p-8">
       <div className="mb-6">
         <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
           ← Órdenes
@@ -116,7 +116,7 @@ export default async function OrderDetailPage({
         </div>
 
         {/* Amounts */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E6EAF0]">
+        <div className="grid grid-cols-1 gap-4 border-t border-[#E6EAF0] pt-4 sm:grid-cols-3">
           <div>
             <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Total</p>
             <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
@@ -134,7 +134,7 @@ export default async function OrderDetailPage({
         </div>
 
         {typedOrder.requires_invoice && (
-          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[#E6EAF0] pt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 border-t border-[#E6EAF0] pt-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Subtotal</p>
               <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
@@ -156,7 +156,7 @@ export default async function OrderDetailPage({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
         {!isCompleted && (
           <AddPaymentDialog orderId={id} action={addPaymentAction} />
         )}
@@ -167,7 +167,7 @@ export default async function OrderDetailPage({
               type="submit"
               variant="outline"
               size="sm"
-              className="border-[#D8DEE8] text-[#6B7280] hover:bg-[#E6EAF0] hover:text-[#1A1F36] text-xs"
+              className="w-full justify-center border-[#D8DEE8] text-xs text-[#6B7280] hover:bg-[#E6EAF0] hover:text-[#1A1F36] sm:w-auto"
             >
               Marcar como completado
             </Button>
