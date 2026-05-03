@@ -2,6 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Home, LogOut, Menu, Package, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -19,11 +22,7 @@ const sections = [
         label: 'Dashboard',
         href: '/admin',
         exact: true,
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-        ),
+        icon: <Home className="size-4" />,
       },
     ],
   },
@@ -33,32 +32,25 @@ const sections = [
       {
         label: 'Clientes',
         href: '/admin/clients',
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        ),
+        icon: <Users className="size-4" />,
       },
       {
         label: 'Órdenes',
         href: '/admin/orders',
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        ),
+        icon: <Package className="size-4" />,
       },
     ],
   },
 ]
 
-function NavLink({ item }: { item: NavItem }) {
+function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const pathname = usePathname()
   const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all',
         isActive
@@ -117,6 +109,85 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
   )
 }
 
+export function MobileAdminNav({ userEmail }: { userEmail: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex size-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-50 md:hidden"
+        aria-label="Abrir menú"
+      >
+        <Menu className="size-5" />
+      </button>
+
+      {open && createPortal(
+        <MobileDrawer userEmail={userEmail} onClose={() => setOpen(false)} />,
+        document.body
+      )}
+    </>
+  )
+}
+
+function MobileDrawer({
+  userEmail,
+  onClose,
+}: {
+  userEmail: string
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[9999] md:hidden">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70"
+        onClick={onClose}
+        aria-label="Cerrar menú"
+      />
+      <aside className="absolute inset-y-0 left-0 flex w-[min(20rem,86vw)] flex-col border-r border-zinc-800 bg-zinc-950 shadow-2xl">
+        <div className="flex h-16 items-center justify-between border-b border-zinc-800/60 px-5">
+          <span className="font-heading text-xl font-bold uppercase tracking-widest text-zinc-50">CHCV</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex size-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+            aria-label="Cerrar menú"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+          {sections.map((section) => (
+            <div key={section.title}>
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                {section.title}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  <NavLink key={item.href} item={item} onNavigate={onClose} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-zinc-800/60 px-3 py-4">
+          <div className="flex items-center gap-3 rounded-lg bg-zinc-900 px-3 py-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/20">
+              <span className="text-xs font-bold uppercase text-emerald-400">{userEmail[0]}</span>
+            </div>
+            <p className="min-w-0 flex-1 truncate text-xs text-zinc-400">{userEmail}</p>
+            <LogoutIcon />
+          </div>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
 function LogoutIcon() {
   async function handleLogout() {
     const { createClient } = await import('@/lib/supabase/client')
@@ -127,9 +198,7 @@ function LogoutIcon() {
 
   return (
     <button onClick={handleLogout} className="text-zinc-600 hover:text-zinc-300 transition-colors shrink-0" title="Cerrar sesión">
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
+      <LogOut className="size-4" />
     </button>
   )
 }

@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
 import { addPayment } from '@/actions/payments'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
 import { formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
-import type { OrderWithClient, Payment } from '@/types'
+import type { OrderWithClient, Payment, PaymentMethod } from '@/types'
 
 type PaymentState = { error?: string; success?: boolean } | null
 
@@ -21,6 +21,8 @@ async function addPaymentAction(prevState: PaymentState, formData: FormData): Pr
       order_id: formData.get('order_id') as string,
       amount: parseFloat(formData.get('amount') as string),
       concept: formData.get('concept') as string,
+      payment_method: formData.get('payment_method') as PaymentMethod,
+      payment_reference: formData.get('payment_reference') as string || undefined,
       notes: formData.get('notes') as string || undefined,
     })
     return { success: true }
@@ -130,6 +132,27 @@ export default async function OrderDetailPage({
             </p>
           </div>
         </div>
+
+        {typedOrder.requires_invoice && (
+          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-zinc-800 pt-4">
+            <div>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Subtotal</p>
+              <p className="text-zinc-300 font-mono font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
+                IVA {Math.round(typedOrder.tax_rate * 100)}%
+              </p>
+              <p className="text-zinc-300 font-mono font-semibold">{formatCurrency(typedOrder.tax_amount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Modo factura</p>
+              <p className="text-zinc-300 text-sm">
+                {typedOrder.tax_mode === 'included' ? 'IVA incluido' : 'IVA agregado'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

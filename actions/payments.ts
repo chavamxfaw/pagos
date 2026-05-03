@@ -5,6 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend/client'
 import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail'
+import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
+import { formatCurrency, getPaymentMethodLabel } from '@/lib/utils'
+import type { PaymentMethod } from '@/types'
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -17,6 +20,8 @@ export async function addPayment(data: {
   order_id: string
   amount: number
   concept: string
+  payment_method: PaymentMethod
+  payment_reference?: string
   notes?: string
 }) {
   await requireAuth()
@@ -57,6 +62,26 @@ export async function addPayment(data: {
       })
     } catch (emailError) {
       console.error('Error enviando correo:', emailError)
+    }
+
+    if (order.clients.phone) {
+      try {
+        const remaining = Math.max(0, order.total_amount - order.paid_amount)
+        const statusLink = `${process.env.NEXT_PUBLIC_APP_URL}/p/${order.token}`
+
+        await sendWhatsAppMessage({
+          to: order.clients.phone,
+          body: [
+            `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
+            `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
+            `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
+            remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
+            `Consulta tu estado aquí: ${statusLink}`,
+          ].join('\n'),
+        })
+      } catch (whatsAppError) {
+        console.error('Error enviando WhatsApp:', whatsAppError)
+      }
     }
   }
 

@@ -25,16 +25,16 @@ export default async function DashboardPage() {
   const recentOrders = allOrders.slice(0, 8)
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 md:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-50">Dashboard</h1>
           <p className="text-zinc-500 text-sm mt-0.5">Resumen general de cobros</p>
         </div>
         <Link
           href="/admin/orders/new"
-          className={cn(buttonVariants(), 'bg-emerald-500 hover:bg-emerald-400 text-black font-semibold')}
+          className={cn(buttonVariants(), 'bg-emerald-500 hover:bg-emerald-400 text-black font-semibold self-start sm:self-auto')}
         >
           + Nueva orden
         </Link>

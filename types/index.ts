@@ -13,12 +13,19 @@ export type Client = {
 }
 
 export type OrderStatus = 'pending' | 'partial' | 'completed'
+export type OrderTaxMode = 'none' | 'included' | 'added'
+export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'check' | 'other'
 
 export type Order = {
   id: string
   client_id: string
   concept: string
   description: string | null
+  requires_invoice: boolean
+  tax_mode: OrderTaxMode
+  subtotal_amount: number
+  tax_amount: number
+  tax_rate: number
   total_amount: number
   paid_amount: number
   status: OrderStatus
@@ -36,6 +43,8 @@ export type Payment = {
   order_id: string
   amount: number
   concept: string
+  payment_method: PaymentMethod
+  payment_reference: string | null
   notes: string | null
   created_at: string
 }

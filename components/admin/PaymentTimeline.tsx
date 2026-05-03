@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, getPaymentMethodLabel } from '@/lib/utils'
 import type { Payment } from '@/types'
 
 export function PaymentTimeline({ payments }: { payments: Payment[] }) {
@@ -28,7 +28,11 @@ export function PaymentTimeline({ payments }: { payments: Payment[] }) {
                 {payment.notes && (
                   <p className="text-zinc-500 text-xs mt-0.5">{payment.notes}</p>
                 )}
-                <p className="text-zinc-600 text-xs mt-1">{formatDate(payment.created_at)}</p>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-600">
+                  <span>{formatDate(payment.created_at)}</span>
+                  <span>{getPaymentMethodLabel(payment.payment_method)}</span>
+                  {payment.payment_reference && <span>Ref: {payment.payment_reference}</span>}
+                </div>
               </div>
               <span className="text-emerald-400 font-mono font-semibold text-sm shrink-0">
                 +{formatCurrency(payment.amount)}

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { PaymentMethod } from "@/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,4 +35,16 @@ export function formatDateShort(date: string): string {
 export function getProgressPercent(paid: number, total: number): number {
   if (total <= 0) return 0
   return Math.min(100, Math.round((paid / total) * 100))
+}
+
+export function getPaymentMethodLabel(method: PaymentMethod): string {
+  const labels: Record<PaymentMethod, string> = {
+    cash: 'Efectivo',
+    transfer: 'Transferencia',
+    card: 'Tarjeta',
+    check: 'Cheque',
+    other: 'Otro',
+  }
+
+  return labels[method]
 }

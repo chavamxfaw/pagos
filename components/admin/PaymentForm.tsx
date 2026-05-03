@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type State = { error?: string; success?: boolean } | null
 
@@ -54,6 +55,34 @@ export function PaymentForm({
           required
           className="bg-zinc-950 border-zinc-800 text-zinc-50"
         />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="payment_method" className="text-zinc-300">Método de pago *</Label>
+          <Select name="payment_method" defaultValue="transfer" required>
+            <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-900 border-zinc-800">
+              <SelectItem value="transfer" className="text-zinc-200 focus:bg-zinc-800">Transferencia</SelectItem>
+              <SelectItem value="cash" className="text-zinc-200 focus:bg-zinc-800">Efectivo</SelectItem>
+              <SelectItem value="card" className="text-zinc-200 focus:bg-zinc-800">Tarjeta</SelectItem>
+              <SelectItem value="check" className="text-zinc-200 focus:bg-zinc-800">Cheque</SelectItem>
+              <SelectItem value="other" className="text-zinc-200 focus:bg-zinc-800">Otro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="payment_reference" className="text-zinc-300">Referencia</Label>
+          <Input
+            id="payment_reference"
+            name="payment_reference"
+            placeholder="Folio, banco, últimos 4..."
+            className="bg-zinc-950 border-zinc-800 text-zinc-50"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">

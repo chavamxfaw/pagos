@@ -91,6 +91,27 @@ export default async function PublicOrderPage({
               )}
             </div>
           </div>
+
+          {order.requires_invoice && (
+            <div className="grid grid-cols-3 gap-3 pt-4 mt-4 border-t border-zinc-800">
+              <div className="text-center">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Subtotal</p>
+                <p className="text-zinc-300 font-mono text-sm">{formatCurrency(order.subtotal_amount)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
+                  IVA {Math.round(order.tax_rate * 100)}%
+                </p>
+                <p className="text-zinc-300 font-mono text-sm">{formatCurrency(order.tax_amount)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Factura</p>
+                <p className="text-zinc-300 text-sm">
+                  {order.tax_mode === 'included' ? 'IVA incluido' : 'IVA agregado'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Payment history */}

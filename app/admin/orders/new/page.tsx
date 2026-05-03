@@ -13,8 +13,10 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
     const order = await createOrder({
       client_id: formData.get('client_id') as string,
       concept: formData.get('concept') as string,
-      total_amount: parseFloat(formData.get('total_amount') as string),
+      amount: parseFloat(formData.get('amount') as string),
       description: (formData.get('description') as string) || undefined,
+      requires_invoice: formData.get('requires_invoice') === 'on',
+      tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
     })
     redirect(`/admin/orders/${order.id}`)
   } catch (e: unknown) {
