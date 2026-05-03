@@ -3,7 +3,33 @@ type SendWhatsAppMessageInput = {
   body: string
 }
 
+type SendWhatsAppTemplateInput = {
+  to: string
+  contentSid: string
+  variables: Record<string, string>
+}
+
 export async function sendWhatsAppMessage({ to, body }: SendWhatsAppMessageInput) {
+  return sendTwilioWhatsApp({
+    to,
+    payload: { Body: body },
+  })
+}
+
+export async function sendWhatsAppTemplate({ to, contentSid, variables }: SendWhatsAppTemplateInput) {
+  return sendTwilioWhatsApp({
+    to,
+    payload: {
+      ContentSid: contentSid,
+      ContentVariables: JSON.stringify(variables),
+    },
+  })
+}
+
+async function sendTwilioWhatsApp({ to, payload }: {
+  to: string
+  payload: Record<string, string>
+}) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const from = process.env.TWILIO_WHATSAPP_FROM
@@ -21,7 +47,7 @@ export async function sendWhatsAppMessage({ to, body }: SendWhatsAppMessageInput
   const form = new URLSearchParams({
     From: from,
     To: toWhatsApp,
-    Body: body,
+    ...payload,
   })
 
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {

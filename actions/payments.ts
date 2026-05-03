@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend/client'
 import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail'
-import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
+import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { formatCurrency, getPaymentMethodLabel, getTodayDateString } from '@/lib/utils'
 import type { PaymentMethod } from '@/types'
@@ -84,17 +84,33 @@ export async function addPayment(data: {
       try {
         const remaining = Math.max(0, order.total_amount - order.paid_amount)
         const statusLink = `${process.env.NEXT_PUBLIC_APP_URL}/p/${order.token}`
+        const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
 
-        await sendWhatsAppMessage({
-          to: order.clients.phone,
-          body: [
-            `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
-            `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
-            `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
-            remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
-            `Consulta tu estado aquí: ${statusLink}`,
-          ].join('\n'),
-        })
+        if (contentSid) {
+          await sendWhatsAppTemplate({
+            to: order.clients.phone,
+            contentSid,
+            variables: {
+              '1': order.clients.name,
+              '2': order.concept,
+              '3': formatCurrency(order.total_amount),
+              '4': formatCurrency(order.paid_amount),
+              '5': formatCurrency(remaining),
+              '6': order.token,
+            },
+          })
+        } else {
+          await sendWhatsAppMessage({
+            to: order.clients.phone,
+            body: [
+              `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
+              `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
+              `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
+              remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
+              `Consulta tu estado aquí: ${statusLink}`,
+            ].join('\n'),
+          })
+        }
       } catch (whatsAppError) {
         console.error('Error enviando WhatsApp:', whatsAppError)
       }

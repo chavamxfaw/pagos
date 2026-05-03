@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend/client'
-import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
+import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { formatCurrency } from '@/lib/utils'
 
@@ -49,7 +49,23 @@ export async function sendOrderReminder(orderId: string) {
   }
 
   if (order.clients.phone) {
-    await sendWhatsAppMessage({ to: order.clients.phone, body: message })
+    const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
+    if (contentSid) {
+      await sendWhatsAppTemplate({
+        to: order.clients.phone,
+        contentSid,
+        variables: {
+          '1': order.clients.name,
+          '2': order.concept,
+          '3': formatCurrency(order.total_amount),
+          '4': formatCurrency(order.paid_amount),
+          '5': formatCurrency(remaining),
+          '6': order.token,
+        },
+      })
+    } else {
+      await sendWhatsAppMessage({ to: order.clients.phone, body: message })
+    }
     channels.push('whatsapp')
   }
 
