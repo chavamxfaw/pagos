@@ -31,6 +31,7 @@ export type Order = {
   status: OrderStatus
   issued_at: string
   due_date: string | null
+  bank_account_id: string | null
   token: string
   created_at: string
   completed_at: string | null
@@ -77,4 +78,18 @@ export type ClientFollowup = {
   content: string
   follow_up_date: string | null
   created_at: string
+}
+
+export type BankAccount = {
+  id: string
+  alias: string
+  bank_name: string
+  account_holder: string
+  clabe: string | null
+  account_number: string | null
+  card_number: string | null
+  instructions: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }

@@ -5,6 +5,7 @@ import { CheckCircle2, Clock3, FileText, Layers3, WalletCards } from 'lucide-rea
 import { getPublicClientPortal } from '@/lib/public-clients'
 import { cn, formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
 import { PublicShareActions } from '@/components/public/PublicShareActions'
+import { PublicBankDetails } from '@/components/public/PublicBankDetails'
 import type { PublicClientOrder } from '@/lib/public-clients'
 
 export default async function PublicClientPage({
@@ -206,7 +207,7 @@ function OrderCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#E6EAF0] pt-3 text-sm">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#E6EAF0] pt-3 text-sm">
         <span className="text-[#6B7280]">
           Abonos: <span className="font-mono text-[#1A1F36]">{order.payments.length}</span>
         </span>
@@ -214,6 +215,12 @@ function OrderCard({
           {completed ? 'Liquidado' : `Pendiente: ${formatCurrency(remaining)}`}
         </span>
       </div>
+
+      {!completed && order.bank_accounts && (
+        <div className="mt-4">
+          <PublicBankDetails bankAccount={order.bank_accounts} pendingAmount={remaining} />
+        </div>
+      )}
     </div>
   )
 }

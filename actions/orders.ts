@@ -23,6 +23,7 @@ export async function createOrder(data: {
   tax_mode?: 'included' | 'added'
   issued_at?: string
   due_date?: string
+  bank_account_id?: string
 }) {
   await requireAuth()
   const admin = createAdminClient()
@@ -40,6 +41,7 @@ export async function createOrder(data: {
       description: data.description,
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
+      bank_account_id: data.bank_account_id || null,
       ...amounts,
     })
     .select()
@@ -69,6 +71,7 @@ export async function updateOrder(orderId: string, data: {
   tax_mode?: 'included' | 'added'
   issued_at?: string
   due_date?: string
+  bank_account_id?: string
   status?: OrderStatus
 }) {
   await requireAuth()
@@ -110,6 +113,7 @@ export async function updateOrder(orderId: string, data: {
       description: data.description,
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
+      bank_account_id: data.bank_account_id || null,
       ...amounts,
       status,
       completed_at: completedAt,

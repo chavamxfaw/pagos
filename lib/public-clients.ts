@@ -1,10 +1,11 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { Client, Order, Payment } from '@/types'
+import type { BankAccount, Client, Order, Payment } from '@/types'
 
 export type PublicClientOrder = Order & {
   payments: Payment[]
+  bank_accounts: BankAccount | null
 }
 
 export async function getPublicClientPortal(token: string) {
@@ -21,7 +22,7 @@ export async function getPublicClientPortal(token: string) {
 
   const { data: orders } = await admin
     .from('orders')
-    .select('*')
+    .select('*, bank_accounts(*)')
     .eq('client_id', client.id)
     .order('created_at', { ascending: false })
 
@@ -43,7 +44,7 @@ export async function getPublicClientPortal(token: string) {
 
   return {
     client: client as Client,
-    orders: ((orders ?? []) as Order[]).map((order) => ({
+    orders: ((orders ?? []) as (Order & { bank_accounts: BankAccount | null })[]).map((order) => ({
       ...order,
       payments: paymentsByOrder.get(order.id) ?? [],
     })),

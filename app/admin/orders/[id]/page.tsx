@@ -6,13 +6,15 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { AddPaymentDialog } from '@/components/admin/AddPaymentDialog'
 import { PaymentTimeline } from '@/components/admin/PaymentTimeline'
 import { PaymentActions } from '@/components/admin/PaymentActions'
+import { BankInstructionsPanel } from '@/components/admin/BankInstructionsPanel'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
 import { addPayment, deletePayment, resendPaymentReceipt, updatePayment } from '@/actions/payments'
+import { sendBankInstructions } from '@/actions/bank-accounts'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
 import { sendOrderReminder } from '@/actions/reminders'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
-import type { OrderWithClient, Payment, PaymentMethod } from '@/types'
+import type { BankAccount, OrderWithClient, Payment, PaymentMethod } from '@/types'
 
 type PaymentState = { error?: string; success?: boolean } | null
 
@@ -72,6 +74,11 @@ async function sendReminderAction(orderId: string) {
   await sendOrderReminder(orderId)
 }
 
+async function sendBankInstructionsAction(orderId: string, formData: FormData) {
+  'use server'
+  await sendBankInstructions(orderId, formData.get('bank_account_id') as string)
+}
+
 export default async function OrderDetailPage({
   params,
 }: {
@@ -94,8 +101,15 @@ export default async function OrderDetailPage({
     .eq('order_id', id)
     .order('created_at', { ascending: false })
 
+  const { data: bankAccounts } = await supabase
+    .from('bank_accounts')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+
   const typedOrder = order as OrderWithClient
   const typedPayments = (payments ?? []) as Payment[]
+  const typedBankAccounts = (bankAccounts ?? []) as BankAccount[]
   const percent = getProgressPercent(typedOrder.paid_amount, typedOrder.total_amount)
   const remaining = typedOrder.total_amount - typedOrder.paid_amount
   const isCompleted = typedOrder.status === 'completed'
@@ -243,6 +257,12 @@ export default async function OrderDetailPage({
           triggerLabel="Borrar"
         />
       </div>
+
+      <BankInstructionsPanel
+        order={typedOrder}
+        bankAccounts={typedBankAccounts}
+        sendAction={sendBankInstructionsAction.bind(null, id)}
+      />
 
       {/* Payment timeline */}
       <div>

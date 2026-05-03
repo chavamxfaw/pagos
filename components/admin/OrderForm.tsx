@@ -7,19 +7,21 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getTodayDateString } from '@/lib/utils'
-import type { Client, Order, OrderStatus } from '@/types'
+import type { BankAccount, Client, Order, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
 
 export function OrderForm({
   action,
   clients,
+  bankAccounts = [],
   defaultClientId,
   defaultValues,
   submitLabel = 'Crear orden',
 }: {
   action: (prevState: State, formData: FormData) => Promise<State>
   clients: Client[]
+  bankAccounts?: BankAccount[]
   defaultClientId?: string
   defaultValues?: Order
   submitLabel?: string
@@ -101,6 +103,28 @@ export function OrderForm({
             className="bg-white border-[#E6EAF0] text-[#1A1F36]"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="bank_account_id" className="text-[#1A1F36]">Datos bancarios para esta orden</Label>
+        <Select name="bank_account_id" defaultValue={defaultValues?.bank_account_id ?? 'none'}>
+          <SelectTrigger className="bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectValue placeholder="Selecciona una cuenta..." />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-[#E6EAF0]">
+            <SelectItem value="none" className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+              Sin datos bancarios visibles
+            </SelectItem>
+            {bankAccounts.map((account) => (
+              <SelectItem key={account.id} value={account.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                {account.alias} — {account.bank_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-[#6B7280]">
+          Si eliges una cuenta, aparecerá en el link público de seguimiento de esta orden.
+        </p>
       </div>
 
       <div className="space-y-2">

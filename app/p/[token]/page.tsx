@@ -5,6 +5,7 @@ import { CalendarDays, CheckCircle2, Clock3, ReceiptText, WalletCards } from 'lu
 import { getPublicOrder } from '@/lib/public-orders'
 import { cn, formatCurrency, formatDateShort, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
 import { PublicShareActions } from '@/components/public/PublicShareActions'
+import { PublicBankDetails } from '@/components/public/PublicBankDetails'
 
 export default async function PublicOrderPage({
   params,
@@ -16,7 +17,7 @@ export default async function PublicOrderPage({
 
   if (!publicOrder) notFound()
 
-  const { order, payments: typedPayments } = publicOrder
+  const { order, payments: typedPayments, bankAccount } = publicOrder
   const percent = getProgressPercent(order.paid_amount, order.total_amount)
   const remaining = order.total_amount - order.paid_amount
   const isCompleted = order.status === 'completed'
@@ -155,6 +156,12 @@ export default async function PublicOrderPage({
             </div>
           )}
         </div>
+
+        {!isCompleted && bankAccount && (
+          <div className="mb-6">
+            <PublicBankDetails bankAccount={bankAccount} pendingAmount={remaining} />
+          </div>
+        )}
 
         {/* Payment history */}
         {typedPayments.length > 0 && (

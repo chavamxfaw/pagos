@@ -19,6 +19,7 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
       tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
       issued_at: formData.get('issued_at') as string,
       due_date: (formData.get('due_date') as string) || undefined,
+      bank_account_id: getBankAccountId(formData),
     })
     redirect(`/admin/orders/${order.id}`)
   } catch (e: unknown) {
@@ -39,6 +40,12 @@ export default async function NewOrderPage({
     .from('clients')
     .select('*')
     .order('name')
+
+  const { data: bankAccounts } = await supabase
+    .from('bank_accounts')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
 
   if (!clients?.length) {
     return (
@@ -72,9 +79,15 @@ export default async function NewOrderPage({
         <OrderForm
           action={createOrderAction}
           clients={clients}
+          bankAccounts={bankAccounts ?? []}
           defaultClientId={defaultClientId}
         />
       </div>
     </div>
   )
+}
+
+function getBankAccountId(formData: FormData) {
+  const value = formData.get('bank_account_id') as string | null
+  return value && value !== 'none' ? value : undefined
 }

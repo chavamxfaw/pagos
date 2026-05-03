@@ -29,6 +29,12 @@ export default async function EditOrderPage({
     .select('*')
     .order('name')
 
+  const { data: bankAccounts } = await supabase
+    .from('bank_accounts')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+
   async function updateOrderAction(prevState: State, formData: FormData): Promise<State> {
     'use server'
     try {
@@ -41,6 +47,7 @@ export default async function EditOrderPage({
         tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
         issued_at: formData.get('issued_at') as string,
         due_date: (formData.get('due_date') as string) || undefined,
+        bank_account_id: getBankAccountId(formData),
         status: getStatusValue(formData.get('status') as string | null),
       })
       redirect(`/admin/orders/${id}`)
@@ -66,6 +73,7 @@ export default async function EditOrderPage({
         <OrderForm
           action={updateOrderAction}
           clients={clients ?? []}
+          bankAccounts={bankAccounts ?? []}
           defaultValues={order as Order}
           submitLabel="Guardar cambios"
         />
@@ -77,4 +85,9 @@ export default async function EditOrderPage({
 function getStatusValue(value: string | null): OrderStatus | undefined {
   if (!value || value === 'auto') return undefined
   return value as OrderStatus
+}
+
+function getBankAccountId(formData: FormData) {
+  const value = formData.get('bank_account_id') as string | null
+  return value && value !== 'none' ? value : undefined
 }

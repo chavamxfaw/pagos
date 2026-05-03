@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend/client'
+import { PaymentReminderEmail } from '@/emails/PaymentReminderEmail'
 import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { formatCurrency } from '@/lib/utils'
@@ -43,6 +44,15 @@ export async function sendOrderReminder(orderId: string) {
       from: process.env.RESEND_FROM_EMAIL!,
       to: order.clients.email,
       subject: `Recordatorio de pago — ${order.concept}`,
+      react: PaymentReminderEmail({
+        clientName: order.clients.name,
+        concept: order.concept,
+        paidAmount: order.paid_amount,
+        totalAmount: order.total_amount,
+        dueDate: order.due_date,
+        token: order.token,
+        appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+      }),
       text: message,
     })
     channels.push('correo')

@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { Payment } from '@/types'
+import type { BankAccount, Payment } from '@/types'
 
 const PUBLIC_COMPLETED_DAYS = 30
 
@@ -10,7 +10,7 @@ export async function getPublicOrder(token: string) {
 
   const { data: order, error } = await admin
     .from('orders')
-    .select('*, clients(*)')
+    .select('*, clients(*), bank_accounts(*)')
     .eq('token', token)
     .single()
 
@@ -29,6 +29,7 @@ export async function getPublicOrder(token: string) {
   return {
     order,
     payments: (payments ?? []) as Payment[],
+    bankAccount: (order.bank_accounts ?? null) as BankAccount | null,
   }
 }
 
