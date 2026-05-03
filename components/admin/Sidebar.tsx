@@ -76,9 +76,9 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
       <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#6C5CE7]/25 blur-3xl" />
       <div className="pointer-events-none absolute -right-32 bottom-20 h-80 w-80 rounded-full bg-[#4A8BFF]/20 blur-3xl" />
       {/* Logo */}
-      <div className="relative flex min-h-28 items-center gap-3 border-b border-white/10 px-5">
+      <div className="relative flex min-h-36 flex-col items-center justify-center border-b border-white/10 px-5 py-5 text-center">
         <Image src="/otla-white.png" alt="OTLA" width={148} height={118} className="h-16 w-auto object-contain" priority />
-        <div className="min-w-0 pt-2">
+        <div className="mt-2 min-w-0">
           <p className="text-xs text-white/55">Control de pagos.</p>
           <p className="text-xs text-white/55">Claridad en tu camino<span className="ml-1 text-[#6C5CE7]">•</span></p>
         </div>

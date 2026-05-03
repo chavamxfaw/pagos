@@ -12,7 +12,7 @@ export type Client = {
   created_at: string
 }
 
-export type OrderStatus = 'pending' | 'partial' | 'completed'
+export type OrderStatus = 'pending' | 'partial' | 'completed' | 'cancelled' | 'paused' | 'disputed'
 export type OrderTaxMode = 'none' | 'included' | 'added'
 export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'check' | 'other'
 
@@ -29,9 +29,12 @@ export type Order = {
   total_amount: number
   paid_amount: number
   status: OrderStatus
+  issued_at: string
+  due_date: string | null
   token: string
   created_at: string
   completed_at: string | null
+  cancelled_at: string | null
 }
 
 export type OrderWithClient = Order & {
@@ -46,9 +49,32 @@ export type Payment = {
   payment_method: PaymentMethod
   payment_reference: string | null
   notes: string | null
+  paid_at: string
   created_at: string
 }
 
 export type ClientWithOrderCount = Client & {
   active_orders_count: number
+}
+
+export type ActivityLog = {
+  id: string
+  entity_type: 'client' | 'order' | 'payment'
+  entity_id: string
+  client_id: string | null
+  order_id: string | null
+  payment_id: string | null
+  event_type: string
+  message: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export type ClientFollowup = {
+  id: string
+  client_id: string
+  note_type: 'note' | 'call' | 'promise' | 'reminder' | 'invoice'
+  content: string
+  follow_up_date: string | null
+  created_at: string
 }

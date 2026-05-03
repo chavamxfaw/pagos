@@ -1,14 +1,26 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { Download, MoreVertical, Search } from 'lucide-react'
+import { Download, Edit3, Eye, MoreVertical, Plus, Search, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { buttonVariants } from '@/components/ui/button'
-import { cn, formatDateShort } from '@/lib/utils'
+import { deleteClient } from '@/actions/clients'
+import { cn, formatDateShort, getTodayDateString } from '@/lib/utils'
 import type { Client } from '@/types'
 
 type ClientRow = Client & {
@@ -39,6 +51,7 @@ function downloadCsv(filename: string, rows: (string | number | boolean | null |
 export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<ClientFilter>('all')
+  const [openActionsId, setOpenActionsId] = useState<string | null>(null)
 
   const filteredClients = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -90,7 +103,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
       ]
     })
 
-    downloadCsv(`clientes-${new Date().toISOString().slice(0, 10)}.csv`, [
+    downloadCsv(`clientes-${getTodayDateString()}.csv`, [
       [
         'Nombre',
         'Correo',
@@ -241,13 +254,12 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                       {formatDateShort(client.created_at)}
                     </td>
                     <td className="px-4 py-5">
-                      <Link
-                        href={`/admin/clients/${client.id}`}
-                        className="flex size-9 items-center justify-center rounded-xl border border-[#E6EAF0] text-[#8A94A6] transition-colors hover:bg-[#F8FAFF] hover:text-[#1A1F36]"
-                        aria-label={`Ver cliente ${client.name}`}
-                      >
-                        <MoreVertical className="size-4" />
-                      </Link>
+                      <ClientActionsMenu
+                        client={client}
+                        isOpen={openActionsId === client.id}
+                        onToggle={() => setOpenActionsId(openActionsId === client.id ? null : client.id)}
+                        onClose={() => setOpenActionsId(null)}
+                      />
                     </td>
                   </tr>
                 )
@@ -270,4 +282,105 @@ function getAvatarTone(name: string) {
   ]
   const code = name.charCodeAt(0) || 0
   return tones[code % tones.length]
+}
+
+function ClientActionsMenu({
+  client,
+  isOpen,
+  onToggle,
+  onClose,
+}: {
+  client: Client
+  isOpen: boolean
+  onToggle: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="relative flex justify-end">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={onToggle}
+        className="size-9 rounded-xl border-[#E6EAF0] bg-white text-[#8A94A6] hover:bg-[#F8FAFF] hover:text-[#1A1F36]"
+        aria-label={`Acciones para ${client.name}`}
+        aria-expanded={isOpen}
+      >
+        <MoreVertical className="size-4" />
+      </Button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-11 z-30 w-52 overflow-hidden rounded-xl border border-[#E6EAF0] bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]">
+          <QuickActionLink href={`/admin/clients/${client.id}`} icon={<Eye className="size-4" />} onClick={onClose}>
+            Ver detalle
+          </QuickActionLink>
+          <QuickActionLink href={`/admin/orders/new?client=${client.id}`} icon={<Plus className="size-4" />} onClick={onClose}>
+            Nueva orden
+          </QuickActionLink>
+          <QuickActionLink href={`/admin/clients/${client.id}/edit`} icon={<Edit3 className="size-4" />} onClick={onClose}>
+            Editar
+          </QuickActionLink>
+          <Dialog>
+            <DialogTrigger
+              render={
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#EF4444] transition-colors hover:bg-[#EF4444]/10"
+                  onClick={onClose}
+                >
+                  <Trash2 className="size-4" />
+                  Eliminar
+                </button>
+              }
+            />
+            <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-[#1A1F36]">Borrar cliente</DialogTitle>
+                <DialogDescription className="text-[#6B7280]">
+                  Esto eliminará a {client.name} y también sus órdenes y abonos asociados. Esta acción no se puede deshacer.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="border-[#E6EAF0] bg-white/90">
+                <DialogClose render={<Button type="button" variant="outline" />}>
+                  Cancelar
+                </DialogClose>
+                <form action={deleteClient.bind(null, client.id)}>
+                  <Button
+                    type="submit"
+                    variant="destructive"
+                    className="w-full bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 sm:w-auto"
+                  >
+                    Borrar cliente
+                  </Button>
+                </form>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function QuickActionLink({
+  href,
+  icon,
+  children,
+  onClick,
+}: {
+  href: string
+  icon: ReactNode
+  children: ReactNode
+  onClick: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF] hover:text-[#4A8BFF]"
+    >
+      {icon}
+      {children}
+    </Link>
+  )
 }

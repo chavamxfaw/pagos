@@ -2,14 +2,16 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { AddPaymentDialog } from '@/components/admin/AddPaymentDialog'
 import { PaymentTimeline } from '@/components/admin/PaymentTimeline'
+import { PaymentActions } from '@/components/admin/PaymentActions'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
-import { addPayment } from '@/actions/payments'
+import { addPayment, deletePayment, updatePayment } from '@/actions/payments'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
-import { formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
+import { sendOrderReminder } from '@/actions/reminders'
+import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
 import type { OrderWithClient, Payment, PaymentMethod } from '@/types'
 
 type PaymentState = { error?: string; success?: boolean } | null
@@ -24,6 +26,7 @@ async function addPaymentAction(prevState: PaymentState, formData: FormData): Pr
       payment_method: formData.get('payment_method') as PaymentMethod,
       payment_reference: formData.get('payment_reference') as string || undefined,
       notes: formData.get('notes') as string || undefined,
+      paid_at: formData.get('paid_at') as string,
     })
     return { success: true }
   } catch (e: unknown) {
@@ -31,9 +34,37 @@ async function addPaymentAction(prevState: PaymentState, formData: FormData): Pr
   }
 }
 
+async function updatePaymentAction(paymentId: string, prevState: PaymentState, formData: FormData): Promise<PaymentState> {
+  'use server'
+  try {
+    await updatePayment(paymentId, {
+      order_id: formData.get('order_id') as string,
+      amount: parseFloat(formData.get('amount') as string),
+      concept: formData.get('concept') as string,
+      payment_method: formData.get('payment_method') as PaymentMethod,
+      payment_reference: formData.get('payment_reference') as string || undefined,
+      notes: formData.get('notes') as string || undefined,
+      paid_at: formData.get('paid_at') as string,
+    })
+    return { success: true }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Error al actualizar abono' }
+  }
+}
+
+async function deletePaymentAction(paymentId: string, orderId: string) {
+  'use server'
+  await deletePayment(paymentId, orderId)
+}
+
 async function markCompletedAction(orderId: string) {
   'use server'
   await markOrderCompleted(orderId)
+}
+
+async function sendReminderAction(orderId: string) {
+  'use server'
+  await sendOrderReminder(orderId)
 }
 
 export default async function OrderDetailPage({
@@ -63,6 +94,7 @@ export default async function OrderDetailPage({
   const percent = getProgressPercent(typedOrder.paid_amount, typedOrder.total_amount)
   const remaining = typedOrder.total_amount - typedOrder.paid_amount
   const isCompleted = typedOrder.status === 'completed'
+  const timing = getOrderTiming(typedOrder)
 
   async function deleteOrderAction() {
     'use server'
@@ -85,6 +117,7 @@ export default async function OrderDetailPage({
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-xl font-bold text-[#1A1F36] truncate">{typedOrder.concept}</h1>
               <StatusBadge status={typedOrder.status} />
+              {timing.label && <TimingBadge timing={timing.key} label={timing.label} />}
             </div>
             <Link
               href={`/admin/clients/${typedOrder.client_id}`}
@@ -95,7 +128,10 @@ export default async function OrderDetailPage({
             {typedOrder.description && (
               <p className="text-[#6B7280] text-sm mt-2">{typedOrder.description}</p>
             )}
-            <p className="text-[#8A94A6] text-xs mt-1">{formatDateShort(typedOrder.created_at)}</p>
+            <p className="text-[#8A94A6] text-xs mt-1">
+              Emitida {formatDateShort(typedOrder.issued_at ?? typedOrder.created_at)}
+              {typedOrder.due_date ? ` · Límite ${formatDateShort(typedOrder.due_date)}` : ''}
+            </p>
           </div>
         </div>
 
@@ -160,7 +196,28 @@ export default async function OrderDetailPage({
         {!isCompleted && (
           <AddPaymentDialog orderId={id} action={addPaymentAction} />
         )}
+        <Link
+          href={`/admin/orders/${id}/edit`}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'w-full justify-center border-[#D8DEE8] text-xs text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto'
+          )}
+        >
+          Editar orden
+        </Link>
         <CopyLinkButton path={`/p/${typedOrder.token}`} label="Copiar link de orden" />
+        {!isCompleted && (
+          <form action={sendReminderAction.bind(null, id)}>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              className="w-full justify-center border-[#D8DEE8] text-xs text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto"
+            >
+              Enviar recordatorio
+            </Button>
+          </form>
+        )}
         {!isCompleted && (
           <form action={markCompletedAction.bind(null, id)}>
             <Button
@@ -190,7 +247,17 @@ export default async function OrderDetailPage({
             <span className="text-[#6B7280] font-normal text-sm ml-2">({typedPayments.length})</span>
           )}
         </h2>
-        <PaymentTimeline payments={typedPayments} />
+        <PaymentTimeline
+          payments={typedPayments}
+          actions={(payment) => (
+            <PaymentActions
+              payment={payment}
+              orderId={id}
+              updateAction={updatePaymentAction.bind(null, payment.id)}
+              deleteAction={deletePaymentAction.bind(null, payment.id, id)}
+            />
+          )}
+        />
       </div>
     </div>
   )
@@ -203,5 +270,24 @@ function StatusBadge({ status }: { status: string }) {
   if (status === 'partial') {
     return <Badge className="bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30">Parcial</Badge>
   }
-  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pendiente</Badge>
+  if (status === 'cancelled') {
+    return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">Cancelado</Badge>
+  }
+  if (status === 'paused') {
+    return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pausado</Badge>
+  }
+  if (status === 'disputed') {
+    return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">En disputa</Badge>
+  }
+  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">{getOrderStatusLabel(status)}</Badge>
+}
+
+function TimingBadge({ timing, label }: { timing: string; label: string }) {
+  const className = timing === 'overdue'
+    ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30'
+    : timing === 'due_today' || timing === 'due_soon'
+      ? 'bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30'
+      : 'bg-[#EEF2FF] text-[#4A8BFF] border-[#4A8BFF]/20'
+
+  return <Badge className={className}>{label}</Badge>
 }

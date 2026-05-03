@@ -2,12 +2,15 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { deleteClient, setClientPortalEnabled } from '@/actions/clients'
+import { addClientFollowup } from '@/actions/followups'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
+import { ClientFollowups } from '@/components/admin/ClientFollowups'
 import { formatCurrency, formatDateShort, getProgressPercent, cn } from '@/lib/utils'
+import type { ActivityLog, ClientFollowup } from '@/types'
 
 export default async function ClientDetailPage({
   params,
@@ -31,8 +34,28 @@ export default async function ClientDetailPage({
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
+  const [{ data: followups }, { data: activityLogs }] = await Promise.all([
+    supabase
+      .from('client_followups')
+      .select('*')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false })
+      .limit(8),
+    supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ])
+
   const activeOrders = orders?.filter(o => o.status !== 'completed') ?? []
   const completedOrders = orders?.filter(o => o.status === 'completed') ?? []
+  const totalOrders = orders ?? []
+  const totalAmount = totalOrders.reduce((sum, order) => sum + order.total_amount, 0)
+  const paidAmount = totalOrders.reduce((sum, order) => sum + order.paid_amount, 0)
+  const pendingAmount = Math.max(totalAmount - paidAmount, 0)
+  const globalProgress = getProgressPercent(paidAmount, totalAmount)
 
   async function deleteClientAction() {
     'use server'
@@ -43,6 +66,21 @@ export default async function ClientDetailPage({
   async function toggleClientPortalAction() {
     'use server'
     await setClientPortalEnabled(id, !client.client_portal_enabled)
+  }
+
+  async function addFollowupAction(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
+    'use server'
+    try {
+      await addClientFollowup({
+        client_id: id,
+        note_type: formData.get('note_type') as ClientFollowup['note_type'],
+        content: formData.get('content') as string,
+        follow_up_date: (formData.get('follow_up_date') as string) || undefined,
+      })
+      return { success: true }
+    } catch (e: unknown) {
+      return { error: e instanceof Error ? e.message : 'Error al agregar seguimiento' }
+    }
   }
 
   return (
@@ -99,6 +137,39 @@ export default async function ClientDetailPage({
         </div>
       </div>
 
+      {/* Client financial summary */}
+      <div className="mb-6 rounded-2xl border border-white bg-white p-5 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-[#6B7280]">Resumen financiero</p>
+            <h2 className="mt-1 text-xl font-bold text-[#1A1F36]">Estado global del cliente</h2>
+          </div>
+          <div className="rounded-full bg-[#F8FAFF] px-3 py-1 text-sm font-semibold text-[#6B7280] ring-1 ring-[#E6EAF0]">
+            {globalProgress}% pagado
+          </div>
+        </div>
+
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryMetric label="Total en órdenes" value={formatCurrency(totalAmount)} />
+          <SummaryMetric label="Pagado" value={formatCurrency(paidAmount)} tone="paid" />
+          <SummaryMetric label="Pendiente" value={formatCurrency(pendingAmount)} tone="pending" />
+          <SummaryMetric label="Órdenes" value={`${totalOrders.length}`} detail={`${activeOrders.length} activas · ${completedOrders.length} liquidadas`} />
+        </div>
+
+        <div>
+          <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+            <span>Progreso global</span>
+            <span>{globalProgress}%</span>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#E6EAF0]">
+            <div
+              className="h-full rounded-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] transition-all duration-500"
+              style={{ width: `${globalProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Client public portal */}
       <div className="bg-white border border-[#E6EAF0] rounded-xl p-5 mb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -137,6 +208,14 @@ export default async function ClientDetailPage({
             </form>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <ClientFollowups
+          followups={(followups ?? []) as ClientFollowup[]}
+          action={addFollowupAction}
+        />
+        <ActivityPanel activityLogs={(activityLogs ?? []) as ActivityLog[]} />
       </div>
 
       {/* Active orders */}
@@ -213,6 +292,57 @@ export default async function ClientDetailPage({
           </Link>
         </div>
       )}
+    </div>
+  )
+}
+
+function ActivityPanel({ activityLogs }: { activityLogs: ActivityLog[] }) {
+  return (
+    <div className="rounded-2xl border border-white bg-white p-5 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+      <div className="mb-5">
+        <p className="text-sm font-semibold uppercase tracking-wider text-[#6B7280]">Bitácora</p>
+        <h2 className="mt-1 text-xl font-bold text-[#1A1F36]">Actividad reciente</h2>
+      </div>
+      {!activityLogs.length ? (
+        <p className="text-sm text-[#8A94A6]">Sin actividad registrada todavía.</p>
+      ) : (
+        <div className="space-y-3">
+          {activityLogs.map((log) => (
+            <div key={log.id} className="border-l-2 border-[#E6EAF0] pl-3">
+              <p className="text-sm font-medium text-[#1A1F36]">{log.message}</p>
+              <p className="mt-0.5 text-xs text-[#8A94A6]">{formatDateShort(log.created_at)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SummaryMetric({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string
+  value: string
+  detail?: string
+  tone?: 'paid' | 'pending'
+}) {
+  return (
+    <div className="rounded-xl border border-[#E6EAF0] bg-[#F8FAFF] p-4">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</p>
+      <p
+        className={cn(
+          'font-mono text-lg font-bold text-[#1A1F36]',
+          tone === 'paid' && 'text-[#2ED39A]',
+          tone === 'pending' && 'text-[#F4B740]'
+        )}
+      >
+        {value}
+      </p>
+      {detail && <p className="mt-1 text-xs text-[#8A94A6]">{detail}</p>}
     </div>
   )
 }

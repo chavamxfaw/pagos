@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend/client'
 import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
-import { formatCurrency, getPaymentMethodLabel } from '@/lib/utils'
+import { logActivity } from '@/lib/activity'
+import { formatCurrency, getPaymentMethodLabel, getTodayDateString } from '@/lib/utils'
 import type { PaymentMethod } from '@/types'
 
 async function requireAuth() {
@@ -23,13 +24,15 @@ export async function addPayment(data: {
   payment_method: PaymentMethod
   payment_reference?: string
   notes?: string
+  paid_at?: string
 }) {
   await requireAuth()
   const admin = createAdminClient()
+  const paidAt = getValidPaidAt(data.paid_at)
 
   const { data: payment, error } = await admin
     .from('payments')
-    .insert(data)
+    .insert({ ...data, paid_at: paidAt })
     .select()
     .single()
 
@@ -43,6 +46,17 @@ export async function addPayment(data: {
     .single()
 
   if (order?.clients) {
+    await logActivity(admin, {
+      entity_type: 'payment',
+      entity_id: payment.id,
+      client_id: order.client_id,
+      order_id: data.order_id,
+      payment_id: payment.id,
+      event_type: 'payment_created',
+      message: `Abono registrado: ${formatCurrency(payment.amount)} para ${order.concept}`,
+      metadata: { amount: payment.amount, payment_method: payment.payment_method, paid_at: payment.paid_at },
+    })
+
     // Enviar correo solo si el cliente tiene email. Si falla, no hacemos rollback.
     if (order.clients.email) {
       try {
@@ -93,9 +107,79 @@ export async function addPayment(data: {
   return payment
 }
 
+export async function updatePayment(paymentId: string, data: {
+  order_id: string
+  amount: number
+  concept: string
+  payment_method: PaymentMethod
+  payment_reference?: string
+  notes?: string
+  paid_at?: string
+}) {
+  await requireAuth()
+  const admin = createAdminClient()
+
+  if (!Number.isFinite(data.amount) || data.amount <= 0) {
+    throw new Error('El monto debe ser mayor a 0')
+  }
+
+  const paidAt = getValidPaidAt(data.paid_at)
+
+  const { data: payment, error } = await admin
+    .from('payments')
+    .update({
+      amount: data.amount,
+      concept: data.concept,
+      payment_method: data.payment_method,
+      payment_reference: data.payment_reference || null,
+      notes: data.notes || null,
+      paid_at: paidAt,
+    })
+    .eq('id', paymentId)
+    .select('*, orders(client_id, concept)')
+    .single()
+
+  if (error) throw new Error(error.message)
+  const paymentOrder = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders
+
+  await logActivity(admin, {
+    entity_type: 'payment',
+    entity_id: paymentId,
+    client_id: paymentOrder.client_id,
+    order_id: data.order_id,
+    payment_id: paymentId,
+    event_type: 'payment_updated',
+    message: `Abono corregido: ${formatCurrency(data.amount)} para ${paymentOrder.concept}`,
+    metadata: { amount: data.amount, payment_method: data.payment_method, paid_at: paidAt },
+  })
+
+  revalidatePath(`/admin/orders/${data.order_id}`)
+  revalidatePath(`/admin/clients/${paymentOrder.client_id}`)
+  revalidatePath('/admin/orders')
+  revalidatePath('/admin')
+  return payment
+}
+
+function getValidPaidAt(value?: string) {
+  const today = getTodayDateString()
+  if (!value) return today
+
+  if (value > today) {
+    throw new Error('La fecha del abono no puede ser futura')
+  }
+
+  return value
+}
+
 export async function deletePayment(paymentId: string, orderId: string) {
   await requireAuth()
   const admin = createAdminClient()
+
+  const { data: payment } = await admin
+    .from('payments')
+    .select('amount, concept, orders(client_id, concept)')
+    .eq('id', paymentId)
+    .single()
 
   const { error } = await admin
     .from('payments')
@@ -103,6 +187,20 @@ export async function deletePayment(paymentId: string, orderId: string) {
     .eq('id', paymentId)
 
   if (error) throw new Error(error.message)
+  if (payment) {
+    const paymentOrder = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders
+    await logActivity(admin, {
+      entity_type: 'payment',
+      entity_id: paymentId,
+      client_id: paymentOrder.client_id,
+      order_id: orderId,
+      payment_id: paymentId,
+      event_type: 'payment_deleted',
+      message: `Abono eliminado: ${formatCurrency(payment.amount)} de ${paymentOrder.concept}`,
+      metadata: { amount: payment.amount, concept: payment.concept },
+    })
+    revalidatePath(`/admin/clients/${paymentOrder.client_id}`)
+  }
   revalidatePath(`/admin/orders/${orderId}`)
   revalidatePath('/admin/orders')
   revalidatePath('/admin')

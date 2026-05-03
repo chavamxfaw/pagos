@@ -10,7 +10,7 @@ export default async function OrdersPage() {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('*, clients(*)')
+    .select('*, clients(*), payments(payment_method)')
     .order('created_at', { ascending: false })
 
   const typedOrders = (orders ?? []) as OrderWithClient[]

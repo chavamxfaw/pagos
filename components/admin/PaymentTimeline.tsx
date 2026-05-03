@@ -1,7 +1,14 @@
-import { formatCurrency, formatDate, getPaymentMethodLabel } from '@/lib/utils'
+import type { ReactNode } from 'react'
+import { formatCurrency, formatDate, formatDateShort, getPaymentMethodLabel } from '@/lib/utils'
 import type { Payment } from '@/types'
 
-export function PaymentTimeline({ payments }: { payments: Payment[] }) {
+export function PaymentTimeline({
+  payments,
+  actions,
+}: {
+  payments: Payment[]
+  actions?: (payment: Payment) => ReactNode
+}) {
   if (!payments.length) {
     return (
       <p className="text-[#8A94A6] text-sm py-4">Sin abonos registrados aún.</p>
@@ -29,14 +36,18 @@ export function PaymentTimeline({ payments }: { payments: Payment[] }) {
                   <p className="text-[#6B7280] text-xs mt-0.5">{payment.notes}</p>
                 )}
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#8A94A6]">
-                  <span>{formatDate(payment.created_at)}</span>
+                  <span>Abono: {formatDateShort(payment.paid_at ?? payment.created_at)}</span>
+                  <span>Registrado: {formatDate(payment.created_at)}</span>
                   <span>{getPaymentMethodLabel(payment.payment_method)}</span>
                   {payment.payment_reference && <span>Ref: {payment.payment_reference}</span>}
                 </div>
               </div>
-              <span className="text-[#2ED39A] font-mono font-semibold text-sm shrink-0">
-                +{formatCurrency(payment.amount)}
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-[#2ED39A] font-mono font-semibold text-sm">
+                  +{formatCurrency(payment.amount)}
+                </span>
+                {actions?.(payment)}
+              </div>
             </div>
           </div>
         </div>

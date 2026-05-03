@@ -17,6 +17,8 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
       description: (formData.get('description') as string) || undefined,
       requires_invoice: formData.get('requires_invoice') === 'on',
       tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
+      issued_at: formData.get('issued_at') as string,
+      due_date: (formData.get('due_date') as string) || undefined,
     })
     redirect(`/admin/orders/${order.id}`)
   } catch (e: unknown) {

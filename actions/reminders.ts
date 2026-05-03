@@ -1,0 +1,72 @@
+"use server"
+
+import { revalidatePath } from 'next/cache'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { resend } from '@/lib/resend/client'
+import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
+import { logActivity } from '@/lib/activity'
+import { formatCurrency } from '@/lib/utils'
+
+async function requireAuth() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+  return user
+}
+
+export async function sendOrderReminder(orderId: string) {
+  await requireAuth()
+  const admin = createAdminClient()
+
+  const { data: order, error } = await admin
+    .from('orders')
+    .select('*, clients(*)')
+    .eq('id', orderId)
+    .single()
+
+  if (error || !order) throw new Error(error?.message ?? 'Orden no encontrada')
+
+  const remaining = Math.max(0, order.total_amount - order.paid_amount)
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/p/${order.token}`
+  const message = [
+    `Hola ${order.clients.name}, te compartimos el estado de tu orden: ${order.concept}.`,
+    `Total: ${formatCurrency(order.total_amount)}. Pagado: ${formatCurrency(order.paid_amount)}. Pendiente: ${formatCurrency(remaining)}.`,
+    order.due_date ? `Fecha límite: ${order.due_date}.` : '',
+    `Puedes revisar el detalle aquí: ${url}`,
+  ].filter(Boolean).join('\n')
+
+  const channels: string[] = []
+
+  if (order.clients.email) {
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: order.clients.email,
+      subject: `Recordatorio de pago — ${order.concept}`,
+      text: message,
+    })
+    channels.push('correo')
+  }
+
+  if (order.clients.phone) {
+    await sendWhatsAppMessage({ to: order.clients.phone, body: message })
+    channels.push('whatsapp')
+  }
+
+  if (!channels.length) {
+    throw new Error('El cliente no tiene correo ni teléfono registrado.')
+  }
+
+  await logActivity(admin, {
+    entity_type: 'order',
+    entity_id: orderId,
+    client_id: order.client_id,
+    order_id: orderId,
+    event_type: 'reminder_sent',
+    message: `Recordatorio enviado por ${channels.join(' y ')} para ${order.concept}`,
+    metadata: { channels, remaining },
+  })
+
+  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/admin/clients/${order.client_id}`)
+}

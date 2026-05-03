@@ -24,7 +24,7 @@ export async function getPublicOrder(token: string) {
     .from('payments')
     .select('*')
     .eq('order_id', order.id)
-    .order('created_at', { ascending: false })
+    .order('paid_at', { ascending: false })
 
   return {
     order,

@@ -1,8 +1,9 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CalendarDays, CheckCircle2, Clock3, ReceiptText, WalletCards } from 'lucide-react'
 import { getPublicOrder } from '@/lib/public-orders'
-import { cn, formatCurrency, formatDate, getProgressPercent } from '@/lib/utils'
+import { cn, formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
 
 export default async function PublicOrderPage({
   params,
@@ -18,6 +19,9 @@ export default async function PublicOrderPage({
   const percent = getProgressPercent(order.paid_amount, order.total_amount)
   const remaining = order.total_amount - order.paid_amount
   const isCompleted = order.status === 'completed'
+  const clientPortalPath = order.clients.client_portal_enabled
+    ? `/c/${order.clients.client_portal_token}`
+    : null
 
   return (
     <div className="min-h-screen bg-[#F5F7FB] px-4 py-6 md:py-10">
@@ -25,6 +29,17 @@ export default async function PublicOrderPage({
         <div className="mb-6 flex items-center justify-center">
           <Image src="/otla-logo.png" alt="OTLA" width={148} height={118} className="h-14 w-auto object-contain" priority />
         </div>
+
+        {clientPortalPath && (
+          <div className="mb-4 flex justify-center">
+            <Link
+              href={clientPortalPath}
+              className="inline-flex max-w-full items-center justify-center rounded-full border border-[#E6EAF0] bg-white px-4 py-2 text-center text-sm font-semibold text-[#1A1F36] shadow-sm transition-colors hover:border-[#C8D0DC] hover:bg-[#F8FAFF]"
+            >
+              ← Volver al resumen general
+            </Link>
+          </div>
+        )}
 
         <div className="mb-6 overflow-hidden rounded-[28px] border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
           <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-8 text-center md:px-10">
@@ -148,7 +163,7 @@ export default async function PublicOrderPage({
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-[#1A1F36] text-sm font-medium">{payment.concept}</p>
-                        <p className="text-[#8A94A6] text-xs">{formatDate(payment.created_at)}</p>
+                        <p className="text-[#8A94A6] text-xs">{formatDateShort(payment.paid_at ?? payment.created_at)}</p>
                       </div>
                       <span className="text-[#2ED39A] font-mono text-sm font-semibold shrink-0 ml-2">
                         +{formatCurrency(payment.amount)}

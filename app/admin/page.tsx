@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDateShort, getProgressPercent } from '@/lib/utils'
+import { formatCurrency, formatDateShort, getOrderTiming, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
 import { buttonVariants, } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { OrderWithClient } from '@/types'
+import type { Payment, PaymentMethod } from '@/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,16 +13,30 @@ export default async function DashboardPage() {
   const [
     { count: totalClients },
     { data: orders },
+    { data: payments },
   ] = await Promise.all([
     supabase.from('clients').select('*', { count: 'exact', head: true }),
     supabase.from('orders').select('*, clients(*)').order('created_at', { ascending: false }).limit(50),
+    supabase.from('payments').select('*').order('paid_at', { ascending: false }).limit(200),
   ])
 
   const allOrders = (orders ?? []) as OrderWithClient[]
+  const allPayments = (payments ?? []) as Payment[]
   const activeOrders = allOrders.filter(o => o.status !== 'completed')
   const completedOrders = allOrders.filter(o => o.status === 'completed')
-  const totalCollected = allOrders.reduce((s, o) => s + o.paid_amount, 0)
   const totalPending = activeOrders.reduce((s, o) => s + (o.total_amount - o.paid_amount), 0)
+  const overdueOrders = activeOrders.filter((order) => getOrderTiming(order).key === 'overdue')
+  const now = new Date()
+  const collectedThisMonth = allPayments
+    .filter((payment) => {
+      const date = new Date(`${payment.paid_at ?? payment.created_at}T00:00:00`)
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+    })
+    .reduce((sum, payment) => sum + payment.amount, 0)
+  const paymentsByMethod = allPayments.reduce<Record<PaymentMethod, number>>((acc, payment) => {
+    acc[payment.payment_method] = (acc[payment.payment_method] ?? 0) + payment.amount
+    return acc
+  }, { cash: 0, transfer: 0, card: 0, check: 0, other: 0 })
   const recentOrders = allOrders.slice(0, 8)
 
   return (
@@ -56,8 +71,8 @@ export default async function DashboardPage() {
           color="amber"
         />
         <StatCard
-          label="Total cobrado"
-          value={formatCurrency(totalCollected)}
+          label="Cobrado este mes"
+          value={formatCurrency(collectedThisMonth)}
           icon={<CheckIcon />}
           color="emerald"
           mono
@@ -65,7 +80,7 @@ export default async function DashboardPage() {
         <StatCard
           label="Por cobrar"
           value={formatCurrency(totalPending)}
-          sub={activeOrders.length > 0 ? `en ${activeOrders.length} orden${activeOrders.length !== 1 ? 'es' : ''}` : 'Sin pendientes'}
+          sub={overdueOrders.length ? `${overdueOrders.length} vencida${overdueOrders.length !== 1 ? 's' : ''}` : 'Sin vencidas'}
           icon={<ClockIcon />}
           color="rose"
           mono
@@ -166,6 +181,21 @@ export default async function DashboardPage() {
                 total={allOrders.length}
                 color="bg-[#2ED39A]"
               />
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E6EAF0] rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-[#1A1F36] mb-4">Pagos por método</h2>
+            <div className="space-y-3">
+              {(Object.entries(paymentsByMethod) as [PaymentMethod, number][])
+                .filter(([, total]) => total > 0)
+                .map(([method, total]) => (
+                  <div key={method} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-[#6B7280]">{getPaymentMethodLabel(method)}</span>
+                    <span className="font-mono font-semibold text-[#1A1F36]">{formatCurrency(total)}</span>
+                  </div>
+                ))}
+              {!allPayments.length && <p className="text-sm text-[#8A94A6]">Sin pagos registrados.</p>}
             </div>
           </div>
         </div>

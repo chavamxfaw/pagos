@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Client } from '@/types'
+import { getTodayDateString } from '@/lib/utils'
+import type { Client, Order, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
 
@@ -14,15 +15,23 @@ export function OrderForm({
   action,
   clients,
   defaultClientId,
+  defaultValues,
+  submitLabel = 'Crear orden',
 }: {
   action: (prevState: State, formData: FormData) => Promise<State>
   clients: Client[]
   defaultClientId?: string
+  defaultValues?: Order
+  submitLabel?: string
 }) {
   const [state, formAction, pending] = useActionState(action, null)
-  const [amount, setAmount] = useState('')
-  const [requiresInvoice, setRequiresInvoice] = useState(false)
-  const [taxMode, setTaxMode] = useState<'included' | 'added'>('included')
+  const initialTaxMode = defaultValues?.tax_mode === 'added' ? 'added' : 'included'
+  const initialAmount = getInitialAmount(defaultValues)
+  const [amount, setAmount] = useState(initialAmount)
+  const [requiresInvoice, setRequiresInvoice] = useState(defaultValues?.requires_invoice ?? false)
+  const [taxMode, setTaxMode] = useState<'included' | 'added'>(initialTaxMode)
+  const selectedClientId = defaultValues?.client_id ?? defaultClientId
+  const today = getTodayDateString()
 
   const taxPreview = useMemo(() => {
     const parsed = parseFloat(amount)
@@ -57,18 +66,41 @@ export function OrderForm({
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="client_id" className="text-[#1A1F36]">Cliente *</Label>
-        <Select name="client_id" defaultValue={defaultClientId} required>
+        <Select name="client_id" defaultValue={selectedClientId} required>
           <SelectTrigger className="bg-white border-[#E6EAF0] text-[#1A1F36]">
             <SelectValue placeholder="Selecciona un cliente..." />
           </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             {clients.map((client) => (
-              <SelectItem key={client.id} value={client.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+          <SelectItem key={client.id} value={client.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
                 {client.name}{client.email ? ` — ${client.email}` : ' — Sin correo'}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="issued_at" className="text-[#1A1F36]">Fecha de emisión</Label>
+          <Input
+            id="issued_at"
+            name="issued_at"
+            type="date"
+            defaultValue={defaultValues?.issued_at ?? today}
+            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="due_date" className="text-[#1A1F36]">Fecha límite de pago</Label>
+          <Input
+            id="due_date"
+            name="due_date"
+            type="date"
+            defaultValue={defaultValues?.due_date ?? ''}
+            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -78,6 +110,7 @@ export function OrderForm({
           name="concept"
           placeholder="Ej: Proyecto web, Mensualidad enero..."
           required
+          defaultValue={defaultValues?.concept ?? ''}
           className="bg-white border-[#E6EAF0] text-[#1A1F36]"
         />
       </div>
@@ -166,9 +199,30 @@ export function OrderForm({
           name="description"
           placeholder="Detalles adicionales sobre la orden..."
           rows={3}
+          defaultValue={defaultValues?.description ?? ''}
           className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none"
         />
       </div>
+
+      {defaultValues && (
+        <div className="space-y-2">
+          <Label htmlFor="status" className="text-[#1A1F36]">Estatus operativo</Label>
+          <Select name="status" defaultValue={getEditableStatus(defaultValues.status)}>
+            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-[#E6EAF0]">
+              <SelectItem value="auto" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Automático por pagos</SelectItem>
+              <SelectItem value="paused" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Pausado</SelectItem>
+              <SelectItem value="disputed" className="text-[#1A1F36] focus:bg-[#E6EAF0]">En disputa</SelectItem>
+              <SelectItem value="cancelled" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-[#6B7280]">
+            Automático recalcula pendiente, parcial o liquidado según los abonos.
+          </p>
+        </div>
+      )}
 
       {state?.error && (
         <p className="text-[#EF4444] text-sm">{state.error}</p>
@@ -179,10 +233,24 @@ export function OrderForm({
         disabled={pending}
         className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto"
       >
-        {pending ? 'Creando...' : 'Crear orden'}
+        {pending ? 'Guardando...' : submitLabel}
       </Button>
     </form>
   )
+}
+
+function getInitialAmount(order?: Order) {
+  if (!order) return ''
+
+  const amount = order.requires_invoice && order.tax_mode === 'added'
+    ? order.subtotal_amount
+    : order.total_amount
+
+  return Number.isFinite(amount) ? String(amount) : ''
+}
+
+function getEditableStatus(status: OrderStatus) {
+  return ['cancelled', 'paused', 'disputed'].includes(status) ? status : 'auto'
 }
 
 function PreviewAmount({
