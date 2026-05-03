@@ -13,12 +13,25 @@ async function requireAuth() {
 
 export type ClientData = {
   name: string
-  email: string
-  phone?: string
-  company?: string
-  rfc?: string
-  address?: string
-  notes?: string
+  email?: string | null
+  phone?: string | null
+  company?: string | null
+  rfc?: string | null
+  address?: string | null
+  notes?: string | null
+}
+
+function normalizeClientData(data: ClientData) {
+  return {
+    ...data,
+    name: data.name.trim(),
+    email: data.email?.trim() || null,
+    phone: data.phone?.trim() || null,
+    company: data.company?.trim() || null,
+    rfc: data.rfc?.trim() || null,
+    address: data.address?.trim() || null,
+    notes: data.notes?.trim() || null,
+  }
 }
 
 export async function createClient_action(data: ClientData) {
@@ -27,7 +40,7 @@ export async function createClient_action(data: ClientData) {
 
   const { data: client, error } = await admin
     .from('clients')
-    .insert(data)
+    .insert(normalizeClientData(data))
     .select()
     .single()
 
@@ -42,7 +55,7 @@ export async function updateClient(id: string, data: ClientData) {
 
   const { error } = await admin
     .from('clients')
-    .update(data)
+    .update(normalizeClientData(data))
     .eq('id', id)
 
   if (error) throw new Error(error.message)

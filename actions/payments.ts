@@ -42,26 +42,28 @@ export async function addPayment(data: {
     .eq('id', data.order_id)
     .single()
 
-  // Enviar correo — si falla no hacemos rollback
   if (order?.clients) {
-    try {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL!,
-        to: order.clients.email,
-        subject: `Recibo de abono — ${order.concept}`,
-        react: PaymentReceiptEmail({
-          clientName: order.clients.name,
-          concept: order.concept,
-          paymentAmount: payment.amount,
-          paymentDate: payment.created_at,
-          paidAmount: order.paid_amount,
-          totalAmount: order.total_amount,
-          token: order.token,
-          appUrl: process.env.NEXT_PUBLIC_APP_URL!,
-        }),
-      })
-    } catch (emailError) {
-      console.error('Error enviando correo:', emailError)
+    // Enviar correo solo si el cliente tiene email. Si falla, no hacemos rollback.
+    if (order.clients.email) {
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL!,
+          to: order.clients.email,
+          subject: `Recibo de abono — ${order.concept}`,
+          react: PaymentReceiptEmail({
+            clientName: order.clients.name,
+            concept: order.concept,
+            paymentAmount: payment.amount,
+            paymentDate: payment.created_at,
+            paidAmount: order.paid_amount,
+            totalAmount: order.total_amount,
+            token: order.token,
+            appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+          }),
+        })
+      } catch (emailError) {
+        console.error('Error enviando correo:', emailError)
+      }
     }
 
     if (order.clients.phone) {

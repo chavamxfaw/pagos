@@ -29,11 +29,11 @@ export default async function EditClientPage({
       await updateClient(id, {
         name: formData.get('name') as string,
         email: formData.get('email') as string,
-        phone: (formData.get('phone') as string) || undefined,
-        company: (formData.get('company') as string) || undefined,
-        rfc: (formData.get('rfc') as string) || undefined,
-        address: (formData.get('address') as string) || undefined,
-        notes: (formData.get('notes') as string) || undefined,
+        phone: formData.get('phone') as string,
+        company: formData.get('company') as string,
+        rfc: formData.get('rfc') as string,
+        address: formData.get('address') as string,
+        notes: formData.get('notes') as string,
       })
       redirect(`/admin/clients/${id}`)
     } catch (e: unknown) {

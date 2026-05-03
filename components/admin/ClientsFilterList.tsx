@@ -77,7 +77,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
 
       return [
         client.name,
-        client.email,
+        client.email ?? '',
         client.phone,
         client.company,
         client.rfc,
@@ -187,7 +187,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                           <span className="block truncate font-semibold text-[#1A1F36] transition-colors hover:text-[#4A8BFF]">
                             {client.name}
                           </span>
-                          <span className="block truncate text-sm text-[#6B7280]">{client.email}</span>
+                          <span className="block truncate text-sm text-[#6B7280]">{client.email ?? 'Sin correo'}</span>
                           {client.company && (
                             <span className="mt-1 inline-flex rounded-md bg-[#EEF2F7] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#6B7280]">
                               {client.company}

@@ -64,7 +64,7 @@ export function OrderForm({
           <SelectContent className="bg-white border-[#E6EAF0]">
             {clients.map((client) => (
               <SelectItem key={client.id} value={client.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
-                {client.name} — {client.email}
+                {client.name}{client.email ? ` — ${client.email}` : ' — Sin correo'}
               </SelectItem>
             ))}
           </SelectContent>

@@ -62,7 +62,7 @@ export default async function ClientDetailPage({
               <p className="text-[#2ED39A]/80 text-sm font-medium mt-0.5">{client.company}</p>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-              <p className="text-[#6B7280] text-sm">{client.email}</p>
+              <p className="text-[#6B7280] text-sm">{client.email ?? 'Sin correo registrado'}</p>
               {client.phone && <p className="text-[#6B7280] text-sm">{client.phone}</p>}
             </div>
             {(client.rfc || client.address) && (

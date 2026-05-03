@@ -103,7 +103,7 @@ export function OrdersFilterList({ orders }: { orders: OrderWithClient[] }) {
 
       return [
         order.clients.name,
-        order.clients.email,
+        order.clients.email ?? '',
         order.clients.phone,
         order.concept,
         order.description,

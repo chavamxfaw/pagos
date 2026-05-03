@@ -30,8 +30,8 @@ export function ClientForm({
           <Field label="Nombre completo *" id="name">
             <Input id="name" name="name" defaultValue={defaultValues?.name} placeholder="Juan Pérez" required />
           </Field>
-          <Field label="Correo electrónico *" id="email">
-            <Input id="email" name="email" type="email" defaultValue={defaultValues?.email} placeholder="juan@ejemplo.com" required />
+          <Field label="Correo electrónico" id="email">
+            <Input id="email" name="email" type="email" defaultValue={defaultValues?.email ?? ''} placeholder="juan@ejemplo.com" />
           </Field>
           <Field label="Teléfono" id="phone">
             <Input id="phone" name="phone" type="tel" defaultValue={defaultValues?.phone ?? ''} placeholder="+52 55 1234 5678" />

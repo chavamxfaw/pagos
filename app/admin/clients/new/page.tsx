@@ -12,11 +12,11 @@ async function createClientAction(prevState: State, formData: FormData): Promise
     const client = await createClient_action({
       name: formData.get('name') as string,
       email: formData.get('email') as string,
-      phone: (formData.get('phone') as string) || undefined,
-      company: (formData.get('company') as string) || undefined,
-      rfc: (formData.get('rfc') as string) || undefined,
-      address: (formData.get('address') as string) || undefined,
-      notes: (formData.get('notes') as string) || undefined,
+      phone: formData.get('phone') as string,
+      company: formData.get('company') as string,
+      rfc: formData.get('rfc') as string,
+      address: formData.get('address') as string,
+      notes: formData.get('notes') as string,
     })
     redirect(`/admin/clients/${client.id}`)
   } catch (e: unknown) {
