@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   applicationName: "OTLA Pagos",
   description: "Control de pagos, órdenes y seguimiento de cobranza.",
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -51,7 +51,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4A8BFF",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({
@@ -64,6 +67,13 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${jakarta.variable} ${mono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a1a1a" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
       <body className="min-h-full flex flex-col">
         <PWARegister />
         {children}
