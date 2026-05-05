@@ -58,7 +58,7 @@ export default async function ProfilePage() {
             <h2 className="text-lg font-bold text-[#1A1F36]">Nombre visible en notificaciones</h2>
             <p className="mt-1 text-sm text-[#6B7280]">
               Este nombre aparece en los correos y mensajes de WhatsApp que reciben tus clientes —
-              por ejemplo: <em>"De parte de: Salvador Cervantes"</em>.
+              por ejemplo: <em>&quot;De parte de: Salvador Cervantes&quot;</em>.
             </p>
           </div>
           <form action={handleSave} className="p-6">

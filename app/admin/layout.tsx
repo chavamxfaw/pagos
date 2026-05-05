@@ -4,6 +4,7 @@ import { MobileAdminNav, Sidebar } from '@/components/admin/Sidebar'
 import { SessionTimeout } from '@/components/admin/SessionTimeout'
 import { AdminUserMenu } from '@/components/admin/AdminUserMenu'
 import { Bell } from 'lucide-react'
+import { getDisplayName } from '@/actions/user-settings'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) redirect('/login')
 
   const email = user.email!
-  const displayName = email.split('@')[0].split(/[._-]/).filter(Boolean).map((part) => part[0].toUpperCase() + part.slice(1)).join(' ')
+  const displayName = await getDisplayName(user.id, email)
   const initials = displayName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase() || email[0].toUpperCase()
 
   return (
