@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { sendWhatsAppMessage } from '@/lib/whatsapp/client'
+import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { buildBankInstructionsMessage } from '@/lib/bank-instructions'
+import { formatCurrency } from '@/lib/utils'
 import type { BankAccount, OrderWithClient } from '@/types'
 
 async function requireAuth() {
@@ -116,7 +117,26 @@ export async function sendBankInstructions(orderId: string, bankAccountId: strin
     appUrl: process.env.NEXT_PUBLIC_APP_URL!,
   })
 
-  await sendWhatsAppMessage({ to: typedOrder.clients.phone, body: message })
+  const contentSid = process.env.TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID
+  if (contentSid) {
+    const remaining = Math.max(0, typedOrder.total_amount - typedOrder.paid_amount)
+    await sendWhatsAppTemplate({
+      to: typedOrder.clients.phone,
+      contentSid,
+      variables: {
+        '1': typedOrder.clients.name,
+        '2': typedOrder.concept,
+        '3': formatCurrency(remaining),
+        '4': typedBankAccount.bank_name,
+        '5': typedBankAccount.account_holder,
+        '6': typedBankAccount.clabe ?? typedBankAccount.account_number ?? typedBankAccount.card_number ?? 'No disponible',
+        '7': typedOrder.token,
+      },
+    })
+  } else {
+    await sendWhatsAppMessage({ to: typedOrder.clients.phone, body: message })
+  }
+
   await logActivity(admin, {
     entity_type: 'order',
     entity_id: orderId,
