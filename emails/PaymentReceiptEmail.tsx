@@ -22,6 +22,7 @@ interface PaymentReceiptEmailProps {
   totalAmount: number
   token: string
   appUrl: string
+  senderName?: string
 }
 
 function fmt(amount: number) {
@@ -50,6 +51,7 @@ export function PaymentReceiptEmail({
   totalAmount,
   token,
   appUrl,
+  senderName,
 }: PaymentReceiptEmailProps) {
   const remaining = totalAmount - paidAmount
   const percent = Math.min(100, Math.round((paidAmount / totalAmount) * 100))
@@ -150,6 +152,9 @@ export function PaymentReceiptEmail({
             )}
 
             <Hr style={hr} />
+            {senderName && (
+              <Text style={senderLine}>De parte de: {senderName}</Text>
+            )}
             <Text style={footer}>OTLA · Control de pagos</Text>
           </Section>
         </Container>
@@ -306,6 +311,13 @@ const footerNote = {
   fontSize: '11px',
   textAlign: 'center' as const,
   margin: '8px 0',
+}
+
+const senderLine = {
+  color: '#6B7280',
+  fontSize: '13px',
+  textAlign: 'center' as const,
+  margin: '0 0 6px',
 }
 
 const footer = {

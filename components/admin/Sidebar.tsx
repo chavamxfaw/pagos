@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CreditCard, Home, LogOut, Menu, Package, Rocket, Users, X } from 'lucide-react'
+import { CreditCard, Home, LogOut, Menu, Package, Rocket, Settings, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -44,6 +44,16 @@ const sections = [
         label: 'Datos bancarios',
         href: '/admin/settings/bank-accounts',
         icon: <CreditCard className="size-4" />,
+      },
+    ],
+  },
+  {
+    title: 'CUENTA',
+    items: [
+      {
+        label: 'Mi perfil',
+        href: '/admin/profile',
+        icon: <Settings className="size-4" />,
       },
     ],
   },
