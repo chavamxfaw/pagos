@@ -21,6 +21,7 @@ interface PaymentReminderEmailProps {
   dueDate?: string | null
   token: string
   appUrl: string
+  senderName?: string
 }
 
 function fmt(amount: number) {
@@ -46,6 +47,7 @@ export function PaymentReminderEmail({
   dueDate,
   token,
   appUrl,
+  senderName,
 }: PaymentReminderEmailProps) {
   const remaining = Math.max(0, totalAmount - paidAmount)
   const percent = totalAmount > 0 ? Math.min(100, Math.round((paidAmount / totalAmount) * 100)) : 0
@@ -130,6 +132,9 @@ export function PaymentReminderEmail({
             </Link>
 
             <Hr style={hr} />
+            {senderName && (
+              <Text style={senderLine}>De parte de: {senderName}</Text>
+            )}
             <Text style={footer}>OTLA · Control de pagos</Text>
           </Section>
         </Container>
@@ -273,6 +278,13 @@ const button = {
   fontSize: '14px',
   textAlign: 'center' as const,
   margin: '16px 0',
+}
+
+const senderLine = {
+  color: '#6B7280',
+  fontSize: '13px',
+  textAlign: 'center' as const,
+  margin: '0 0 6px',
 }
 
 const footer = {

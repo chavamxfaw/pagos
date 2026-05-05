@@ -8,6 +8,7 @@ import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail'
 import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { formatCurrency, getPaymentMethodLabel, getTodayDateString } from '@/lib/utils'
+import { getDisplayName } from '@/actions/user-settings'
 import type { PaymentMethod } from '@/types'
 
 async function requireAuth() {
@@ -26,7 +27,8 @@ export async function addPayment(data: {
   notes?: string
   paid_at?: string
 }) {
-  await requireAuth()
+  const user = await requireAuth()
+  const senderName = await getDisplayName(user.id, user.email!)
   const admin = createAdminClient()
   const paidAt = getValidPaidAt(data.paid_at)
 
@@ -73,6 +75,7 @@ export async function addPayment(data: {
             totalAmount: order.total_amount,
             token: order.token,
             appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+            senderName,
           }),
         })
       } catch (emailError) {
@@ -97,6 +100,7 @@ export async function addPayment(data: {
               '4': formatCurrency(order.paid_amount),
               '5': formatCurrency(remaining),
               '6': order.token,
+              '7': senderName,
             },
           })
         } else {
@@ -108,6 +112,7 @@ export async function addPayment(data: {
               `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
               remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
               `Consulta tu estado aquí: ${statusLink}`,
+              `De parte de: ${senderName}`,
             ].join('\n'),
           })
         }
@@ -177,7 +182,8 @@ export async function updatePayment(paymentId: string, data: {
 }
 
 export async function resendPaymentReceipt(paymentId: string) {
-  await requireAuth()
+  const user = await requireAuth()
+  const senderName = await getDisplayName(user.id, user.email!)
   const admin = createAdminClient()
 
   const { data: payment, error } = await admin
@@ -210,6 +216,7 @@ export async function resendPaymentReceipt(paymentId: string) {
       totalAmount: order.total_amount,
       token: order.token,
       appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+      senderName,
     }),
   })
 

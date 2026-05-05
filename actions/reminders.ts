@@ -8,6 +8,7 @@ import { PaymentReminderEmail } from '@/emails/PaymentReminderEmail'
 import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
 import { formatCurrency } from '@/lib/utils'
+import { getDisplayName } from '@/actions/user-settings'
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -17,8 +18,10 @@ async function requireAuth() {
 }
 
 export async function sendOrderReminder(orderId: string) {
-  await requireAuth()
+  const user = await requireAuth()
   const admin = createAdminClient()
+
+  const senderName = await getDisplayName(user.id, user.email!)
 
   const { data: order, error } = await admin
     .from('orders')
@@ -35,6 +38,7 @@ export async function sendOrderReminder(orderId: string) {
     `Total: ${formatCurrency(order.total_amount)}. Pagado: ${formatCurrency(order.paid_amount)}. Pendiente: ${formatCurrency(remaining)}.`,
     order.due_date ? `Fecha límite: ${order.due_date}.` : '',
     `Puedes revisar el detalle aquí: ${url}`,
+    `De parte de: ${senderName}`,
   ].filter(Boolean).join('\n')
 
   const channels: string[] = []
@@ -52,6 +56,7 @@ export async function sendOrderReminder(orderId: string) {
         dueDate: order.due_date,
         token: order.token,
         appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+        senderName,
       }),
       text: message,
     })
@@ -71,6 +76,7 @@ export async function sendOrderReminder(orderId: string) {
           '4': formatCurrency(order.paid_amount),
           '5': formatCurrency(remaining),
           '6': order.token,
+          '7': senderName,
         },
       })
     } else {
