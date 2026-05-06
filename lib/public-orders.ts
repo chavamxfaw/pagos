@@ -16,7 +16,7 @@ export async function getPublicOrder(token: string) {
 
   if (error || !order) return null
 
-  if (isExpiredCompletedOrder(order.status, order.completed_at)) {
+  if (isExpiredCompletedOrder(order.status, order.completed_at, order.paid_amount, order.total_amount)) {
     return null
   }
 
@@ -33,8 +33,10 @@ export async function getPublicOrder(token: string) {
   }
 }
 
-function isExpiredCompletedOrder(status: string, completedAt: string | null) {
-  if (status !== 'completed' || !completedAt) return false
+function isExpiredCompletedOrder(status: string, completedAt: string | null, paidAmount: number, totalAmount: number) {
+  if (status === 'completed') return true
+  if (totalAmount > 0 && paidAmount >= totalAmount) return true
+  if (!completedAt) return false
 
   const completedTime = new Date(completedAt).getTime()
   const expiresAt = completedTime + PUBLIC_COMPLETED_DAYS * 24 * 60 * 60 * 1000

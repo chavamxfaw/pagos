@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { MobileAdminNav, Sidebar } from '@/components/admin/Sidebar'
 import { SessionTimeout } from '@/components/admin/SessionTimeout'
 import { AdminUserMenu } from '@/components/admin/AdminUserMenu'
-import { Bell } from 'lucide-react'
+import { AdminNotifications } from '@/components/admin/AdminNotifications'
 import { getDisplayName } from '@/actions/user-settings'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -35,16 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            <button
-              type="button"
-              className="relative hidden size-10 items-center justify-center rounded-full border border-[#E6EAF0] bg-white text-[#1A1F36] shadow-sm transition-colors hover:bg-[#F8FAFF] sm:inline-flex"
-              aria-label="Notificaciones"
-            >
-              <Bell className="size-4" />
-              <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-[10px] font-bold text-white">
-                3
-              </span>
-            </button>
+            <AdminNotifications />
             <AdminUserMenu email={email} displayName={displayName} initials={initials} />
           </div>
         </header>

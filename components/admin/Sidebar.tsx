@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CreditCard, Home, LogOut, Menu, Package, Rocket, Settings, Users, X } from 'lucide-react'
+import { CreditCard, FileText, Home, LogOut, Menu, Package, Rocket, Settings, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -44,6 +44,11 @@ const sections = [
         label: 'Datos bancarios',
         href: '/admin/settings/bank-accounts',
         icon: <CreditCard className="size-4" />,
+      },
+      {
+        label: 'Docs fiscales',
+        href: '/admin/settings/fiscal-documents',
+        icon: <FileText className="size-4" />,
       },
     ],
   },
@@ -95,7 +100,7 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
         <Image src="/otla-white.png" alt="OTLA" width={148} height={118} className="h-16 w-auto object-contain" priority />
         <div className="mt-2 min-w-0">
           <p className="text-xs text-white/55">Control de pagos.</p>
-          <p className="text-xs text-white/55">Claridad en tu camino<span className="ml-1 text-[#6C5CE7]">•</span></p>
+         
         </div>
       </div>
 

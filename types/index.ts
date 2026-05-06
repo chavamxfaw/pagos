@@ -93,3 +93,17 @@ export type BankAccount = {
   created_at: string
   updated_at: string
 }
+
+export type FiscalDocument = {
+  id: string
+  title: string
+  description: string | null
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: 'application/pdf'
+  share_token: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
