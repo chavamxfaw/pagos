@@ -2,15 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/admin'
 import { logActivity } from '@/lib/activity'
 import type { ClientFollowup } from '@/types'
 
 async function requireAuth() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autorizado')
-  return user
+  return requireAdmin()
 }
 
 export async function addClientFollowup(data: {

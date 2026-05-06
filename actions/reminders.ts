@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/admin'
 import { resend } from '@/lib/resend/client'
 import { PaymentReminderEmail } from '@/emails/PaymentReminderEmail'
 import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
@@ -11,10 +11,7 @@ import { formatCurrency } from '@/lib/utils'
 import { getDisplayName } from '@/actions/user-settings'
 
 async function requireAuth() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autorizado')
-  return user
+  return requireAdmin()
 }
 
 export async function sendOrderReminder(orderId: string) {

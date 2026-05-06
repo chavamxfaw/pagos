@@ -25,14 +25,27 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
+  let isAdmin = false
+
+  if (user) {
+    const { data: adminUser } = await supabase
+      .from('app_admin_users')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    isAdmin = Boolean(adminUser)
+  }
 
   // Proteger rutas admin
-  if (pathname.startsWith('/admin') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (pathname.startsWith('/admin') && !isAdmin) {
+    const loginUrl = new URL('/login', request.url)
+    if (user) loginUrl.searchParams.set('error', 'unauthorized')
+    return NextResponse.redirect(loginUrl)
   }
 
   // Si ya está autenticado y va a /login, redirigir al admin
-  if (pathname === '/login' && user) {
+  if (pathname === '/login' && isAdmin) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 

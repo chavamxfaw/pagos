@@ -3,16 +3,13 @@
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/admin'
 
 const BUCKET = 'fiscal-documents'
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 async function requireAuth() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autorizado')
-  return user
+  return requireAdmin()
 }
 
 function clean(value: FormDataEntryValue | null) {

@@ -1,16 +1,18 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, saveDisplayName } from '@/actions/user-settings'
+import { requireAdmin } from '@/lib/auth/admin'
 import { Mail, ShieldCheck, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default async function ProfilePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
+  let user
+  try {
+    user = await requireAdmin()
+  } catch {
+    redirect('/login')
+  }
 
   const email = user.email ?? ''
   const displayName = await getDisplayName(user.id, email)

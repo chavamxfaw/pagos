@@ -1,16 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { MobileAdminNav, Sidebar } from '@/components/admin/Sidebar'
 import { SessionTimeout } from '@/components/admin/SessionTimeout'
 import { AdminUserMenu } from '@/components/admin/AdminUserMenu'
 import { AdminNotifications } from '@/components/admin/AdminNotifications'
 import { getDisplayName } from '@/actions/user-settings'
+import { requireAdmin } from '@/lib/auth/admin'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
+  let user
+  try {
+    user = await requireAdmin()
+  } catch {
+    redirect('/login')
+  }
 
   const email = user.email!
   const displayName = await getDisplayName(user.id, email)
