@@ -9,12 +9,15 @@ import { PaymentActions } from '@/components/admin/PaymentActions'
 import { BankInstructionsPanel } from '@/components/admin/BankInstructionsPanel'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
+import { StripePaymentRequestDialog } from '@/components/admin/StripePaymentRequestDialog'
+import { StripePaymentRequestsPanel } from '@/components/admin/StripePaymentRequestsPanel'
 import { addPayment, deletePayment, resendPaymentReceipt, updatePayment } from '@/actions/payments'
 import { sendBankInstructions } from '@/actions/bank-accounts'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
 import { sendOrderReminder } from '@/actions/reminders'
+import { cancelStripePaymentRequest, createStripePaymentRequest } from '@/actions/stripe-payment-requests'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
-import type { BankAccount, OrderWithClient, Payment, PaymentMethod } from '@/types'
+import type { BankAccount, OrderWithClient, Payment, PaymentMethod, StripePaymentRequest } from '@/types'
 
 type PaymentState = { error?: string; success?: boolean } | null
 
@@ -79,6 +82,23 @@ async function sendBankInstructionsAction(orderId: string, formData: FormData) {
   await sendBankInstructions(orderId, formData.get('bank_account_id') as string)
 }
 
+async function createStripePaymentRequestAction(formData: FormData) {
+  'use server'
+  await createStripePaymentRequest({
+    order_id: formData.get('order_id') as string,
+    amount: parseFloat(formData.get('amount') as string),
+    concept: (formData.get('concept') as string) || undefined,
+    requires_invoice: formData.get('requires_invoice') === 'on',
+    tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
+    notes: (formData.get('notes') as string) || undefined,
+  })
+}
+
+async function cancelStripePaymentRequestAction(formData: FormData) {
+  'use server'
+  await cancelStripePaymentRequest(formData.get('request_id') as string)
+}
+
 export default async function OrderDetailPage({
   params,
 }: {
@@ -107,9 +127,16 @@ export default async function OrderDetailPage({
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
+  const { data: stripePaymentRequests } = await supabase
+    .from('stripe_payment_requests')
+    .select('*')
+    .eq('order_id', id)
+    .order('created_at', { ascending: false })
+
   const typedOrder = order as OrderWithClient
   const typedPayments = (payments ?? []) as Payment[]
   const typedBankAccounts = (bankAccounts ?? []) as BankAccount[]
+  const typedStripePaymentRequests = (stripePaymentRequests ?? []) as StripePaymentRequest[]
   const percent = getProgressPercent(typedOrder.paid_amount, typedOrder.total_amount)
   const remaining = typedOrder.total_amount - typedOrder.paid_amount
   const isCompleted = typedOrder.status === 'completed'
@@ -215,6 +242,13 @@ export default async function OrderDetailPage({
         {!isCompleted && (
           <AddPaymentDialog orderId={id} action={addPaymentAction} />
         )}
+        {!isCompleted && (
+          <StripePaymentRequestDialog
+            orderId={id}
+            pendingAmount={remaining}
+            action={createStripePaymentRequestAction}
+          />
+        )}
         <Link
           href={`/admin/orders/${id}/edit`}
           className={cn(
@@ -262,6 +296,12 @@ export default async function OrderDetailPage({
         order={typedOrder}
         bankAccounts={typedBankAccounts}
         sendAction={sendBankInstructionsAction.bind(null, id)}
+      />
+
+      <StripePaymentRequestsPanel
+        requests={typedStripePaymentRequests}
+        orderPath={`/p/${typedOrder.token}`}
+        cancelAction={cancelStripePaymentRequestAction}
       />
 
       {/* Payment timeline */}

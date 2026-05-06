@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { CalendarDays, CheckCircle2, ChevronDown, FileText } from 'lucide-react'
 import { PublicBankDetails } from '@/components/public/PublicBankDetails'
+import { PublicStripePayment } from '@/components/public/PublicStripePayment'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
-import type { BankAccount, OrderStatus, Payment } from '@/types'
+import type { BankAccount, OrderStatus, Payment, StripePaymentRequest, StripeSettings } from '@/types'
 
 export type PublicAccordionOrder = {
   id: string
@@ -18,6 +19,11 @@ export type PublicAccordionOrder = {
   issued_at: string
   created_at: string
   token: string
+  stripe_enabled?: boolean
+  stripe_payment_mode?: 'customer_amount' | 'fixed_amounts'
+  stripe_min_payment_amount?: number | null
+  stripe_fixed_payment_amounts?: number[]
+  stripe_payment_requests?: StripePaymentRequest[]
   payments: Payment[]
   bank_accounts: BankAccount | null
 }
@@ -27,11 +33,13 @@ export function PublicOrdersAccordion({
   title,
   showDetailLinks = true,
   defaultOpenFirst = false,
+  stripeSettings,
 }: {
   orders: PublicAccordionOrder[]
   title: string
   showDetailLinks?: boolean
   defaultOpenFirst?: boolean
+  stripeSettings?: StripeSettings
 }) {
   const initialOpen = useMemo(() => {
     if (!defaultOpenFirst || orders.length === 0) return {}
@@ -55,6 +63,8 @@ export function PublicOrdersAccordion({
           const completed = order.status === 'completed'
           const isOpen = openItems[order.id] ?? false
           const dueLabel = order.due_date ? `Vence ${formatDateShort(order.due_date)}` : `Emitida ${formatDateShort(order.issued_at ?? order.created_at)}`
+          const pendingStripeRequest = order.stripe_payment_requests?.find((request) => request.status === 'pending')
+          const canPayWithStripe = Boolean(stripeSettings?.enabled && pendingStripeRequest && !completed && remaining > 0)
 
           return (
             <article
@@ -121,6 +131,18 @@ export function PublicOrdersAccordion({
                   {!completed && order.bank_accounts && (
                     <div className="mb-4">
                       <PublicBankDetails bankAccount={order.bank_accounts} pendingAmount={remaining} compact />
+                    </div>
+                  )}
+
+                  {canPayWithStripe && stripeSettings && pendingStripeRequest && (
+                    <div className="mb-4">
+                      <PublicStripePayment
+                        orderId={order.id}
+                        token={order.token}
+                        pendingAmount={remaining}
+                        request={pendingStripeRequest}
+                        settings={stripeSettings}
+                      />
                     </div>
                   )}
 

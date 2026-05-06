@@ -32,6 +32,10 @@ export type Order = {
   issued_at: string
   due_date: string | null
   bank_account_id: string | null
+  stripe_enabled: boolean
+  stripe_payment_mode: 'customer_amount' | 'fixed_amounts'
+  stripe_min_payment_amount: number | null
+  stripe_fixed_payment_amounts: number[]
   token: string
   created_at: string
   completed_at: string | null
@@ -104,6 +108,55 @@ export type FiscalDocument = {
   mime_type: 'application/pdf'
   share_token: string
   is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type StripeSettings = {
+  id: boolean
+  enabled: boolean
+  mode: 'test' | 'live'
+  stripe_account_id: string | null
+  commission_payer: 'merchant' | 'customer'
+  fee_percent: number
+  fixed_fee_amount: number
+  minimum_payment_amount: number
+  created_at: string
+  updated_at: string
+}
+
+export type StripeCheckoutSession = {
+  id: string
+  order_id: string
+  client_id: string
+  payment_request_id: string | null
+  stripe_session_id: string
+  stripe_payment_intent_id: string | null
+  amount: number
+  fee_amount: number
+  total_charged: number
+  commission_payer: 'merchant' | 'customer'
+  status: 'pending' | 'paid' | 'expired' | 'cancelled'
+  created_at: string
+  paid_at: string | null
+  metadata: Record<string, unknown>
+}
+
+export type StripePaymentRequest = {
+  id: string
+  order_id: string
+  client_id: string
+  amount: number
+  concept: string
+  status: 'pending' | 'paid' | 'cancelled' | 'expired'
+  commission_payer: 'merchant' | 'customer'
+  fee_amount: number
+  total_charged: number
+  requires_invoice: boolean
+  tax_mode: 'none' | 'included' | 'added'
+  notes: string | null
+  expires_at: string | null
+  paid_at: string | null
   created_at: string
   updated_at: string
 }

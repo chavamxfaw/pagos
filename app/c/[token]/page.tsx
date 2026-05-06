@@ -5,6 +5,7 @@ import { PublicShareActions } from '@/components/public/PublicShareActions'
 import { PublicLinkHeader } from '@/components/public/PublicLinkHeader'
 import { PublicAccountHero } from '@/components/public/PublicAccountHero'
 import { PublicOrdersAccordion } from '@/components/public/PublicOrdersAccordion'
+import { getStripeSettings } from '@/lib/stripe/config'
 
 export default async function PublicClientPage({
   params,
@@ -12,7 +13,10 @@ export default async function PublicClientPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const portal = await getPublicClientPortal(token)
+  const [portal, stripeSettings] = await Promise.all([
+    getPublicClientPortal(token),
+    getStripeSettings(),
+  ])
 
   if (!portal) notFound()
 
@@ -51,7 +55,12 @@ export default async function PublicClientPage({
           />
         </div>
 
-        <PublicOrdersAccordion orders={activeOrders} title="Pagos pendientes" defaultOpenFirst />
+        <PublicOrdersAccordion
+          orders={activeOrders}
+          title="Pagos pendientes"
+          defaultOpenFirst
+          stripeSettings={stripeSettings}
+        />
         <PublicOrdersAccordion orders={completedOrders} title="Órdenes liquidadas" />
 
         {!portal.orders.length && (

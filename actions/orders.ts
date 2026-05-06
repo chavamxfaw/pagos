@@ -24,6 +24,10 @@ export async function createOrder(data: {
   issued_at?: string
   due_date?: string
   bank_account_id?: string
+  stripe_enabled?: boolean
+  stripe_payment_mode?: 'customer_amount' | 'fixed_amounts'
+  stripe_min_payment_amount?: number | null
+  stripe_fixed_payment_amounts?: number[]
 }) {
   await requireAuth()
   const admin = createAdminClient()
@@ -42,6 +46,10 @@ export async function createOrder(data: {
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
       bank_account_id: data.bank_account_id || null,
+      stripe_enabled: data.stripe_enabled ?? false,
+      stripe_payment_mode: data.stripe_payment_mode ?? 'customer_amount',
+      stripe_min_payment_amount: data.stripe_min_payment_amount ?? null,
+      stripe_fixed_payment_amounts: data.stripe_fixed_payment_amounts ?? [],
       ...amounts,
     })
     .select()
@@ -72,6 +80,10 @@ export async function updateOrder(orderId: string, data: {
   issued_at?: string
   due_date?: string
   bank_account_id?: string
+  stripe_enabled?: boolean
+  stripe_payment_mode?: 'customer_amount' | 'fixed_amounts'
+  stripe_min_payment_amount?: number | null
+  stripe_fixed_payment_amounts?: number[]
   status?: OrderStatus
 }) {
   await requireAuth()
@@ -114,6 +126,10 @@ export async function updateOrder(orderId: string, data: {
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
       bank_account_id: data.bank_account_id || null,
+      stripe_enabled: data.stripe_enabled ?? false,
+      stripe_payment_mode: data.stripe_payment_mode ?? 'customer_amount',
+      stripe_min_payment_amount: data.stripe_min_payment_amount ?? null,
+      stripe_fixed_payment_amounts: data.stripe_fixed_payment_amounts ?? [],
       ...amounts,
       status,
       completed_at: completedAt,

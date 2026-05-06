@@ -44,12 +44,14 @@ create index if not exists client_followups_client_id_created_at_idx
 alter table public.activity_logs enable row level security;
 alter table public.client_followups enable row level security;
 
+drop policy if exists "admin_all_activity_logs" on public.activity_logs;
 create policy "admin_all_activity_logs"
 on public.activity_logs for all
 to authenticated
 using (true)
 with check (true);
 
+drop policy if exists "admin_all_client_followups" on public.client_followups;
 create policy "admin_all_client_followups"
 on public.client_followups for all
 to authenticated

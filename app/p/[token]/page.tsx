@@ -7,6 +7,7 @@ import { PublicShareActions } from '@/components/public/PublicShareActions'
 import { PublicLinkHeader } from '@/components/public/PublicLinkHeader'
 import { PublicAccountHero } from '@/components/public/PublicAccountHero'
 import { PublicOrdersAccordion } from '@/components/public/PublicOrdersAccordion'
+import { getStripeSettings } from '@/lib/stripe/config'
 
 export default async function PublicOrderPage({
   params,
@@ -14,11 +15,14 @@ export default async function PublicOrderPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const publicOrder = await getPublicOrder(token)
+  const [publicOrder, stripeSettings] = await Promise.all([
+    getPublicOrder(token),
+    getStripeSettings(),
+  ])
 
   if (!publicOrder) notFound()
 
-  const { order, payments: typedPayments, bankAccount } = publicOrder
+  const { order, payments: typedPayments, stripePaymentRequests, bankAccount } = publicOrder
   const percent = getProgressPercent(order.paid_amount, order.total_amount)
   const remaining = Math.max(0, order.total_amount - order.paid_amount)
   const isCompleted = order.status === 'completed'
@@ -29,6 +33,7 @@ export default async function PublicOrderPage({
     ...order,
     bank_accounts: bankAccount,
     payments: typedPayments,
+    stripe_payment_requests: stripePaymentRequests,
   }
 
   return (
@@ -86,6 +91,7 @@ export default async function PublicOrderPage({
           title="Detalle de la orden"
           showDetailLinks={false}
           defaultOpenFirst
+          stripeSettings={stripeSettings}
         />
 
         <p className="text-center text-[#A2ABBA] text-xs mt-8">

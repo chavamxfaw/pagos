@@ -1,11 +1,12 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { BankAccount, Client, Order, Payment } from '@/types'
+import type { BankAccount, Client, Order, Payment, StripePaymentRequest } from '@/types'
 
 export type PublicClientOrder = Order & {
   payments: Payment[]
   bank_accounts: BankAccount | null
+  stripe_payment_requests: StripePaymentRequest[]
 }
 
 export async function getPublicClientPortal(token: string) {
@@ -42,11 +43,28 @@ export async function getPublicClientPortal(token: string) {
     paymentsByOrder.set(payment.order_id, existing)
   }
 
+  const { data: stripePaymentRequests } = orderIds.length
+    ? await admin
+        .from('stripe_payment_requests')
+        .select('*')
+        .in('order_id', orderIds)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  const requestsByOrder = new Map<string, StripePaymentRequest[]>()
+  for (const request of (stripePaymentRequests ?? []) as StripePaymentRequest[]) {
+    const existing = requestsByOrder.get(request.order_id) ?? []
+    existing.push(request)
+    requestsByOrder.set(request.order_id, existing)
+  }
+
   return {
     client: client as Client,
     orders: ((orders ?? []) as (Order & { bank_accounts: BankAccount | null })[]).map((order) => ({
       ...order,
       payments: paymentsByOrder.get(order.id) ?? [],
+      stripe_payment_requests: requestsByOrder.get(order.id) ?? [],
     })),
   }
 }
