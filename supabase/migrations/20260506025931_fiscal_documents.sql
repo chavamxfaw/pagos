@@ -31,13 +31,12 @@ create table if not exists public.fiscal_documents (
 alter table public.fiscal_documents enable row level security;
 
 drop policy if exists "admin_all_fiscal_documents" on public.fiscal_documents;
-create policy "admin_all_fiscal_documents"
-on public.fiscal_documents for all
+create policy "authenticated_read_fiscal_documents"
+on public.fiscal_documents for select
 to authenticated
-using (true)
-with check (true);
+using (true);
 
-grant select, insert, update, delete on public.fiscal_documents to authenticated;
+grant select on public.fiscal_documents to authenticated;
 
 create index if not exists fiscal_documents_active_created_at_idx
 on public.fiscal_documents (is_active, created_at desc);
@@ -45,27 +44,5 @@ on public.fiscal_documents (is_active, created_at desc);
 create index if not exists fiscal_documents_share_token_idx
 on public.fiscal_documents (share_token);
 
-drop policy if exists "authenticated_read_fiscal_document_files" on storage.objects;
-create policy "authenticated_read_fiscal_document_files"
-on storage.objects for select
-to authenticated
-using (bucket_id = 'fiscal-documents');
-
-drop policy if exists "authenticated_insert_fiscal_document_files" on storage.objects;
-create policy "authenticated_insert_fiscal_document_files"
-on storage.objects for insert
-to authenticated
-with check (bucket_id = 'fiscal-documents');
-
-drop policy if exists "authenticated_update_fiscal_document_files" on storage.objects;
-create policy "authenticated_update_fiscal_document_files"
-on storage.objects for update
-to authenticated
-using (bucket_id = 'fiscal-documents')
-with check (bucket_id = 'fiscal-documents');
-
-drop policy if exists "authenticated_delete_fiscal_document_files" on storage.objects;
-create policy "authenticated_delete_fiscal_document_files"
-on storage.objects for delete
-to authenticated
-using (bucket_id = 'fiscal-documents');
+-- No direct Storage policies are granted to anon/authenticated users.
+-- Files are managed server-side with the service role and shared through signed URLs.
