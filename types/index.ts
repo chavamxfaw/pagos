@@ -32,10 +32,6 @@ export type Order = {
   issued_at: string
   due_date: string | null
   bank_account_id: string | null
-  stripe_enabled: boolean
-  stripe_payment_mode: 'customer_amount' | 'fixed_amounts'
-  stripe_min_payment_amount: number | null
-  stripe_fixed_payment_amounts: number[]
   token: string
   created_at: string
   completed_at: string | null
@@ -146,7 +142,9 @@ export type StripePaymentRequest = {
   id: string
   order_id: string
   client_id: string
-  amount: number
+  request_type: 'fixed' | 'open'
+  amount: number | null
+  minimum_amount: number | null
   concept: string
   status: 'pending' | 'paid' | 'cancelled' | 'expired'
   commission_payer: 'merchant' | 'customer'

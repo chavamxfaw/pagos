@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeClient, getStripeWebhookSecrets } from '@/lib/stripe/client'
 import { logActivity } from '@/lib/activity'
+import { notifyPaymentReceipt } from '@/lib/payments/notifications'
 import { formatCurrency, getTodayDateString } from '@/lib/utils'
 
 export async function POST(request: Request) {
@@ -60,8 +61,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (!checkout || checkout.status === 'paid') return
 
-  const order = Array.isArray(checkout.orders) ? checkout.orders[0] : checkout.orders
-  if (!order) return
+  const initialOrder = Array.isArray(checkout.orders) ? checkout.orders[0] : checkout.orders
+  if (!initialOrder) return
 
   const paymentIntent = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null
 
@@ -108,9 +109,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     entity_id: payment.id,
     client_id: checkout.client_id,
     order_id: checkout.order_id,
-    payment_id: payment.id,
-    event_type: 'stripe_payment_succeeded',
-    message: `Pago con tarjeta confirmado: ${formatCurrency(checkout.amount)} para ${order.concept}`,
+      payment_id: payment.id,
+      event_type: 'stripe_payment_succeeded',
+    message: `Pago con tarjeta confirmado: ${formatCurrency(checkout.amount)} para ${initialOrder.concept}`,
     metadata: {
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntent,
@@ -120,6 +121,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       commission_payer: checkout.commission_payer,
     },
   })
+
+  const { data: updatedOrder } = await admin
+    .from('orders')
+    .select('*, clients(*)')
+    .eq('id', checkout.order_id)
+    .single()
+
+  if (updatedOrder?.clients) {
+    await notifyPaymentReceipt({ admin, order: updatedOrder, payment })
+  }
 
   revalidatePath(`/admin/orders/${checkout.order_id}`)
   revalidatePath(`/admin/clients/${checkout.client_id}`)

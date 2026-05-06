@@ -26,6 +26,7 @@ export function StripePaymentRequestDialog({
   action: (formData: FormData) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
+  const [requestType, setRequestType] = useState<'fixed' | 'open'>('fixed')
   const [pending, startTransition] = useTransition()
 
   function onSubmit(formData: FormData) {
@@ -62,24 +63,59 @@ export function StripePaymentRequestDialog({
 
         <form action={onSubmit} className="space-y-4">
           <input type="hidden" name="order_id" value={orderId} />
+          <input type="hidden" name="request_type" value={requestType} />
 
           <div className="rounded-xl border border-[#E6EAF0] bg-[#F8FAFF] p-3 text-sm text-[#6B7280]">
             Saldo disponible para solicitar: <span className="font-mono font-semibold text-[#1A1F36]">{formatCurrency(pendingAmount)}</span>
           </div>
 
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+              <input
+                type="radio"
+                checked={requestType === 'fixed'}
+                onChange={() => setRequestType('fixed')}
+                className="mt-1 size-4 accent-[#6C5CE7]"
+              />
+              <span>
+                <span className="block text-sm font-medium text-[#1A1F36]">Monto fijo</span>
+                <span className="block text-xs text-[#6B7280]">El cliente paga exactamente este monto.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+              <input
+                type="radio"
+                checked={requestType === 'open'}
+                onChange={() => setRequestType('open')}
+                className="mt-1 size-4 accent-[#6C5CE7]"
+              />
+              <span>
+                <span className="block text-sm font-medium text-[#1A1F36]">Monto abierto</span>
+                <span className="block text-xs text-[#6B7280]">El cliente decide cuánto abonar.</span>
+              </span>
+            </label>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="stripe_request_amount" className="text-[#1A1F36]">Monto a solicitar *</Label>
+            <Label htmlFor="stripe_request_amount" className="text-[#1A1F36]">
+              {requestType === 'fixed' ? 'Monto a solicitar *' : 'Abono mínimo'}
+            </Label>
             <Input
               id="stripe_request_amount"
-              name="amount"
+              name={requestType === 'fixed' ? 'amount' : 'minimum_amount'}
               type="number"
               step="0.01"
-              min="0.01"
+              min={requestType === 'fixed' ? '0.01' : '1'}
               max={pendingAmount}
-              required
+              required={requestType === 'fixed'}
               placeholder="0.00"
               className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono text-lg"
             />
+            {requestType === 'open' && (
+              <p className="text-xs text-[#6B7280]">
+                Si lo dejas vacío se usará el mínimo global de Stripe. El máximo siempre será el saldo pendiente.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

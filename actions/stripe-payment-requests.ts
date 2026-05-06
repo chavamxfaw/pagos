@@ -15,7 +15,9 @@ async function requireAuth() {
 
 export async function createStripePaymentRequest(data: {
   order_id: string
-  amount: number
+  request_type: 'fixed' | 'open'
+  amount?: number | null
+  minimum_amount?: number | null
   concept?: string
   requires_invoice?: boolean
   tax_mode?: 'none' | 'included' | 'added'
@@ -43,15 +45,37 @@ export async function createStripePaymentRequest(data: {
     throw new Error('La orden ya está liquidada.')
   }
 
-  const pendingAmount = Math.max(0, Number(order.total_amount) - Number(order.paid_amount))
-  if (!Number.isFinite(data.amount) || data.amount <= 0) {
-    throw new Error('El monto debe ser mayor a 0.')
-  }
-  if (data.amount > pendingAmount) {
-    throw new Error('El monto solicitado no puede ser mayor al saldo pendiente.')
+  const { data: existingRequest } = await admin
+    .from('stripe_payment_requests')
+    .select('id')
+    .eq('order_id', order.id)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+
+  if (existingRequest) {
+    throw new Error('Esta orden ya tiene una solicitud Stripe pendiente. Cancélala antes de crear otra.')
   }
 
-  const charge = calculateStripeChargeAmount(data.amount, settings)
+  const pendingAmount = Math.max(0, Number(order.total_amount) - Number(order.paid_amount))
+  const requestType = data.request_type === 'open' ? 'open' : 'fixed'
+  const fixedAmount = Number(data.amount ?? 0)
+  const minimumAmount = data.minimum_amount == null ? null : Number(data.minimum_amount)
+
+  if (requestType === 'fixed' && (!Number.isFinite(fixedAmount) || fixedAmount <= 0)) {
+    throw new Error('El monto debe ser mayor a 0.')
+  }
+  if (requestType === 'fixed' && fixedAmount > pendingAmount) {
+    throw new Error('El monto solicitado no puede ser mayor al saldo pendiente.')
+  }
+  if (requestType === 'open' && minimumAmount !== null && (!Number.isFinite(minimumAmount) || minimumAmount < 1)) {
+    throw new Error('El mínimo debe ser mayor o igual a 1.')
+  }
+  if (requestType === 'open' && minimumAmount !== null && minimumAmount > pendingAmount) {
+    throw new Error('El mínimo no puede ser mayor al saldo pendiente.')
+  }
+
+  const charge = requestType === 'fixed' ? calculateStripeChargeAmount(fixedAmount, settings) : null
   const concept = data.concept?.trim() || `Solicitud de pago - ${order.concept}`
   const taxMode = data.requires_invoice ? (data.tax_mode === 'added' || data.tax_mode === 'included' ? data.tax_mode : 'included') : 'none'
 
@@ -60,11 +84,13 @@ export async function createStripePaymentRequest(data: {
     .insert({
       order_id: order.id,
       client_id: order.client_id,
-      amount: charge.paymentAmount,
+      request_type: requestType,
+      amount: charge?.paymentAmount ?? null,
+      minimum_amount: requestType === 'open' ? minimumAmount : null,
       concept,
       commission_payer: settings.commission_payer,
-      fee_amount: charge.feeAmount,
-      total_charged: charge.totalCharged,
+      fee_amount: charge?.feeAmount ?? 0,
+      total_charged: charge?.totalCharged ?? 0,
       requires_invoice: data.requires_invoice ?? false,
       tax_mode: taxMode,
       notes: data.notes || null,
@@ -80,12 +106,16 @@ export async function createStripePaymentRequest(data: {
     client_id: order.client_id,
     order_id: order.id,
     event_type: 'stripe_payment_request_created',
-    message: `Solicitud Stripe creada por ${formatCurrency(charge.paymentAmount)} para ${order.concept}`,
+    message: requestType === 'fixed'
+      ? `Solicitud Stripe creada por ${formatCurrency(charge!.paymentAmount)} para ${order.concept}`
+      : `Solicitud Stripe abierta creada para ${order.concept}`,
     metadata: {
       stripe_payment_request_id: request.id,
-      amount: charge.paymentAmount,
-      total_charged: charge.totalCharged,
-      fee_amount: charge.feeAmount,
+      request_type: requestType,
+      amount: charge?.paymentAmount ?? null,
+      minimum_amount: requestType === 'open' ? minimumAmount : null,
+      total_charged: charge?.totalCharged ?? null,
+      fee_amount: charge?.feeAmount ?? null,
       commission_payer: settings.commission_payer,
     },
   })

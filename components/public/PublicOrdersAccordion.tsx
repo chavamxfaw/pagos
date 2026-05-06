@@ -19,10 +19,6 @@ export type PublicAccordionOrder = {
   issued_at: string
   created_at: string
   token: string
-  stripe_enabled?: boolean
-  stripe_payment_mode?: 'customer_amount' | 'fixed_amounts'
-  stripe_min_payment_amount?: number | null
-  stripe_fixed_payment_amounts?: number[]
   stripe_payment_requests?: StripePaymentRequest[]
   payments: Payment[]
   bank_accounts: BankAccount | null

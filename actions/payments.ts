@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { resend } from '@/lib/resend/client'
 import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail'
-import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { logActivity } from '@/lib/activity'
-import { formatCurrency, getPaymentMethodLabel, getTodayDateString } from '@/lib/utils'
+import { notifyPaymentReceipt } from '@/lib/payments/notifications'
+import { resend } from '@/lib/resend/client'
+import { formatCurrency, getTodayDateString } from '@/lib/utils'
 import { getDisplayName } from '@/actions/user-settings'
 import type { PaymentMethod } from '@/types'
 
@@ -59,67 +59,7 @@ export async function addPayment(data: {
       metadata: { amount: payment.amount, payment_method: payment.payment_method, paid_at: payment.paid_at },
     })
 
-    // Enviar correo solo si el cliente tiene email. Si falla, no hacemos rollback.
-    if (order.clients.email) {
-      try {
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL!,
-          to: order.clients.email,
-          subject: `Recibo de abono — ${order.concept}`,
-          react: PaymentReceiptEmail({
-            clientName: order.clients.name,
-            concept: order.concept,
-            paymentAmount: payment.amount,
-            paymentDate: payment.created_at,
-            paidAmount: order.paid_amount,
-            totalAmount: order.total_amount,
-            token: order.token,
-            appUrl: process.env.NEXT_PUBLIC_APP_URL!,
-            senderName,
-          }),
-        })
-      } catch (emailError) {
-        console.error('Error enviando correo:', emailError)
-      }
-    }
-
-    if (order.clients.phone) {
-      try {
-        const remaining = Math.max(0, order.total_amount - order.paid_amount)
-        const statusLink = `${process.env.NEXT_PUBLIC_APP_URL}/p/${order.token}`
-        const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
-
-        if (contentSid) {
-          await sendWhatsAppTemplate({
-            to: order.clients.phone,
-            contentSid,
-            variables: {
-              '1': order.clients.name,
-              '2': order.concept,
-              '3': formatCurrency(order.total_amount),
-              '4': formatCurrency(order.paid_amount),
-              '5': formatCurrency(remaining),
-              '6': order.token,
-              '7': senderName,
-            },
-          })
-        } else {
-          await sendWhatsAppMessage({
-            to: order.clients.phone,
-            body: [
-              `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
-              `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
-              `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
-              remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
-              `Consulta tu estado aquí: ${statusLink}`,
-              `De parte de: ${senderName}`,
-            ].join('\n'),
-          })
-        }
-      } catch (whatsAppError) {
-        console.error('Error enviando WhatsApp:', whatsAppError)
-      }
-    }
+    await notifyPaymentReceipt({ admin, order, payment, senderName })
   }
 
   revalidatePath(`/admin/orders/${data.order_id}`)

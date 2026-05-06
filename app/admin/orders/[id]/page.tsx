@@ -86,12 +86,19 @@ async function createStripePaymentRequestAction(formData: FormData) {
   'use server'
   await createStripePaymentRequest({
     order_id: formData.get('order_id') as string,
-    amount: parseFloat(formData.get('amount') as string),
+    request_type: formData.get('request_type') === 'open' ? 'open' : 'fixed',
+    amount: getOptionalMoney(formData, 'amount'),
+    minimum_amount: getOptionalMoney(formData, 'minimum_amount'),
     concept: (formData.get('concept') as string) || undefined,
     requires_invoice: formData.get('requires_invoice') === 'on',
     tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
     notes: (formData.get('notes') as string) || undefined,
   })
+}
+
+function getOptionalMoney(formData: FormData, key: string) {
+  const value = Number.parseFloat(String(formData.get(key) ?? ''))
+  return Number.isFinite(value) && value > 0 ? value : null
 }
 
 async function cancelStripePaymentRequestAction(formData: FormData) {

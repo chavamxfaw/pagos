@@ -20,10 +20,6 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
       issued_at: formData.get('issued_at') as string,
       due_date: (formData.get('due_date') as string) || undefined,
       bank_account_id: getBankAccountId(formData),
-      stripe_enabled: formData.get('stripe_enabled') === 'on',
-      stripe_payment_mode: getStripePaymentMode(formData),
-      stripe_min_payment_amount: getOptionalMoney(formData, 'stripe_min_payment_amount'),
-      stripe_fixed_payment_amounts: getStripeFixedAmounts(formData),
     })
     redirect(`/admin/orders/${order.id}`)
   } catch (e: unknown) {
@@ -94,20 +90,4 @@ export default async function NewOrderPage({
 function getBankAccountId(formData: FormData) {
   const value = formData.get('bank_account_id') as string | null
   return value && value !== 'none' ? value : undefined
-}
-
-function getStripePaymentMode(formData: FormData) {
-  return formData.get('stripe_payment_mode') === 'fixed_amounts' ? 'fixed_amounts' : 'customer_amount'
-}
-
-function getOptionalMoney(formData: FormData, key: string) {
-  const value = parseFloat(String(formData.get(key) ?? ''))
-  return Number.isFinite(value) && value > 0 ? value : null
-}
-
-function getStripeFixedAmounts(formData: FormData) {
-  return String(formData.get('stripe_fixed_payment_amounts') ?? '')
-    .split(',')
-    .map((value) => parseFloat(value.trim()))
-    .filter((value) => Number.isFinite(value) && value > 0)
 }

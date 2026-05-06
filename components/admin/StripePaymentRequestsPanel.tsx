@@ -47,10 +47,16 @@ export function StripePaymentRequestsPanel({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-[#1A1F36]">{request.concept}</p>
+                  <Badge className="border-[#C8D0FF] bg-[#EEF2FF] text-[#4A55C7]">
+                    {request.request_type === 'open' ? 'Monto abierto' : 'Monto fijo'}
+                  </Badge>
                   <RequestBadge status={request.status} />
                 </div>
                 <p className="mt-1 text-sm text-[#6B7280]">
-                  Creada {formatDateShort(request.created_at)} · Cargo a cliente {formatCurrency(request.total_charged)}
+                  Creada {formatDateShort(request.created_at)}
+                  {request.request_type === 'fixed'
+                    ? ` · Cargo a cliente ${formatCurrency(request.total_charged)}`
+                    : ` · Mínimo ${formatCurrency(request.minimum_amount ?? 0)}`}
                 </p>
                 {request.requires_invoice && (
                   <p className="mt-1 text-xs text-[#6B7280]">
@@ -60,7 +66,9 @@ export function StripePaymentRequestsPanel({
                 {request.notes && <p className="mt-2 text-sm text-[#6B7280]">{request.notes}</p>}
               </div>
               <div className="shrink-0 text-left sm:text-right">
-                <p className="font-mono text-lg font-bold text-[#1A1F36]">{formatCurrency(request.amount)}</p>
+                <p className="font-mono text-lg font-bold text-[#1A1F36]">
+                  {request.request_type === 'fixed' ? formatCurrency(request.amount ?? 0) : 'Abierto'}
+                </p>
                 <p className="text-xs text-[#6B7280]">
                   Comisión {request.commission_payer === 'customer' ? 'cliente' : 'absorbida'}
                   {request.fee_amount > 0 ? ` · ${formatCurrency(request.fee_amount)}` : ''}

@@ -35,22 +35,30 @@ export async function POST(request: Request) {
   }
 
   const pendingAmount = roundMoney(Math.max(0, order.total_amount - order.paid_amount))
-  const { data: paymentRequest, error: requestError } = await admin
-    .from('stripe_payment_requests')
-    .select('*')
-    .eq('id', body.paymentRequestId ?? '')
-    .eq('order_id', order.id)
-    .eq('status', 'pending')
-    .single()
+  const paymentRequest = body.paymentRequestId
+    ? await getPendingStripePaymentRequest(admin, body.paymentRequestId, order.id)
+    : null
 
-  if (requestError || !paymentRequest) {
+  if (!paymentRequest) {
     return NextResponse.json({ error: 'Solicitud de pago no encontrada o no vigente.' }, { status: 404 })
   }
 
-  const requestedAmount = roundMoney(Number(paymentRequest.amount ?? 0))
+  const isOpenRequest = paymentRequest.request_type === 'open'
+  const requestedAmount = roundMoney(Number(isOpenRequest ? body.amount : paymentRequest.amount))
 
   if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
     return NextResponse.json({ error: 'El monto no es válido.' }, { status: 400 })
+  }
+
+  if (isOpenRequest) {
+    const minimumAmount = Math.min(
+      pendingAmount,
+      Math.max(1, Number(paymentRequest.minimum_amount ?? settings.minimum_payment_amount))
+    )
+
+    if (requestedAmount < minimumAmount) {
+      return NextResponse.json({ error: `El abono mínimo es ${minimumAmount.toFixed(2)} MXN.` }, { status: 400 })
+    }
   }
 
   if (requestedAmount > pendingAmount) {
@@ -97,6 +105,7 @@ export async function POST(request: Request) {
       total_charged: String(charge.totalCharged),
       commission_payer: paymentRequest.commission_payer,
       payment_request_id: paymentRequest.id,
+      checkout_source: isOpenRequest ? 'open_request' : 'fixed_request',
     },
     success_url: `${appUrl}/p/${order.token}?stripe=success`,
     cancel_url: `${appUrl}/p/${order.token}?stripe=cancelled`,
@@ -117,6 +126,7 @@ export async function POST(request: Request) {
       metadata: {
         absorbed_fee: charge.absorbedFee,
         mode: settings.mode,
+        checkout_source: isOpenRequest ? 'open_request' : 'fixed_request',
       },
     })
 
@@ -125,4 +135,21 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ url: session.url })
+}
+
+async function getPendingStripePaymentRequest(
+  admin: ReturnType<typeof createAdminClient>,
+  paymentRequestId: string,
+  orderId: string
+) {
+  const { data, error } = await admin
+    .from('stripe_payment_requests')
+    .select('*')
+    .eq('id', paymentRequestId)
+    .eq('order_id', orderId)
+    .eq('status', 'pending')
+    .single()
+
+  if (error || !data) return null
+  return data
 }
