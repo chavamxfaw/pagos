@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Check, Copy, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 export function PublicShareActions({
   title,
@@ -19,6 +20,7 @@ export function PublicShareActions({
     const shareText = `${text}\n${window.location.href}`
     await navigator.clipboard.writeText(shareText)
     setCopied(true)
+    toast.success('Resumen copiado')
     window.setTimeout(() => setCopied(false), 1800)
   }
 
@@ -29,6 +31,7 @@ export function PublicShareActions({
         text,
         url: window.location.href,
       })
+      toast.success('Resumen compartido')
       return
     }
 

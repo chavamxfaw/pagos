@@ -5,13 +5,16 @@ import { Copy, Landmark } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
 import type { BankAccount } from '@/types'
+import { toast } from 'sonner'
 
 export function PublicBankDetails({
   bankAccount,
   pendingAmount,
+  compact = false,
 }: {
   bankAccount: BankAccount
   pendingAmount: number
+  compact?: boolean
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -28,22 +31,23 @@ export function PublicBankDetails({
 
     await navigator.clipboard.writeText(lines.filter(Boolean).join('\n'))
     setCopied(true)
+    toast.success('Datos de pago copiados')
     setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <section className="rounded-[28px] border border-white bg-white p-6 shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#6C5CE7]">
+    <section className={compact ? 'rounded-2xl border border-[#E6EAF0] bg-white p-4' : 'rounded-2xl border border-[#E6EAF0] bg-white p-5'}>
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#6C5CE7]">
           <Landmark className="size-5" />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6C5CE7]">Datos para pago</p>
-          <h2 className="font-semibold text-[#1A1F36]">{bankAccount.alias}</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6C5CE7]">Datos para pago</p>
+          <h2 className="text-sm font-semibold text-[#1A1F36]">{bankAccount.alias}</h2>
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-[#E6EAF0] bg-[#F8FAFF] p-4 text-sm">
+      <div className="grid gap-3 rounded-xl bg-[#F8FAFF] p-4 text-sm ring-1 ring-[#E6EAF0]">
         <BankRow label="Monto pendiente" value={formatCurrency(Math.max(0, pendingAmount))} strong />
         <BankRow label="Banco" value={bankAccount.bank_name} />
         <BankRow label="Titular" value={bankAccount.account_holder} />
@@ -59,7 +63,7 @@ export function PublicBankDetails({
         type="button"
         variant="outline"
         onClick={copyDetails}
-        className="mt-4 w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0]"
+        className="mt-4 w-full justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF]"
       >
         <Copy className="size-4" />
         {copied ? 'Datos copiados' : 'Copiar datos de pago'}

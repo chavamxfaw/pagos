@@ -1,12 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { Copy, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { buildBankInstructionsMessage } from '@/lib/bank-instructions'
 import { formatCurrency } from '@/lib/utils'
 import type { BankAccount, OrderWithClient } from '@/types'
+import { toast } from 'sonner'
 
 export function BankInstructionsPanel({
   order,
@@ -19,6 +19,7 @@ export function BankInstructionsPanel({
 }) {
   const [selectedId, setSelectedId] = useState(bankAccounts[0]?.id ?? '')
   const [copied, setCopied] = useState(false)
+  const [sending, setSending] = useState(false)
   const selected = useMemo(
     () => bankAccounts.find((account) => account.id === selectedId) ?? bankAccounts[0],
     [bankAccounts, selectedId]
@@ -35,7 +36,34 @@ export function BankInstructionsPanel({
 
     await navigator.clipboard.writeText(message)
     setCopied(true)
+    toast.success('Datos bancarios copiados', {
+      description: `Incluye el saldo pendiente de ${formatCurrency(remaining)}.`,
+    })
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function sendInstructions(formData: FormData) {
+    if (!selected) return
+
+    setSending(true)
+    const toastId = toast.loading('Enviando WhatsApp...', {
+      description: `Datos de pago de ${selected.alias}`,
+    })
+
+    try {
+      await sendAction(formData)
+      toast.success('WhatsApp enviado', {
+        id: toastId,
+        description: 'Se mandaron los datos bancarios al teléfono del cliente.',
+      })
+    } catch (error) {
+      toast.error('No se pudo enviar el WhatsApp', {
+        id: toastId,
+        description: error instanceof Error ? error.message : 'Revisa la configuración de Twilio.',
+      })
+    } finally {
+      setSending(false)
+    }
   }
 
   if (!bankAccounts.length) {
@@ -90,9 +118,9 @@ export function BankInstructionsPanel({
           {copied ? 'Copiado' : 'Copiar datos'}
         </Button>
 
-        <form action={sendAction}>
+        <form action={sendInstructions}>
           <input type="hidden" name="bank_account_id" value={selected?.id ?? ''} />
-          <SendSubmitButton disabled={!selected || !order.clients.phone} />
+          <SendSubmitButton disabled={!selected || !order.clients.phone || sending} sending={sending} />
         </form>
       </div>
 
@@ -100,23 +128,21 @@ export function BankInstructionsPanel({
         <p className="mt-3 text-xs text-[#EF4444]">El cliente no tiene teléfono registrado para WhatsApp.</p>
       )}
       <p className="mt-3 text-xs text-[#8A94A6]">
-        El envío por WhatsApp usa mensaje libre si existe ventana abierta. Para iniciar conversaciones con clientes nuevos hará falta template aprobado.
+        El envío por WhatsApp usa el template aprobado cuando está configurado. Si Twilio no lo tiene disponible, se intenta como mensaje libre.
       </p>
     </section>
   )
 }
 
-function SendSubmitButton({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus()
-
+function SendSubmitButton({ disabled, sending }: { disabled: boolean; sending: boolean }) {
   return (
     <Button
       type="submit"
-      disabled={disabled || pending}
+      disabled={disabled}
       className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white shadow-sm hover:brightness-105 disabled:opacity-50 sm:w-auto"
     >
       <Send className="size-4" />
-      {pending ? 'Enviando...' : 'Enviar por WhatsApp'}
+      {sending ? 'Enviando...' : 'Enviar por WhatsApp'}
     </Button>
   )
 }

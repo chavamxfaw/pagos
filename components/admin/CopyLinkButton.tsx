@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 export function CopyLinkButton({
   path,
@@ -16,6 +17,9 @@ export function CopyLinkButton({
     const url = `${window.location.origin}${path}`
     await navigator.clipboard.writeText(url)
     setCopied(true)
+    toast.success('Link copiado', {
+      description: 'Ya puedes compartirlo con el cliente.',
+    })
     setTimeout(() => setCopied(false), 2000)
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { PWARegister } from "@/components/PWARegister";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -77,6 +78,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <PWARegister />
         {children}
+        <Toaster richColors closeButton position="top-right" />
       </body>
     </html>
   );
