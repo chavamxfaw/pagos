@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/admin'
 import { logActivity } from '@/lib/activity'
 import { getTodayDateString } from '@/lib/utils'
-import type { OrderStatus } from '@/types'
+import type { OrderCategory, OrderStatus } from '@/types'
 
 async function requireAuth() {
   return requireAdmin()
@@ -15,6 +15,8 @@ export async function createOrder(data: {
   client_id: string
   concept: string
   description?: string
+  category?: OrderCategory
+  tags?: string
   amount: number
   requires_invoice?: boolean
   tax_mode?: 'included' | 'added'
@@ -36,6 +38,8 @@ export async function createOrder(data: {
       client_id: data.client_id,
       concept: data.concept,
       description: data.description,
+      category: getOrderCategory(data.category),
+      tags: parseTags(data.tags),
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
       bank_account_id: data.bank_account_id || null,
@@ -63,6 +67,8 @@ export async function updateOrder(orderId: string, data: {
   client_id: string
   concept: string
   description?: string
+  category?: OrderCategory
+  tags?: string
   amount: number
   requires_invoice?: boolean
   tax_mode?: 'included' | 'added'
@@ -108,6 +114,8 @@ export async function updateOrder(orderId: string, data: {
       client_id: data.client_id,
       concept: data.concept,
       description: data.description,
+      category: getOrderCategory(data.category),
+      tags: parseTags(data.tags),
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
       bank_account_id: data.bank_account_id || null,
@@ -202,6 +210,23 @@ function getOrderStatus(paidAmount: number, totalAmount: number) {
 function getEditableStatus(status: OrderStatus | undefined, paidAmount: number, totalAmount: number) {
   if (status && ['cancelled', 'paused', 'disputed'].includes(status)) return status
   return getOrderStatus(paidAmount, totalAmount)
+}
+
+function getOrderCategory(category?: OrderCategory) {
+  const allowed: OrderCategory[] = ['service', 'product', 'project', 'subscription', 'other']
+  return category && allowed.includes(category) ? category : 'service'
+}
+
+function parseTags(value?: string) {
+  return Array.from(
+    new Set(
+      (value ?? '')
+        .split(',')
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 12)
+    )
+  )
 }
 
 export async function markOrderCompleted(orderId: string) {

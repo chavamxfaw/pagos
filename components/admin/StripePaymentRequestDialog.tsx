@@ -123,7 +123,7 @@ export function StripePaymentRequestDialog({
             <Input
               id="stripe_request_concept"
               name="concept"
-              placeholder="Ej: Anticipo, segunda parcialidad..."
+              placeholder="Anticipo, segunda parcialidad..."
               className="bg-white border-[#E6EAF0] text-[#1A1F36]"
             />
           </div>

@@ -37,7 +37,7 @@ export default async function ClientsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-[#1A1F36]">Clientes</h1>
           <p className="mt-1 text-sm text-[#6B7280]">{totalClients} clientes registrados</p>
         </div>
-        <Link href="/admin/clients/new" className={cn(buttonVariants({ size: 'lg' }), "w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 font-semibold text-white shadow-[0_14px_30px_rgba(74,139,255,0.25)] hover:brightness-105 sm:w-auto")}>
+        <Link href="/admin/clients/new" className={cn(buttonVariants({ size: 'lg' }), "w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 font-semibold text-white shadow-[0_10px_22px_rgba(74,139,255,0.16)] hover:brightness-105 sm:w-auto")}>
           + Nuevo cliente
         </Link>
       </div>
@@ -122,9 +122,9 @@ function ClientMetric({
   }[tone]
 
   return (
-    <div className="rounded-2xl border border-white bg-white p-6 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+    <div className="rounded-2xl border border-[#E3E8F0] bg-white/90 p-6 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
       <div className="flex items-center gap-4">
-        <div className={cn('flex size-14 shrink-0 items-center justify-center rounded-full shadow-lg', tones.bubble)}>
+        <div className={cn('flex size-14 shrink-0 items-center justify-center rounded-full shadow-sm', tones.bubble)}>
           {icon}
         </div>
         <div className="min-w-0">

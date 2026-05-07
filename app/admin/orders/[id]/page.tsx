@@ -2,21 +2,17 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { AddPaymentDialog } from '@/components/admin/AddPaymentDialog'
 import { PaymentTimeline } from '@/components/admin/PaymentTimeline'
 import { PaymentActions } from '@/components/admin/PaymentActions'
 import { BankInstructionsPanel } from '@/components/admin/BankInstructionsPanel'
-import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
-import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
-import { StripePaymentRequestDialog } from '@/components/admin/StripePaymentRequestDialog'
+import { OrderActionsBar } from '@/components/admin/OrderActionsBar'
 import { StripePaymentRequestsPanel } from '@/components/admin/StripePaymentRequestsPanel'
 import { addPayment, deletePayment, resendPaymentReceipt, updatePayment } from '@/actions/payments'
 import { sendBankInstructions } from '@/actions/bank-accounts'
 import { deleteOrder, markOrderCompleted } from '@/actions/orders'
 import { sendOrderReminder } from '@/actions/reminders'
 import { cancelStripePaymentRequest, createStripePaymentRequest } from '@/actions/stripe-payment-requests'
-import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
+import { formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
 import type { BankAccount, OrderWithClient, Payment, PaymentMethod, StripePaymentRequest } from '@/types'
 
 type PaymentState = { error?: string; success?: boolean } | null
@@ -74,7 +70,7 @@ async function markCompletedAction(orderId: string) {
 
 async function sendReminderAction(orderId: string) {
   'use server'
-  await sendOrderReminder(orderId)
+  return sendOrderReminder(orderId)
 }
 
 async function sendBankInstructionsAction(orderId: string, formData: FormData) {
@@ -244,60 +240,17 @@ export default async function OrderDetailPage({
         )}
       </div>
 
-      {/* Actions */}
-      <div className="mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
-        {!isCompleted && (
-          <AddPaymentDialog orderId={id} action={addPaymentAction} />
-        )}
-        {!isCompleted && (
-          <StripePaymentRequestDialog
-            orderId={id}
-            pendingAmount={remaining}
-            action={createStripePaymentRequestAction}
-          />
-        )}
-        <Link
-          href={`/admin/orders/${id}/edit`}
-          className={cn(
-            buttonVariants({ variant: 'outline', size: 'sm' }),
-            'w-full justify-center border-[#D8DEE8] text-xs text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto'
-          )}
-        >
-          Editar orden
-        </Link>
-        <CopyLinkButton path={`/p/${typedOrder.token}`} label="Copiar link de orden" />
-        {!isCompleted && (
-          <form action={sendReminderAction.bind(null, id)}>
-            <Button
-              type="submit"
-              variant="outline"
-              size="sm"
-              className="w-full justify-center border-[#D8DEE8] text-xs text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto"
-            >
-              Enviar recordatorio
-            </Button>
-          </form>
-        )}
-        {!isCompleted && (
-          <form action={markCompletedAction.bind(null, id)}>
-            <Button
-              type="submit"
-              variant="outline"
-              size="sm"
-              className="w-full justify-center border-[#D8DEE8] text-xs text-[#6B7280] hover:bg-[#E6EAF0] hover:text-[#1A1F36] sm:w-auto"
-            >
-              Marcar como completado
-            </Button>
-          </form>
-        )}
-        <DeleteConfirmDialog
-          action={deleteOrderAction}
-          title="Borrar orden"
-          description="Esto eliminará la orden y todos sus abonos registrados. Esta acción no se puede deshacer."
-          confirmLabel="Borrar orden"
-          triggerLabel="Borrar"
-        />
-      </div>
+      <OrderActionsBar
+        orderId={id}
+        token={typedOrder.token}
+        isCompleted={isCompleted}
+        pendingAmount={remaining}
+        addPaymentAction={addPaymentAction}
+        createStripePaymentRequestAction={createStripePaymentRequestAction}
+        sendReminderAction={sendReminderAction.bind(null, id)}
+        markCompletedAction={markCompletedAction.bind(null, id)}
+        deleteOrderAction={deleteOrderAction}
+      />
 
       <BankInstructionsPanel
         order={typedOrder}

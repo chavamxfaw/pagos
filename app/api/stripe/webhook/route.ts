@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeClient, getStripeWebhookSecrets } from '@/lib/stripe/client'
 import { logActivity } from '@/lib/activity'
+import { notifyAdminStripePayment } from '@/lib/admin-stripe-notifications'
 import { notifyPaymentReceipt } from '@/lib/payments/notifications'
 import { formatCurrency, getTodayDateString } from '@/lib/utils'
 
@@ -130,6 +131,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (updatedOrder?.clients) {
     await notifyPaymentReceipt({ admin, order: updatedOrder, payment })
+    await notifyAdminStripePayment({ admin, order: updatedOrder, payment, checkout })
   }
 
   revalidatePath(`/admin/orders/${checkout.order_id}`)

@@ -14,6 +14,7 @@ export type Client = {
 
 export type OrderStatus = 'pending' | 'partial' | 'completed' | 'cancelled' | 'paused' | 'disputed'
 export type OrderTaxMode = 'none' | 'included' | 'added'
+export type OrderCategory = 'service' | 'product' | 'project' | 'subscription' | 'other'
 export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'check' | 'other'
 
 export type Order = {
@@ -21,6 +22,8 @@ export type Order = {
   client_id: string
   concept: string
   description: string | null
+  category: OrderCategory
+  tags: string[]
   requires_invoice: boolean
   tax_mode: OrderTaxMode
   subtotal_amount: number
@@ -69,6 +72,16 @@ export type ActivityLog = {
   message: string
   metadata: Record<string, unknown>
   created_at: string
+}
+
+export type UserSettings = {
+  user_id: string
+  display_name: string | null
+  admin_phone: string | null
+  notify_stripe_email: boolean
+  notify_stripe_whatsapp: boolean
+  created_at: string
+  updated_at: string
 }
 
 export type ClientFollowup = {

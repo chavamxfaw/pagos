@@ -138,7 +138,7 @@ export default async function ClientDetailPage({
       </div>
 
       {/* Client financial summary */}
-      <div className="mb-6 rounded-2xl border border-white bg-white p-5 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+      <div className="mb-6 rounded-2xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-[#6B7280]">Resumen financiero</p>
@@ -186,9 +186,7 @@ export default async function ClientDetailPage({
                 {client.client_portal_enabled ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
-            <p className="text-[#6B7280] text-sm">
-              Muestra todas las órdenes del cliente, saldos pendientes y progreso de pagos.
-            </p>
+            <p className="text-[#6B7280] text-sm">Órdenes, saldos y progreso.</p>
           </div>
           <div className="grid w-full grid-cols-1 gap-2 min-[430px]:grid-cols-2 sm:w-auto sm:flex sm:flex-wrap">
             {client.client_portal_enabled && (
@@ -298,7 +296,7 @@ export default async function ClientDetailPage({
 
 function ActivityPanel({ activityLogs }: { activityLogs: ActivityLog[] }) {
   return (
-    <div className="rounded-2xl border border-white bg-white p-5 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+    <div className="rounded-2xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-wider text-[#6B7280]">Bitácora</p>
         <h2 className="mt-1 text-xl font-bold text-[#1A1F36]">Actividad reciente</h2>

@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Download, Edit3, Eye, MoreVertical, Plus, Search, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -123,7 +124,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 rounded-2xl border border-white bg-white p-4 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70 lg:grid-cols-[1fr_240px_auto]">
+      <div className="grid gap-3 rounded-2xl border border-[#E3E8F0] bg-white/90 p-4 shadow-[0_10px_30px_rgba(26,31,54,0.025)] lg:grid-cols-[1fr_240px_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8A94A6]" />
           <Input
@@ -134,7 +135,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
           />
         </div>
         <Select value={filter} onValueChange={(value) => setFilter(value as ClientFilter)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36] shadow-sm">
+          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36] shadow-none">
             <SelectValue>{filterLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
@@ -149,7 +150,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
           variant="outline"
           onClick={exportClients}
           disabled={!filteredClients.length}
-          className="h-10 w-full justify-center border-[#E6EAF0] bg-white px-5 text-[#1A1F36] shadow-sm hover:bg-[#F8FAFF] lg:w-auto"
+          className="h-10 w-full justify-center border-[#E6EAF0] bg-white px-5 text-[#1A1F36] shadow-none hover:bg-[#F8FAFF] lg:w-auto"
         >
           <Download className="size-4" />
           Exportar CSV
@@ -163,10 +164,10 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
       {!filteredClients.length ? (
         <div className="text-center py-16 text-[#8A94A6]">
           <p className="text-lg mb-2">Sin resultados</p>
-          <p className="text-sm">Ajusta la búsqueda o cambia el filtro.</p>
+          <p className="text-sm">Sin coincidencias.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.07)] ring-1 ring-[#E6EAF0]/80">
+        <div className="overflow-hidden rounded-2xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
           <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -295,9 +296,38 @@ function ClientActionsMenu({
   onToggle: () => void
   onClose: () => void
 }) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null)
+
+  useEffect(() => {
+    if (!isOpen || !buttonRef.current) {
+      setMenuPosition(null)
+      return
+    }
+
+    function updatePosition() {
+      if (!buttonRef.current) return
+      const rect = buttonRef.current.getBoundingClientRect()
+      setMenuPosition({
+        top: Math.min(rect.bottom + 8, window.innerHeight - 240),
+        right: Math.max(12, window.innerWidth - rect.right),
+      })
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [isOpen])
+
   return (
     <div className="relative flex justify-end">
       <Button
+        ref={buttonRef}
         type="button"
         variant="outline"
         size="icon"
@@ -309,54 +339,65 @@ function ClientActionsMenu({
         <MoreVertical className="size-4" />
       </Button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-11 z-30 w-52 overflow-hidden rounded-xl border border-[#E6EAF0] bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]">
-          <QuickActionLink href={`/admin/clients/${client.id}`} icon={<Eye className="size-4" />} onClick={onClose}>
-            Ver detalle
-          </QuickActionLink>
-          <QuickActionLink href={`/admin/orders/new?client=${client.id}`} icon={<Plus className="size-4" />} onClick={onClose}>
-            Nueva orden
-          </QuickActionLink>
-          <QuickActionLink href={`/admin/clients/${client.id}/edit`} icon={<Edit3 className="size-4" />} onClick={onClose}>
-            Editar
-          </QuickActionLink>
-          <Dialog>
-            <DialogTrigger
-              render={
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#EF4444] transition-colors hover:bg-[#EF4444]/10"
-                  onClick={onClose}
-                >
-                  <Trash2 className="size-4" />
-                  Eliminar
-                </button>
-              }
-            />
-            <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-[#1A1F36]">Borrar cliente</DialogTitle>
-                <DialogDescription className="text-[#6B7280]">
-                  Esto eliminará a {client.name} y también sus órdenes y abonos asociados. Esta acción no se puede deshacer.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="border-[#E6EAF0] bg-white/90">
-                <DialogClose render={<Button type="button" variant="outline" />}>
-                  Cancelar
-                </DialogClose>
-                <form action={deleteClient.bind(null, client.id)}>
-                  <Button
-                    type="submit"
-                    variant="destructive"
-                    className="w-full bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 sm:w-auto"
+      {isOpen && menuPosition && createPortal(
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default bg-transparent"
+            aria-label="Cerrar acciones"
+            onClick={onClose}
+          />
+          <div
+            className="fixed z-50 w-52 overflow-hidden rounded-xl border border-[#E6EAF0] bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]"
+            style={{ top: menuPosition.top, right: menuPosition.right }}
+          >
+            <QuickActionLink href={`/admin/clients/${client.id}`} icon={<Eye className="size-4" />} onClick={onClose}>
+              Ver detalle
+            </QuickActionLink>
+            <QuickActionLink href={`/admin/orders/new?client=${client.id}`} icon={<Plus className="size-4" />} onClick={onClose}>
+              Nueva orden
+            </QuickActionLink>
+            <QuickActionLink href={`/admin/clients/${client.id}/edit`} icon={<Edit3 className="size-4" />} onClick={onClose}>
+              Editar
+            </QuickActionLink>
+            <Dialog>
+              <DialogTrigger
+                render={
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#EF4444] transition-colors hover:bg-[#EF4444]/10"
                   >
-                    Borrar cliente
-                  </Button>
-                </form>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                    <Trash2 className="size-4" />
+                    Eliminar
+                  </button>
+                }
+              />
+              <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-[#1A1F36]">Borrar cliente</DialogTitle>
+                  <DialogDescription className="text-[#6B7280]">
+                    Esto eliminará a {client.name} y también sus órdenes y abonos asociados. Esta acción no se puede deshacer.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="border-[#E6EAF0] bg-white/90">
+                  <DialogClose render={<Button type="button" variant="outline" />}>
+                    Cancelar
+                  </DialogClose>
+                  <form action={deleteClient.bind(null, client.id)}>
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      className="w-full bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 sm:w-auto"
+                    >
+                      Borrar cliente
+                    </Button>
+                  </form>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </>,
+        document.body
       )}
     </div>
   )

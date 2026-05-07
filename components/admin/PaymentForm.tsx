@@ -50,7 +50,6 @@ export function PaymentForm({
           defaultValue={defaultValues?.paid_at ?? today}
           className="bg-white border-[#E6EAF0] text-[#1A1F36]"
         />
-        <p className="text-xs text-[#6B7280]">Puedes registrar pagos de hoy o de fechas anteriores.</p>
       </div>
 
       <div className="space-y-2">
@@ -73,7 +72,7 @@ export function PaymentForm({
         <Input
           id="concept"
           name="concept"
-          placeholder="Ej: Primer abono, Pago quincenal..."
+          placeholder="Primer abono, pago quincenal..."
           required
           defaultValue={defaultValues?.concept ?? ''}
           className="bg-white border-[#E6EAF0] text-[#1A1F36]"

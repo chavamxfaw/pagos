@@ -1,13 +1,13 @@
 'use client'
 
-import { useActionState, useMemo, useState } from 'react'
+import { KeyboardEvent, useActionState, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { getTodayDateString } from '@/lib/utils'
-import type { BankAccount, Client, Order, OrderStatus } from '@/types'
+import type { BankAccount, Client, Order, OrderCategory, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
 
@@ -32,8 +32,17 @@ export function OrderForm({
   const [amount, setAmount] = useState(initialAmount)
   const [requiresInvoice, setRequiresInvoice] = useState(defaultValues?.requires_invoice ?? false)
   const [taxMode, setTaxMode] = useState<'included' | 'added'>(initialTaxMode)
-  const selectedClientId = defaultValues?.client_id ?? defaultClientId
+  const initialClientId = defaultValues?.client_id ?? defaultClientId ?? ''
   const today = getTodayDateString()
+  const [selectedClientId, setSelectedClientId] = useState(initialClientId)
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState(defaultValues?.bank_account_id ?? 'none')
+  const [category, setCategory] = useState<OrderCategory>(defaultValues?.category ?? 'service')
+  const [editableStatus, setEditableStatus] = useState(defaultValues ? getEditableStatus(defaultValues.status) : 'auto')
+  const [tags, setTags] = useState<string[]>(defaultValues?.tags ?? [])
+  const [tagInput, setTagInput] = useState('')
+  const selectedClient = clients.find((client) => client.id === selectedClientId)
+  const selectedBankAccount = bankAccounts.find((account) => account.id === selectedBankAccountId)
+  const selectedCategoryLabel = orderCategories.find((item) => item.value === category)?.label ?? 'Servicio'
 
   const taxPreview = useMemo(() => {
     const parsed = parseFloat(amount)
@@ -68,9 +77,13 @@ export function OrderForm({
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="client_id" className="text-[#1A1F36]">Cliente *</Label>
-        <Select name="client_id" defaultValue={selectedClientId} required>
-          <SelectTrigger className="bg-white border-[#E6EAF0] text-[#1A1F36]">
-            <SelectValue placeholder="Selecciona un cliente..." />
+        <Select name="client_id" value={selectedClientId} onValueChange={(value) => value && setSelectedClientId(value)} required>
+          <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <span className="truncate text-left">
+              {selectedClient
+                ? `${selectedClient.name}${selectedClient.email ? ` — ${selectedClient.email}` : ' — Sin correo'}`
+                : 'Selecciona un cliente...'}
+            </span>
           </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             {clients.map((client) => (
@@ -107,9 +120,11 @@ export function OrderForm({
 
       <div className="space-y-2">
         <Label htmlFor="bank_account_id" className="text-[#1A1F36]">Datos bancarios para esta orden</Label>
-        <Select name="bank_account_id" defaultValue={defaultValues?.bank_account_id ?? 'none'}>
-          <SelectTrigger className="bg-white border-[#E6EAF0] text-[#1A1F36]">
-            <SelectValue placeholder="Selecciona una cuenta..." />
+        <Select name="bank_account_id" value={selectedBankAccountId} onValueChange={(value) => value && setSelectedBankAccountId(value)}>
+          <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <span className="truncate text-left">
+              {selectedBankAccount ? `${selectedBankAccount.alias} — ${selectedBankAccount.bank_name}` : 'Sin datos bancarios visibles'}
+            </span>
           </SelectTrigger>
           <SelectContent className="bg-white border-[#E6EAF0]">
             <SelectItem value="none" className="text-[#1A1F36] focus:bg-[#E6EAF0]">
@@ -122,9 +137,6 @@ export function OrderForm({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-[#6B7280]">
-          Si eliges una cuenta, aparecerá en el link público de seguimiento de esta orden.
-        </p>
       </div>
 
       <div className="space-y-2">
@@ -132,11 +144,40 @@ export function OrderForm({
         <Input
           id="concept"
           name="concept"
-          placeholder="Ej: Proyecto web, Mensualidad enero..."
+          placeholder="Proyecto web, mensualidad enero..."
           required
           defaultValue={defaultValues?.concept ?? ''}
           className="bg-white border-[#E6EAF0] text-[#1A1F36]"
         />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
+        <div className="space-y-2">
+          <Label htmlFor="category" className="text-[#1A1F36]">Categoría</Label>
+          <Select name="category" value={category} onValueChange={(value) => value && setCategory(value as OrderCategory)}>
+            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+              <span className="truncate text-left">{selectedCategoryLabel}</span>
+            </SelectTrigger>
+            <SelectContent className="bg-white border-[#E6EAF0]">
+              {orderCategories.map((item) => (
+                <SelectItem key={item.value} value={item.value} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tags" className="text-[#1A1F36]">Tags</Label>
+          <input type="hidden" name="tags" value={tags.join(',')} />
+          <TagInput
+            tags={tags}
+            value={tagInput}
+            onValueChange={setTagInput}
+            onAdd={addTag}
+            onRemove={removeTag}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -168,9 +209,6 @@ export function OrderForm({
           />
           <span>
             <span className="block text-sm font-medium text-[#1A1F36]">Requiere factura</span>
-            <span className="block text-sm text-[#6B7280]">
-              Si se activa, la orden guarda subtotal, IVA 16% y total.
-            </span>
           </span>
         </label>
 
@@ -187,7 +225,6 @@ export function OrderForm({
               />
               <span>
                 <span className="block text-sm font-medium text-[#1A1F36]">Precio incluye IVA</span>
-                <span className="block text-xs text-[#6B7280]">El monto capturado ya es el total facturado.</span>
               </span>
             </label>
             <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
@@ -201,7 +238,6 @@ export function OrderForm({
               />
               <span>
                 <span className="block text-sm font-medium text-[#1A1F36]">Agregar IVA</span>
-                <span className="block text-xs text-[#6B7280]">El monto capturado es subtotal y se suma IVA.</span>
               </span>
             </label>
           </div>
@@ -231,9 +267,9 @@ export function OrderForm({
       {defaultValues && (
         <div className="space-y-2">
           <Label htmlFor="status" className="text-[#1A1F36]">Estatus operativo</Label>
-          <Select name="status" defaultValue={getEditableStatus(defaultValues.status)}>
+          <Select name="status" value={editableStatus} onValueChange={(value) => value && setEditableStatus(value)}>
             <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
-              <SelectValue />
+              <span className="truncate text-left">{statusLabels[editableStatus] ?? 'Automático por pagos'}</span>
             </SelectTrigger>
             <SelectContent className="bg-white border-[#E6EAF0]">
               <SelectItem value="auto" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Automático por pagos</SelectItem>
@@ -242,9 +278,6 @@ export function OrderForm({
               <SelectItem value="cancelled" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cancelado</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-[#6B7280]">
-            Automático recalcula pendiente, parcial o liquidado según los abonos.
-          </p>
         </div>
       )}
 
@@ -261,6 +294,29 @@ export function OrderForm({
       </Button>
     </form>
   )
+
+  function addTag(rawValue: string) {
+    const nextTags = rawValue
+      .split(',')
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (!nextTags.length) return
+
+    setTags((current) => {
+      const unique = new Set(current)
+      for (const tag of nextTags) {
+        if (unique.size >= 12) break
+        unique.add(tag)
+      }
+      return Array.from(unique)
+    })
+    setTagInput('')
+  }
+
+  function removeTag(tag: string) {
+    setTags((current) => current.filter((item) => item !== tag))
+  }
 }
 
 function getInitialAmount(order?: Order) {
@@ -277,6 +333,84 @@ function getEditableStatus(status: OrderStatus) {
   return ['cancelled', 'paused', 'disputed'].includes(status) ? status : 'auto'
 }
 
+const orderCategories: { value: OrderCategory; label: string }[] = [
+  { value: 'service', label: 'Servicio' },
+  { value: 'product', label: 'Producto' },
+  { value: 'project', label: 'Proyecto' },
+  { value: 'subscription', label: 'Mensualidad' },
+  { value: 'other', label: 'Otro' },
+]
+
+const statusLabels: Record<string, string> = {
+  auto: 'Automático por pagos',
+  paused: 'Pausado',
+  disputed: 'En disputa',
+  cancelled: 'Cancelado',
+}
+
+function TagInput({
+  tags,
+  value,
+  onValueChange,
+  onAdd,
+  onRemove,
+}: {
+  tags: string[]
+  value: string
+  onValueChange: (value: string) => void
+  onAdd: (value: string) => void
+  onRemove: (tag: string) => void
+}) {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter' || event.key === 'Tab' || event.key === ',') {
+      if (value.trim()) {
+        event.preventDefault()
+        onAdd(value)
+      }
+    }
+
+    if (event.key === 'Backspace' && !value && tags.length) {
+      event.preventDefault()
+      onRemove(tags[tags.length - 1])
+    }
+  }
+
+  return (
+    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-lg border border-[#E6EAF0] bg-white px-3 py-2 focus-within:border-[#6C5CE7] focus-within:ring-3 focus-within:ring-[#6C5CE7]/15">
+      {tags.map((tag) => (
+        <span key={tag} className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-[#6C5CE7]/10 px-2.5 py-1 text-xs font-semibold text-[#6C5CE7]">
+          {tag}
+          <button
+            type="button"
+            onClick={() => onRemove(tag)}
+            className="rounded-full text-[#6C5CE7]/70 hover:text-[#EF4444]"
+            aria-label={`Quitar tag ${tag}`}
+          >
+            x
+          </button>
+        </span>
+      ))}
+      <input
+        id="tags"
+        value={value}
+        onChange={(event) => {
+          const nextValue = event.target.value
+          if (nextValue.includes(',')) {
+            onAdd(nextValue)
+          } else {
+            onValueChange(nextValue)
+          }
+        }}
+        onKeyDown={handleKeyDown}
+        onBlur={() => {
+          if (value.trim()) onAdd(value)
+        }}
+        placeholder={tags.length ? 'Agregar tag...' : 'urgente, factura, mantenimiento'}
+        className="min-h-7 min-w-[160px] flex-1 border-0 bg-transparent text-sm text-[#1A1F36] outline-none placeholder:text-[#8A94A6]"
+      />
+    </div>
+  )
+}
 
 function PreviewAmount({
   label,

@@ -25,7 +25,7 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
   }
 
   return (
-    <section className="mb-6 overflow-hidden rounded-3xl border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
+    <section className="mb-6 overflow-hidden rounded-3xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
       <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-7 text-white">
         <div className="flex items-center gap-3">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-white/18 ring-1 ring-white/25">
@@ -33,7 +33,7 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
           </span>
           <div>
             <h2 className="text-xl font-bold">Cuenta conectada</h2>
-            <p className="text-sm text-white/70">Las llaves secretas van en variables de entorno, no se guardan en base de datos.</p>
+            <p className="text-sm text-white/70">Configuración activa</p>
           </div>
         </div>
       </div>
@@ -76,9 +76,6 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
           />
           <span>
             <span className="block text-sm font-semibold text-[#1A1F36]">Habilitar pagos con Stripe</span>
-            <span className="block text-sm text-[#6B7280]">
-              Esto solo permite activarlo por orden. Cada orden decide si muestra pago con tarjeta.
-            </span>
           </span>
         </label>
 
@@ -108,13 +105,12 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
           </div>
 
           <p className="mt-3 text-xs text-[#6B7280]">
-            Ejemplo con {formatCurrency(5000)}: si el cliente paga comisión, se le cargaría aprox.{' '}
-            {formatCurrency(5000 + (5000 * settings.fee_percent / 100) + settings.fixed_fee_amount)}.
+            Referencia {formatCurrency(5000)}: {formatCurrency(5000 + (5000 * settings.fee_percent / 100) + settings.fixed_fee_amount)}
           </p>
         </div>
 
         <div className="rounded-2xl border border-[#F4B740]/30 bg-[#FFF7E6] p-4 text-sm text-[#7A5600]">
-          Para facturación y recargos por comisión conviene validarlo con tu contador. Técnicamente el sistema puede sumar la comisión, pero fiscalmente puede requerir reflejarlo como cargo o parte del precio.
+          Validar tratamiento fiscal de comisiones antes de usar en producción.
         </div>
 
         <div>

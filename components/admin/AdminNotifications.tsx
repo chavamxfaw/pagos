@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AlertTriangle, Bell, CheckCircle2, Info } from 'lucide-react'
+import { dismissAdminNotifications } from '@/actions/admin-notifications'
 import { getAdminNotifications, type AdminNotification } from '@/lib/admin-notifications'
 import { cn } from '@/lib/utils'
 
@@ -22,11 +23,23 @@ export async function AdminNotifications() {
       </summary>
 
       <div className="absolute right-0 top-12 z-50 w-[360px] overflow-hidden rounded-2xl border border-[#E6EAF0] bg-white shadow-[0_24px_60px_rgba(26,31,54,0.14)]">
-        <div className="border-b border-[#E6EAF0] px-4 py-3">
-          <p className="text-sm font-bold text-[#1A1F36]">Notificaciones</p>
-          <p className="text-xs text-[#6B7280]">
-            {count > 0 ? `${count} punto${count === 1 ? '' : 's'} por revisar` : 'Todo al día'}
-          </p>
+        <div className="flex items-start justify-between gap-3 border-b border-[#E6EAF0] px-4 py-3">
+          <div>
+            <p className="text-sm font-bold text-[#1A1F36]">Notificaciones</p>
+            <p className="text-xs text-[#6B7280]">
+              {count > 0 ? `${count} punto${count === 1 ? '' : 's'} por revisar` : 'Todo al día'}
+            </p>
+          </div>
+          {notifications.length > 0 && (
+            <form action={dismissAdminNotifications}>
+              <button
+                type="submit"
+                className="min-h-8 rounded-lg px-2 text-xs font-semibold text-[#4A8BFF] transition-colors hover:bg-[#EEF2FF]"
+              >
+                Limpiar
+              </button>
+            </form>
+          )}
         </div>
 
         {notifications.length ? (
@@ -39,7 +52,7 @@ export async function AdminNotifications() {
           <div className="px-4 py-8 text-center">
             <CheckCircle2 className="mx-auto mb-2 size-8 text-[#2ED39A]" />
             <p className="text-sm font-semibold text-[#1A1F36]">Sin pendientes importantes</p>
-            <p className="mt-1 text-xs text-[#6B7280]">Las alertas aparecerán aquí cuando haya algo que atender.</p>
+            <p className="mt-1 text-xs text-[#6B7280]">Sin alertas activas.</p>
           </div>
         )}
       </div>

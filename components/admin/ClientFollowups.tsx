@@ -29,7 +29,7 @@ export function ClientFollowups({
   const [state, formAction, pending] = useActionState(action, null)
 
   return (
-    <div className="rounded-2xl border border-white bg-white p-5 shadow-[0_16px_40px_rgba(26,31,54,0.06)] ring-1 ring-[#E6EAF0]/70">
+    <div className="rounded-2xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-wider text-[#6B7280]">Seguimiento</p>
         <h2 className="mt-1 text-xl font-bold text-[#1A1F36]">Notas de cobranza</h2>
@@ -63,7 +63,7 @@ export function ClientFollowups({
             name="content"
             required
             rows={4}
-            placeholder="Ej: prometió pagar el viernes..."
+            placeholder="Prometió pagar el viernes..."
             className="min-h-28 w-full bg-white border-[#E6EAF0] text-[#1A1F36] resize-y"
           />
         </div>

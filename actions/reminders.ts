@@ -98,4 +98,6 @@ export async function sendOrderReminder(orderId: string) {
 
   revalidatePath(`/admin/orders/${orderId}`)
   revalidatePath(`/admin/clients/${order.client_id}`)
+
+  return { channels }
 }

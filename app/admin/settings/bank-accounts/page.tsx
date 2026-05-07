@@ -31,13 +31,11 @@ export default async function BankAccountsPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Configuración</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1A1F36]">Datos bancarios</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
-            Guarda tus cuentas de cobro para copiarlas o enviarlas desde una orden.
-          </p>
+          <p className="mt-1 text-sm text-[#6B7280]">Cuentas de cobro</p>
         </div>
       </div>
 
-      <section className="mb-8 overflow-hidden rounded-3xl border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
+      <section className="mb-8 overflow-hidden rounded-3xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
         <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-7 text-white">
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-white/18 ring-1 ring-white/25">
@@ -45,7 +43,7 @@ export default async function BankAccountsPage() {
             </span>
             <div>
               <h2 className="text-xl font-bold">Nueva cuenta de cobro</h2>
-              <p className="text-sm text-white/70">Solo guarda datos de cuenta, CLABE o tarjeta. No guardes claves bancarias.</p>
+              <p className="text-sm text-white/70">Cuenta, CLABE o tarjeta</p>
             </div>
           </div>
         </div>
@@ -63,13 +61,13 @@ export default async function BankAccountsPage() {
         {!bankAccounts.length && (
           <div className="rounded-3xl border border-dashed border-[#D8DEE8] bg-white p-8 text-center">
             <p className="text-sm font-semibold text-[#1A1F36]">Sin datos bancarios todavía</p>
-            <p className="mt-1 text-sm text-[#6B7280]">Agrega una cuenta para tenerla disponible en tus órdenes.</p>
+            <p className="mt-1 text-sm text-[#6B7280]">No hay cuentas guardadas.</p>
           </div>
         )}
 
         <div className="grid gap-4">
           {bankAccounts.map((account) => (
-            <article key={account.id} className="rounded-3xl border border-[#E6EAF0] bg-white p-5 shadow-sm">
+            <article key={account.id} className="rounded-3xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_8px_24px_rgba(26,31,54,0.02)]">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -155,7 +153,7 @@ function BankAccountForm({
           id={`instructions-${account?.id ?? 'new'}`}
           name="instructions"
           defaultValue={account?.instructions ?? ''}
-          placeholder="Ej. Enviar comprobante por WhatsApp con el nombre de la orden."
+          placeholder="Enviar comprobante por WhatsApp con el nombre de la orden."
           className="min-h-24 border-[#D8DEE8] bg-white text-[#1A1F36]"
         />
       </div>

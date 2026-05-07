@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, getOrderTiming, getTodayDateString } from '@/lib/utils'
-import type { Client, ClientFollowup, OrderWithClient } from '@/types'
+import type { ActivityLog, Client, ClientFollowup, OrderWithClient } from '@/types'
 
 export type AdminNotification = {
   id: string
@@ -11,12 +11,15 @@ export type AdminNotification = {
   href: string
   tone: 'danger' | 'warning' | 'info'
   count?: number
+  fingerprint: string
 }
 
 export async function getAdminNotifications(): Promise<AdminNotification[]> {
   const supabase = await createClient()
+  const { data: authData } = await supabase.auth.getUser()
+  const userId = authData.user?.id
 
-  const [{ data: orders }, { data: followups }, { data: clients }] = await Promise.all([
+  const [{ data: orders }, { data: followups }, { data: clients }, { data: stripePayments }] = await Promise.all([
     supabase
       .from('orders')
       .select('*, clients(*)')
@@ -35,11 +38,19 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(200),
+    supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('event_type', 'stripe_payment_succeeded')
+      .gte('created_at', getRecentThreshold())
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   const activeOrders = (orders ?? []) as OrderWithClient[]
   const clientRows = (clients ?? []) as Client[]
   const followupRows = (followups ?? []) as (ClientFollowup & { clients?: { name?: string } })[]
+  const stripePaymentRows = (stripePayments ?? []) as ActivityLog[]
 
   const notifications: AdminNotification[] = []
   const overdueOrders = activeOrders.filter((order) => getOrderTiming(order).key === 'overdue')
@@ -47,6 +58,19 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
   const ordersWithoutBank = activeOrders.filter((order) => !order.bank_account_id)
   const clientsWithoutContact = clientRows.filter((client) => !client.email && !client.phone)
   const clientsWithoutPortal = getClientsWithOrdersAndNoPortal(activeOrders)
+
+  if (stripePaymentRows.length) {
+    const first = stripePaymentRows[0]
+    notifications.push({
+      id: 'stripe-payments',
+      title: `${stripePaymentRows.length} pago${stripePaymentRows.length === 1 ? '' : 's'} por Stripe`,
+      description: first.message,
+      href: first.order_id ? `/admin/orders/${first.order_id}` : '/admin/orders',
+      tone: 'info',
+      count: stripePaymentRows.length,
+      fingerprint: makeFingerprint(stripePaymentRows.map((payment) => payment.id).join('|')),
+    })
+  }
 
   if (overdueOrders.length) {
     const pendingTotal = overdueOrders.reduce((sum, order) => sum + Math.max(0, order.total_amount - order.paid_amount), 0)
@@ -57,6 +81,7 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: '/admin/orders?status=overdue',
       tone: 'danger',
       count: overdueOrders.length,
+      fingerprint: makeFingerprint(`${overdueOrders.length}|${pendingTotal}|${overdueOrders.map((order) => order.id).join('|')}`),
     })
   }
 
@@ -69,6 +94,7 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: '/admin/orders?status=due_soon',
       tone: 'warning',
       count: dueSoonOrders.length,
+      fingerprint: makeFingerprint(`${dueSoonOrders.length}|${dueSoonOrders.map((order) => `${order.id}:${order.due_date}`).join('|')}`),
     })
   }
 
@@ -81,6 +107,7 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: `/admin/clients/${first.client_id}`,
       tone: 'warning',
       count: followupRows.length,
+      fingerprint: makeFingerprint(`${followupRows.length}|${followupRows.map((followup) => `${followup.id}:${followup.follow_up_date}`).join('|')}`),
     })
   }
 
@@ -93,6 +120,7 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: '/admin/orders',
       tone: 'info',
       count: ordersWithoutBank.length,
+      fingerprint: makeFingerprint(`${ordersWithoutBank.length}|${ordersWithoutBank.map((order) => order.id).join('|')}`),
     })
   }
 
@@ -104,6 +132,7 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: '/admin/clients',
       tone: 'info',
       count: clientsWithoutContact.length,
+      fingerprint: makeFingerprint(`${clientsWithoutContact.length}|${clientsWithoutContact.map((client) => client.id).join('|')}`),
     })
   }
 
@@ -115,10 +144,29 @@ export async function getAdminNotifications(): Promise<AdminNotification[]> {
       href: `/admin/clients/${clientsWithoutPortal[0].id}`,
       tone: 'info',
       count: clientsWithoutPortal.length,
+      fingerprint: makeFingerprint(`${clientsWithoutPortal.length}|${clientsWithoutPortal.map((client) => client.id).join('|')}`),
     })
   }
 
-  return notifications.slice(0, 8)
+  if (!userId || !notifications.length) return notifications.slice(0, 8)
+
+  const { data: dismissed } = await supabase
+    .from('admin_notification_dismissals')
+    .select('notification_id, fingerprint')
+    .eq('user_id', userId)
+    .in('notification_id', notifications.map((notification) => notification.id))
+
+  const dismissedMap = new Map((dismissed ?? []).map((item) => [item.notification_id, item.fingerprint]))
+
+  return notifications
+    .filter((notification) => dismissedMap.get(notification.id) !== notification.fingerprint)
+    .slice(0, 8)
+}
+
+function getRecentThreshold() {
+  const date = new Date()
+  date.setDate(date.getDate() - 7)
+  return date.toISOString()
 }
 
 function getClientsWithOrdersAndNoPortal(orders: OrderWithClient[]) {
@@ -131,4 +179,8 @@ function getClientsWithOrdersAndNoPortal(orders: OrderWithClient[]) {
   }
 
   return Array.from(clientsById.values())
+}
+
+function makeFingerprint(value: string) {
+  return value || 'empty'
 }

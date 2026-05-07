@@ -33,13 +33,11 @@ export default async function FiscalDocumentsPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Configuración</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1A1F36]">Documentos fiscales</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
-            Sube tu constancia fiscal en PDF y genera un link seguro para compartirla.
-          </p>
+          <p className="mt-1 text-sm text-[#6B7280]">PDFs fiscales y links compartibles</p>
         </div>
       </div>
 
-      <section className="mb-8 overflow-hidden rounded-3xl border border-white bg-white shadow-[0_18px_45px_rgba(26,31,54,0.08)] ring-1 ring-[#E6EAF0]/80">
+      <section className="mb-8 overflow-hidden rounded-3xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
         <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-7 text-white">
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-white/18 ring-1 ring-white/25">
@@ -47,7 +45,7 @@ export default async function FiscalDocumentsPage() {
             </span>
             <div>
               <h2 className="text-xl font-bold">Subir constancia fiscal</h2>
-              <p className="text-sm text-white/70">El archivo queda privado; el link compartido abre una URL temporal del PDF.</p>
+              <p className="text-sm text-white/70">PDF privado con link compartible</p>
             </div>
           </div>
         </div>
@@ -65,13 +63,13 @@ export default async function FiscalDocumentsPage() {
         {!documents.length && (
           <div className="rounded-3xl border border-dashed border-[#D8DEE8] bg-white p-8 text-center">
             <p className="text-sm font-semibold text-[#1A1F36]">Sin documentos fiscales todavía</p>
-            <p className="mt-1 text-sm text-[#6B7280]">Sube tu constancia fiscal para poder compartirla cuando un cliente la pida.</p>
+            <p className="mt-1 text-sm text-[#6B7280]">No hay documentos guardados.</p>
           </div>
         )}
 
         <div className="grid gap-4">
           {documents.map((document) => (
-            <article key={document.id} className="rounded-3xl border border-[#E6EAF0] bg-white p-5 shadow-sm">
+            <article key={document.id} className="rounded-3xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_8px_24px_rgba(26,31,54,0.02)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -143,7 +141,7 @@ function FiscalDocumentUploadForm() {
         <Textarea
           id="description"
           name="description"
-          placeholder="Ej. Constancia de situación fiscal vigente."
+          placeholder="Constancia de situación fiscal vigente."
           className="min-h-24 border-[#D8DEE8] bg-white text-[#1A1F36]"
         />
       </div>

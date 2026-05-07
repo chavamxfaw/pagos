@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
 import { OrdersFilterList } from '@/components/admin/OrdersFilterList'
@@ -21,14 +22,16 @@ export default async function OrdersPage({
   const typedOrders = (orders ?? []) as OrderWithClient[]
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div className="mx-auto max-w-[1500px] space-y-6 p-4 md:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1F36]">Órdenes</h1>
-          <p className="text-[#6B7280] text-sm mt-1">{typedOrders.length} órdenes en total</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Cobranza</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1A1F36]">Órdenes</h1>
+          <p className="mt-1 text-sm text-[#6B7280]">{typedOrders.length} órdenes en total</p>
         </div>
-        <Link href="/admin/orders/new" className={cn(buttonVariants(), "w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto")}>
-          + Nueva orden
+        <Link href="/admin/orders/new" className={cn(buttonVariants(), "h-11 w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto")}>
+          <Plus className="size-4" />
+          Nueva orden
         </Link>
       </div>
 
