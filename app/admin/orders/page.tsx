@@ -22,7 +22,7 @@ export default async function OrdersPage({
   const typedOrders = (orders ?? []) as OrderWithClient[]
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6 p-4 md:p-8">
+    <div className="mx-auto w-full max-w-[1500px] min-w-0 space-y-6 overflow-x-hidden p-4 md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Cobranza</p>

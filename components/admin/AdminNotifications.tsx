@@ -9,7 +9,7 @@ export async function AdminNotifications() {
   const count = notifications.reduce((sum, item) => sum + (item.count ?? 1), 0)
 
   return (
-    <details className="group relative hidden sm:block">
+    <details className="group relative isolate z-[120] hidden sm:block">
       <summary
         className="relative inline-flex size-10 cursor-pointer list-none items-center justify-center rounded-full border border-[#E6EAF0] bg-white text-[#1A1F36] shadow-sm transition-colors hover:bg-[#F8FAFF] [&::-webkit-details-marker]:hidden"
         aria-label="Notificaciones"
@@ -22,7 +22,7 @@ export async function AdminNotifications() {
         )}
       </summary>
 
-      <div className="absolute right-0 top-12 z-50 w-[360px] overflow-hidden rounded-2xl border border-[#E6EAF0] bg-white shadow-[0_24px_60px_rgba(26,31,54,0.14)]">
+      <div className="absolute right-0 top-12 z-[999] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#E6EAF0] bg-white shadow-[0_24px_60px_rgba(26,31,54,0.14)]">
         <div className="flex items-start justify-between gap-3 border-b border-[#E6EAF0] px-4 py-3">
           <div>
             <p className="text-sm font-bold text-[#1A1F36]">Notificaciones</p>
@@ -43,7 +43,7 @@ export async function AdminNotifications() {
         </div>
 
         {notifications.length ? (
-          <div className="max-h-[420px] overflow-y-auto p-2">
+          <div className="max-h-[min(70dvh,420px)] overflow-y-auto overscroll-contain p-2">
             {notifications.map((notification) => (
               <NotificationLink key={notification.id} notification={notification} />
             ))}

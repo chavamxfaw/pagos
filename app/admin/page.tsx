@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   const categoryBreakdown = getCategoryBreakdown(allOrders)
   const paymentsByMethod = getPaymentsByMethod(allPayments)
   const criticalOrders = [...overdueOrders, ...dueSoonOrders].slice(0, 5)
-  const recentOrders = allOrders.slice(0, 6)
+  const recentOrders = allOrders.slice(0, 3)
   const recentPayments = allPayments.slice(0, 6)
   const portfolioProgress = getProgressPercent(collectedTotal, totalPortfolio)
 
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
         <MetricCard label="Clientes" value={String(totalClients ?? 0)} hint={`${completedOrders.length} órdenes liquidadas`} icon={<UsersRound className="size-4" />} accent="blue" />
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid items-start gap-5 xl:grid-cols-[1.15fr_0.85fr]">
         <Panel className="p-5">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
         </Panel>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr_0.9fr]">
+      <section className="grid items-start gap-5 xl:grid-cols-[0.9fr_1.1fr_0.9fr]">
         <Panel className="p-5">
           <h2 className="text-lg font-semibold text-[#1A1F36]">Cobros por mes</h2>
           <p className="text-sm text-[#6B7280]">Últimos seis meses.</p>
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
           <div className="mb-5 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-[#1A1F36]">Órdenes recientes</h2>
-              <p className="text-sm text-[#6B7280]">Movimientos recientes.</p>
+              <p className="text-sm text-[#6B7280]">Últimas 3 órdenes creadas.</p>
             </div>
             <Link href="/admin/orders" className="text-sm font-medium text-[#6C5CE7]">Todas</Link>
           </div>
@@ -175,7 +175,7 @@ export default async function DashboardPage() {
         </Panel>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid items-start gap-5 lg:grid-cols-2">
         <Panel className="p-5">
           <h2 className="text-lg font-semibold text-[#1A1F36]">Pagos por método</h2>
           <p className="text-sm text-[#6B7280]">Totales por método.</p>

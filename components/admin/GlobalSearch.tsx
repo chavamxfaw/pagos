@@ -149,7 +149,7 @@ export function GlobalSearch({ clients, orders }: { clients: Client[]; orders: G
   const orderResults = results.filter((result) => result.type === 'order')
 
   return (
-    <div ref={wrapperRef} className="relative w-full">
+    <div ref={wrapperRef} className="relative isolate z-[120] w-full">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#8A94A6]" />
         <Input
@@ -173,9 +173,9 @@ export function GlobalSearch({ clients, orders }: { clients: Client[]; orders: G
       </div>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-50 overflow-hidden rounded-2xl border border-[#D8DEE8] bg-white shadow-[0_24px_70px_rgba(26,31,54,0.18)]">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-[999] max-h-[min(70dvh,460px)] overflow-hidden rounded-2xl border border-[#D8DEE8] bg-white shadow-[0_24px_70px_rgba(26,31,54,0.18)]">
           {results.length ? (
-            <div className="max-h-[420px] overflow-y-auto p-2">
+            <div className="max-h-[min(70dvh,420px)] overflow-y-auto overscroll-contain p-2">
               {clientResults.length > 0 && (
                 <ResultGroup
                   title="Clientes"

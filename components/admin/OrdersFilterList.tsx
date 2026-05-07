@@ -247,8 +247,8 @@ export function OrdersFilterList({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="min-w-0 space-y-4 overflow-x-hidden">
+      <div className="-mx-4 flex max-w-[100vw] gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:max-w-full md:px-0 [&::-webkit-scrollbar]:hidden">
         {(['active', 'pending', 'partial', 'overdue', 'due_soon', 'completed', 'all'] as StatusFilter[]).map((item) => (
           <button
             key={item}
@@ -265,9 +265,9 @@ export function OrdersFilterList({
         ))}
       </div>
 
-      <div className="rounded-3xl border border-[#E3E8F0] bg-white/90 p-3 shadow-[0_10px_30px_rgba(26,31,54,0.02)]">
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-        <div className="relative">
+      <div className="min-w-0 rounded-3xl border border-[#E3E8F0] bg-white/90 p-3 shadow-[0_10px_30px_rgba(26,31,54,0.02)]">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <div className="relative min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8A94A6]" />
           <Input
             value={query}
@@ -281,7 +281,7 @@ export function OrdersFilterList({
           type="button"
           variant="outline"
           onClick={() => setShowFilters((current) => !current)}
-          className="h-10 w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#F8FAFF] lg:w-auto"
+          className="h-10 w-full min-w-0 justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#F8FAFF] lg:w-auto"
           aria-expanded={showFilters}
         >
           <SlidersHorizontal className="size-4 text-[#6C5CE7]" />
@@ -293,7 +293,7 @@ export function OrdersFilterList({
           )}
         </Button>
 
-        <Button type="button" variant="outline" onClick={exportOrders} disabled={!filteredOrders.length} className="h-10 w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] lg:w-auto">
+        <Button type="button" variant="outline" onClick={exportOrders} disabled={!filteredOrders.length} className="h-10 w-full min-w-0 justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] lg:w-auto">
           <Download className="size-4" />
           Exportar CSV
         </Button>
@@ -301,7 +301,7 @@ export function OrdersFilterList({
 
         {showFilters && (
           <div className="mt-3 border-t border-[#E6EAF0] pt-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Select value={clientId} onValueChange={(value) => value && setClientId(value)}>
                 <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
                   <SelectValue>{clientId === 'all' ? 'Todos los clientes' : clients.find(([id]) => id === clientId)?.[1]}</SelectValue>
@@ -391,7 +391,7 @@ export function OrdersFilterList({
           <p className="text-sm">Sin coincidencias.</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredOrders.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
