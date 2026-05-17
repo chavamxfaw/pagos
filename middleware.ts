@@ -1,8 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { enforceIpRateLimit } from '@/lib/security/rate-limit'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+  const { pathname } = request.nextUrl
+
+  const rateLimitResponse = await getMiddlewareRateLimitResponse(request, pathname)
+  if (rateLimitResponse) return rateLimitResponse
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +29,6 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
   let isAdmin = false
 
   if (user) {
@@ -52,6 +56,30 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse
 }
 
+function getMiddlewareRateLimitResponse(request: NextRequest, pathname: string) {
+  if (pathname === '/login') {
+    return enforceIpRateLimit({
+      request,
+      scope: 'auth',
+      limit: 25,
+      windowSeconds: 300,
+      blockSeconds: 900,
+    })
+  }
+
+  if (pathname.startsWith('/p/') || pathname.startsWith('/c/') || pathname.startsWith('/d/')) {
+    return enforceIpRateLimit({
+      request,
+      scope: 'public_link',
+      limit: 120,
+      windowSeconds: 300,
+      blockSeconds: 900,
+    })
+  }
+
+  return null
+}
+
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: ['/admin/:path*', '/login', '/p/:path*', '/c/:path*', '/d/:path*'],
 }

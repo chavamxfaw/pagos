@@ -49,6 +49,8 @@ export default async function EditOrderPage({
         tax_mode: formData.get('tax_mode') as 'included' | 'added' | undefined,
         issued_at: formData.get('issued_at') as string,
         due_date: (formData.get('due_date') as string) || undefined,
+        payment_reminder_enabled: formData.get('payment_reminder_enabled') === 'on',
+        payment_reminder_days_before: Number(formData.get('payment_reminder_days_before') ?? 1),
         bank_account_id: getBankAccountId(formData),
         status: getStatusValue(formData.get('status') as string | null),
       })

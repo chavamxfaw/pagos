@@ -40,6 +40,9 @@ export function OrderForm({
   const [editableStatus, setEditableStatus] = useState(defaultValues ? getEditableStatus(defaultValues.status) : 'auto')
   const [tags, setTags] = useState<string[]>(defaultValues?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
+  const [dueDate, setDueDate] = useState(defaultValues?.due_date ?? '')
+  const [paymentReminderEnabled, setPaymentReminderEnabled] = useState(defaultValues?.payment_reminder_enabled ?? false)
+  const [paymentReminderDaysBefore, setPaymentReminderDaysBefore] = useState(String(defaultValues?.payment_reminder_days_before ?? 1))
   const selectedClient = clients.find((client) => client.id === selectedClientId)
   const selectedBankAccount = bankAccounts.find((account) => account.id === selectedBankAccountId)
   const selectedCategoryLabel = orderCategories.find((item) => item.value === category)?.label ?? 'Servicio'
@@ -112,11 +115,56 @@ export function OrderForm({
             id="due_date"
             name="due_date"
             type="date"
-            defaultValue={defaultValues?.due_date ?? ''}
+            value={dueDate}
+            onChange={(event) => {
+              const nextValue = event.target.value
+              setDueDate(nextValue)
+              if (!nextValue) setPaymentReminderEnabled(false)
+            }}
             className="bg-white border-[#E6EAF0] text-[#1A1F36]"
           />
         </div>
       </div>
+
+      {dueDate && (
+        <div className="rounded-xl border border-[#E6EAF0] bg-white p-4">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="payment_reminder_enabled"
+              checked={paymentReminderEnabled}
+              onChange={(event) => setPaymentReminderEnabled(event.target.checked)}
+              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+            />
+            <span>
+              <span className="block text-sm font-medium text-[#1A1F36]">Activar recordatorio de pago</span>
+              <span className="block text-sm text-[#6B7280]">Se enviará automáticamente al cliente antes del vencimiento.</span>
+            </span>
+          </label>
+
+          {paymentReminderEnabled && (
+            <div className="mt-4 grid gap-2 sm:max-w-xs">
+              <Label htmlFor="payment_reminder_days_before" className="text-[#1A1F36]">Enviar recordatorio</Label>
+              <Select
+                name="payment_reminder_days_before"
+                value={paymentReminderDaysBefore}
+                onValueChange={(value) => value && setPaymentReminderDaysBefore(value)}
+              >
+                <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                  <span className="truncate text-left">{getReminderLabel(Number(paymentReminderDaysBefore))}</span>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-[#E6EAF0]">
+                  {reminderDayOptions.map((days) => (
+                    <SelectItem key={days} value={String(days)} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                      {getReminderLabel(days)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="bank_account_id" className="text-[#1A1F36]">Datos bancarios para esta orden</Label>
@@ -346,6 +394,14 @@ const statusLabels: Record<string, string> = {
   paused: 'Pausado',
   disputed: 'En disputa',
   cancelled: 'Cancelado',
+}
+
+const reminderDayOptions = [0, 1, 2, 3, 5, 7, 14, 30]
+
+function getReminderLabel(days: number) {
+  if (days === 0) return 'El día del vencimiento'
+  if (days === 1) return '1 día antes'
+  return `${days} días antes`
 }
 
 function TagInput({

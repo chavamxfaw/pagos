@@ -34,6 +34,9 @@ export type Order = {
   status: OrderStatus
   issued_at: string
   due_date: string | null
+  payment_reminder_enabled: boolean
+  payment_reminder_days_before: number
+  payment_reminder_last_sent_on: string | null
   bank_account_id: string | null
   token: string
   created_at: string

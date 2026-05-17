@@ -22,6 +22,8 @@ export async function createOrder(data: {
   tax_mode?: 'included' | 'added'
   issued_at?: string
   due_date?: string
+  payment_reminder_enabled?: boolean
+  payment_reminder_days_before?: number
   bank_account_id?: string
 }) {
   await requireAuth()
@@ -42,6 +44,9 @@ export async function createOrder(data: {
       tags: parseTags(data.tags),
       issued_at: data.issued_at || getTodayDateString(),
       due_date: data.due_date || null,
+      payment_reminder_enabled: Boolean(data.due_date && data.payment_reminder_enabled),
+      payment_reminder_days_before: getReminderDaysBefore(data.payment_reminder_days_before),
+      payment_reminder_last_sent_on: null,
       bank_account_id: data.bank_account_id || null,
       ...amounts,
     })
@@ -74,6 +79,8 @@ export async function updateOrder(orderId: string, data: {
   tax_mode?: 'included' | 'added'
   issued_at?: string
   due_date?: string
+  payment_reminder_enabled?: boolean
+  payment_reminder_days_before?: number
   bank_account_id?: string
   status?: OrderStatus
 }) {
@@ -82,7 +89,7 @@ export async function updateOrder(orderId: string, data: {
 
   const { data: currentOrder, error: fetchError } = await admin
     .from('orders')
-    .select('client_id, paid_amount, completed_at, status')
+    .select('client_id, paid_amount, completed_at, status, due_date, payment_reminder_enabled, payment_reminder_days_before')
     .eq('id', orderId)
     .single()
 
@@ -107,6 +114,13 @@ export async function updateOrder(orderId: string, data: {
   const cancelledAt = status === 'cancelled'
     ? new Date().toISOString()
     : null
+  const nextDueDate = data.due_date || null
+  const nextReminderEnabled = Boolean(nextDueDate && data.payment_reminder_enabled)
+  const nextReminderDaysBefore = getReminderDaysBefore(data.payment_reminder_days_before)
+  const shouldResetReminderSentOn =
+    currentOrder.due_date !== nextDueDate ||
+    currentOrder.payment_reminder_enabled !== nextReminderEnabled ||
+    currentOrder.payment_reminder_days_before !== nextReminderDaysBefore
 
   const { data: order, error } = await admin
     .from('orders')
@@ -117,7 +131,10 @@ export async function updateOrder(orderId: string, data: {
       category: getOrderCategory(data.category),
       tags: parseTags(data.tags),
       issued_at: data.issued_at || getTodayDateString(),
-      due_date: data.due_date || null,
+      due_date: nextDueDate,
+      payment_reminder_enabled: nextReminderEnabled,
+      payment_reminder_days_before: nextReminderDaysBefore,
+      ...(shouldResetReminderSentOn ? { payment_reminder_last_sent_on: null } : {}),
       bank_account_id: data.bank_account_id || null,
       ...amounts,
       status,
@@ -227,6 +244,11 @@ function parseTags(value?: string) {
         .slice(0, 12)
     )
   )
+}
+
+function getReminderDaysBefore(value?: number) {
+  if (!Number.isFinite(value)) return 1
+  return Math.min(30, Math.max(0, Math.trunc(value!)))
 }
 
 export async function markOrderCompleted(orderId: string) {

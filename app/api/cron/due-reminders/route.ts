@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendOrderReminderNotification } from '@/lib/order-reminder-notifications'
 import { resend } from '@/lib/resend/client'
 import { addDaysToDateString, formatCurrency, formatDateShort, getTodayDateString } from '@/lib/utils'
+import type { Client, Order } from '@/types'
 
 type DueOrder = {
   id: string
@@ -14,6 +16,10 @@ type DueOrder = {
     name: string
     company: string | null
   }
+}
+
+type AutomaticReminderOrder = Order & {
+  clients: Client
 }
 
 export async function GET(request: Request) {
@@ -35,6 +41,7 @@ export async function GET(request: Request) {
 
   const tomorrow = addDaysToDateString(getTodayDateString(), 1)
   const supabase = createAdminClient()
+  const automaticReminderResult = await sendAutomaticClientReminders(supabase)
 
   const { data, error } = await supabase
     .from('orders')
@@ -49,7 +56,13 @@ export async function GET(request: Request) {
 
   const orders = ((data ?? []) as unknown as DueOrder[])
   if (!orders.length) {
-    return NextResponse.json({ ok: true, sent: false, dueDate: tomorrow, count: 0 })
+    return NextResponse.json({
+      ok: true,
+      sent: false,
+      dueDate: tomorrow,
+      count: 0,
+      automaticReminders: automaticReminderResult,
+    })
   }
 
   const ordersUrl = `${appUrl}/admin/orders?status=due_soon`
@@ -68,7 +81,76 @@ export async function GET(request: Request) {
     }),
   })
 
-  return NextResponse.json({ ok: true, sent: true, dueDate: tomorrow, count: orders.length })
+  return NextResponse.json({
+    ok: true,
+    sent: true,
+    dueDate: tomorrow,
+    count: orders.length,
+    automaticReminders: automaticReminderResult,
+  })
+}
+
+async function sendAutomaticClientReminders(supabase: ReturnType<typeof createAdminClient>) {
+  const today = getTodayDateString()
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, clients(*)')
+    .eq('payment_reminder_enabled', true)
+    .not('due_date', 'is', null)
+    .not('status', 'in', '("completed","cancelled")')
+    .order('due_date', { ascending: true })
+
+  if (error) {
+    console.error('Error consultando recordatorios automáticos', error)
+    return { sent: 0, skipped: 0, failed: 0, error: error.message }
+  }
+
+  const orders = ((data ?? []) as unknown as AutomaticReminderOrder[])
+  let sent = 0
+  let skipped = 0
+  let failed = 0
+
+  for (const order of orders) {
+    if (!order.due_date) {
+      skipped += 1
+      continue
+    }
+
+    const daysBefore = Number.isFinite(order.payment_reminder_days_before)
+      ? order.payment_reminder_days_before
+      : 1
+    const reminderDate = addDaysToDateString(today, daysBefore)
+    const alreadySentToday = order.payment_reminder_last_sent_on === today
+
+    if (order.due_date !== reminderDate || alreadySentToday) {
+      skipped += 1
+      continue
+    }
+
+    try {
+      await sendOrderReminderNotification({
+        admin: supabase,
+        order,
+        senderName: 'OTLA',
+        source: 'automatic',
+      })
+
+      await supabase
+        .from('orders')
+        .update({ payment_reminder_last_sent_on: today })
+        .eq('id', order.id)
+
+      sent += 1
+    } catch (reminderError) {
+      failed += 1
+      console.error('Error enviando recordatorio automático', {
+        orderId: order.id,
+        error: reminderError,
+      })
+    }
+  }
+
+  return { sent, skipped, failed }
 }
 
 function buildDueReminderHtml({

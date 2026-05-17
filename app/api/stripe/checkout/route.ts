@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { enforceIpRateLimit } from '@/lib/security/rate-limit'
 import { calculateStripeChargeAmount, getStripeSettings, roundMoney } from '@/lib/stripe/config'
 import { getStripeClient } from '@/lib/stripe/client'
 
@@ -11,6 +12,16 @@ type CheckoutRequest = {
 }
 
 export async function POST(request: Request) {
+  const rateLimitResponse = await enforceIpRateLimit({
+    request,
+    scope: 'stripe_checkout',
+    limit: 20,
+    windowSeconds: 300,
+    blockSeconds: 900,
+  })
+
+  if (rateLimitResponse) return rateLimitResponse
+
   const body = (await request.json()) as CheckoutRequest
   const admin = createAdminClient()
   const settings = await getStripeSettings()
