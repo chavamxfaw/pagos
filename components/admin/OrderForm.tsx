@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { getTodayDateString } from '@/lib/utils'
-import type { BankAccount, Client, Order, OrderCategory, OrderStatus } from '@/types'
+import type { BankAccount, Client, FiscalDocument, Order, OrderCategory, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
 
@@ -15,6 +15,7 @@ export function OrderForm({
   action,
   clients,
   bankAccounts = [],
+  fiscalDocuments = [],
   defaultClientId,
   defaultValues,
   submitLabel = 'Crear orden',
@@ -22,6 +23,7 @@ export function OrderForm({
   action: (prevState: State, formData: FormData) => Promise<State>
   clients: Client[]
   bankAccounts?: BankAccount[]
+  fiscalDocuments?: FiscalDocument[]
   defaultClientId?: string
   defaultValues?: Order
   submitLabel?: string
@@ -43,8 +45,11 @@ export function OrderForm({
   const [dueDate, setDueDate] = useState(defaultValues?.due_date ?? '')
   const [paymentReminderEnabled, setPaymentReminderEnabled] = useState(defaultValues?.payment_reminder_enabled ?? false)
   const [paymentReminderDaysBefore, setPaymentReminderDaysBefore] = useState(String(defaultValues?.payment_reminder_days_before ?? 1))
+  const [selectedFiscalDocumentId, setSelectedFiscalDocumentId] = useState(defaultValues?.fiscal_document_id ?? 'none')
+  const [showFiscalDocument, setShowFiscalDocument] = useState(defaultValues?.public_show_fiscal_document ?? false)
   const selectedClient = clients.find((client) => client.id === selectedClientId)
   const selectedBankAccount = bankAccounts.find((account) => account.id === selectedBankAccountId)
+  const selectedFiscalDocument = fiscalDocuments.find((document) => document.id === selectedFiscalDocumentId)
   const selectedCategoryLabel = orderCategories.find((item) => item.value === category)?.label ?? 'Servicio'
 
   const taxPreview = useMemo(() => {
@@ -185,6 +190,68 @@ export function OrderForm({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="grid gap-4 rounded-xl border border-[#E6EAF0] bg-white p-4">
+        <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+          <div className="space-y-2">
+            <Label htmlFor="public_sort_order" className="text-[#1A1F36]">Orden público</Label>
+            <Input
+              id="public_sort_order"
+              name="public_sort_order"
+              type="number"
+              min="0"
+              max="9999"
+              step="1"
+              defaultValue={defaultValues?.public_sort_order ?? 100}
+              className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fiscal_document_id" className="text-[#1A1F36]">Constancia fiscal visible</Label>
+            <Select
+              name="fiscal_document_id"
+              value={selectedFiscalDocumentId}
+              onValueChange={(value) => {
+                const nextValue = value || 'none'
+                setSelectedFiscalDocumentId(nextValue)
+                if (nextValue === 'none') setShowFiscalDocument(false)
+              }}
+            >
+              <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <span className="truncate text-left">
+                  {selectedFiscalDocument ? selectedFiscalDocument.title : 'No mostrar constancia'}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-white border-[#E6EAF0]">
+                <SelectItem value="none" className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                  No mostrar constancia
+                </SelectItem>
+                {fiscalDocuments.map((document) => (
+                  <SelectItem key={document.id} value={document.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                    {document.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            name="public_show_fiscal_document"
+            checked={showFiscalDocument}
+            disabled={selectedFiscalDocumentId === 'none'}
+            onChange={(event) => setShowFiscalDocument(event.target.checked)}
+            className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7] disabled:opacity-50"
+          />
+          <span>
+            <span className="block text-sm font-medium text-[#1A1F36]">Mostrar link de constancia en el portal del cliente</span>
+            <span className="block text-sm text-[#6B7280]">La constancia se verá en el link general y en el link individual de esta orden.</span>
+          </span>
+        </label>
       </div>
 
       <div className="space-y-2">

@@ -38,6 +38,9 @@ export type Order = {
   payment_reminder_days_before: number
   payment_reminder_last_sent_on: string | null
   bank_account_id: string | null
+  public_sort_order: number
+  public_show_fiscal_document: boolean
+  fiscal_document_id: string | null
   token: string
   created_at: string
   completed_at: string | null

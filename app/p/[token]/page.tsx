@@ -22,7 +22,7 @@ export default async function PublicOrderPage({
 
   if (!publicOrder) notFound()
 
-  const { order, payments: typedPayments, stripePaymentRequests, bankAccount } = publicOrder
+  const { order, payments: typedPayments, stripePaymentRequests, bankAccount, fiscalDocument } = publicOrder
   const percent = getProgressPercent(order.paid_amount, order.total_amount)
   const remaining = Math.max(0, order.total_amount - order.paid_amount)
   const isCompleted = order.status === 'completed'
@@ -32,6 +32,7 @@ export default async function PublicOrderPage({
   const accordionOrder = {
     ...order,
     bank_accounts: bankAccount,
+    fiscal_documents: fiscalDocument,
     payments: typedPayments,
     stripe_payment_requests: stripePaymentRequests,
   }

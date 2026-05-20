@@ -25,6 +25,9 @@ export async function createOrder(data: {
   payment_reminder_enabled?: boolean
   payment_reminder_days_before?: number
   bank_account_id?: string
+  public_sort_order?: number
+  public_show_fiscal_document?: boolean
+  fiscal_document_id?: string
 }) {
   await requireAuth()
   const admin = createAdminClient()
@@ -48,6 +51,9 @@ export async function createOrder(data: {
       payment_reminder_days_before: getReminderDaysBefore(data.payment_reminder_days_before),
       payment_reminder_last_sent_on: null,
       bank_account_id: data.bank_account_id || null,
+      public_sort_order: getPublicSortOrder(data.public_sort_order),
+      public_show_fiscal_document: Boolean(data.public_show_fiscal_document && data.fiscal_document_id),
+      fiscal_document_id: data.fiscal_document_id || null,
       ...amounts,
     })
     .select()
@@ -82,6 +88,9 @@ export async function updateOrder(orderId: string, data: {
   payment_reminder_enabled?: boolean
   payment_reminder_days_before?: number
   bank_account_id?: string
+  public_sort_order?: number
+  public_show_fiscal_document?: boolean
+  fiscal_document_id?: string
   status?: OrderStatus
 }) {
   await requireAuth()
@@ -136,6 +145,9 @@ export async function updateOrder(orderId: string, data: {
       payment_reminder_days_before: nextReminderDaysBefore,
       ...(shouldResetReminderSentOn ? { payment_reminder_last_sent_on: null } : {}),
       bank_account_id: data.bank_account_id || null,
+      public_sort_order: getPublicSortOrder(data.public_sort_order),
+      public_show_fiscal_document: Boolean(data.public_show_fiscal_document && data.fiscal_document_id),
+      fiscal_document_id: data.fiscal_document_id || null,
       ...amounts,
       status,
       completed_at: completedAt,
@@ -249,6 +261,11 @@ function parseTags(value?: string) {
 function getReminderDaysBefore(value?: number) {
   if (!Number.isFinite(value)) return 1
   return Math.min(30, Math.max(0, Math.trunc(value!)))
+}
+
+function getPublicSortOrder(value?: number) {
+  if (!Number.isFinite(value)) return 100
+  return Math.min(9999, Math.max(0, Math.trunc(value!)))
 }
 
 export async function markOrderCompleted(orderId: string) {

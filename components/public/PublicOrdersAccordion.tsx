@@ -2,17 +2,22 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { CalendarDays, CheckCircle2, ChevronDown, FileText } from 'lucide-react'
+import { CalendarDays, CheckCircle2, ChevronDown, ExternalLink, FileText } from 'lucide-react'
 import { PublicBankDetails } from '@/components/public/PublicBankDetails'
 import { PublicStripePayment } from '@/components/public/PublicStripePayment'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
-import type { BankAccount, OrderStatus, Payment, StripePaymentRequest, StripeSettings } from '@/types'
+import type { BankAccount, FiscalDocument, OrderStatus, Payment, StripePaymentRequest, StripeSettings } from '@/types'
 
 export type PublicAccordionOrder = {
   id: string
   concept: string
   description: string | null
   status: OrderStatus
+  requires_invoice: boolean
+  tax_mode: 'none' | 'included' | 'added'
+  subtotal_amount: number
+  tax_amount: number
+  tax_rate: number
   total_amount: number
   paid_amount: number
   due_date: string | null
@@ -22,6 +27,8 @@ export type PublicAccordionOrder = {
   stripe_payment_requests?: StripePaymentRequest[]
   payments: Payment[]
   bank_accounts: BankAccount | null
+  fiscal_documents?: FiscalDocument | null
+  public_show_fiscal_document?: boolean
 }
 
 export function PublicOrdersAccordion({
@@ -114,6 +121,38 @@ export function PublicOrdersAccordion({
                     <BalanceItem label="Pendiente" value={formatCurrency(remaining)} tone="pending" />
                     <BalanceItem label="Abonos" value={`${order.payments.length}`} />
                   </div>
+
+                  {order.requires_invoice && (
+                    <div className="mb-4 rounded-2xl border border-[#E6EAF0] bg-white p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Factura</p>
+                          <h3 className="text-sm font-bold text-[#1A1F36]">Desglose fiscal</h3>
+                        </div>
+                        <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-semibold text-[#6C5CE7]">
+                          {order.tax_mode === 'included' ? 'IVA incluido' : 'IVA agregado'}
+                        </span>
+                      </div>
+                      <div className="grid gap-3 text-sm sm:grid-cols-3">
+                        <BalanceItem label="Subtotal" value={formatCurrency(order.subtotal_amount)} />
+                        <BalanceItem label={`IVA ${Math.round(order.tax_rate * 100)}%`} value={formatCurrency(order.tax_amount)} />
+                        <BalanceItem label="Total" value={formatCurrency(order.total_amount)} />
+                      </div>
+                    </div>
+                  )}
+
+                  {order.public_show_fiscal_document && order.fiscal_documents?.is_active && (
+                    <a
+                      href={`/d/${order.fiscal_documents.share_token}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#D8DEE8] bg-white px-4 text-sm font-semibold text-[#1A1F36] transition-colors hover:bg-[#F8FAFF] sm:w-auto"
+                    >
+                      <FileText className="size-4 text-[#6C5CE7]" />
+                      Ver constancia fiscal
+                      <ExternalLink className="size-4 text-[#8A94A6]" />
+                    </a>
+                  )}
 
                   {showDetailLinks && (
                     <Link

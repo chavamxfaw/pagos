@@ -24,6 +24,9 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
       payment_reminder_enabled: formData.get('payment_reminder_enabled') === 'on',
       payment_reminder_days_before: Number(formData.get('payment_reminder_days_before') ?? 1),
       bank_account_id: getBankAccountId(formData),
+      public_sort_order: Number(formData.get('public_sort_order') ?? 100),
+      public_show_fiscal_document: formData.get('public_show_fiscal_document') === 'on',
+      fiscal_document_id: getFiscalDocumentId(formData),
     })
     redirect(`/admin/orders/${order.id}`)
   } catch (e: unknown) {
@@ -47,6 +50,12 @@ export default async function NewOrderPage({
 
   const { data: bankAccounts } = await supabase
     .from('bank_accounts')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+
+  const { data: fiscalDocuments } = await supabase
+    .from('fiscal_documents')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
@@ -84,6 +93,7 @@ export default async function NewOrderPage({
           action={createOrderAction}
           clients={clients}
           bankAccounts={bankAccounts ?? []}
+          fiscalDocuments={fiscalDocuments ?? []}
           defaultClientId={defaultClientId}
         />
       </div>
@@ -93,5 +103,10 @@ export default async function NewOrderPage({
 
 function getBankAccountId(formData: FormData) {
   const value = formData.get('bank_account_id') as string | null
+  return value && value !== 'none' ? value : undefined
+}
+
+function getFiscalDocumentId(formData: FormData) {
+  const value = formData.get('fiscal_document_id') as string | null
   return value && value !== 'none' ? value : undefined
 }

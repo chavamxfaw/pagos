@@ -35,6 +35,12 @@ export default async function EditOrderPage({
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
+  const { data: fiscalDocuments } = await supabase
+    .from('fiscal_documents')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+
   async function updateOrderAction(prevState: State, formData: FormData): Promise<State> {
     'use server'
     try {
@@ -52,6 +58,9 @@ export default async function EditOrderPage({
         payment_reminder_enabled: formData.get('payment_reminder_enabled') === 'on',
         payment_reminder_days_before: Number(formData.get('payment_reminder_days_before') ?? 1),
         bank_account_id: getBankAccountId(formData),
+        public_sort_order: Number(formData.get('public_sort_order') ?? 100),
+        public_show_fiscal_document: formData.get('public_show_fiscal_document') === 'on',
+        fiscal_document_id: getFiscalDocumentId(formData),
         status: getStatusValue(formData.get('status') as string | null),
       })
       redirect(`/admin/orders/${id}`)
@@ -78,6 +87,7 @@ export default async function EditOrderPage({
           action={updateOrderAction}
           clients={clients ?? []}
           bankAccounts={bankAccounts ?? []}
+          fiscalDocuments={fiscalDocuments ?? []}
           defaultValues={order as Order}
           submitLabel="Guardar cambios"
         />
@@ -93,5 +103,10 @@ function getStatusValue(value: string | null): OrderStatus | undefined {
 
 function getBankAccountId(formData: FormData) {
   const value = formData.get('bank_account_id') as string | null
+  return value && value !== 'none' ? value : undefined
+}
+
+function getFiscalDocumentId(formData: FormData) {
+  const value = formData.get('fiscal_document_id') as string | null
   return value && value !== 'none' ? value : undefined
 }
