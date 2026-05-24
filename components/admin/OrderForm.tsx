@@ -192,22 +192,10 @@ export function OrderForm({
         </Select>
       </div>
 
-      <div className="grid gap-4 rounded-xl border border-[#E6EAF0] bg-white p-4">
-        <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
-          <div className="space-y-2">
-            <Label htmlFor="public_sort_order" className="text-[#1A1F36]">Orden público</Label>
-            <Input
-              id="public_sort_order"
-              name="public_sort_order"
-              type="number"
-              min="0"
-              max="9999"
-              step="1"
-              defaultValue={defaultValues?.public_sort_order ?? 100}
-              className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono"
-            />
-          </div>
+      <input type="hidden" name="public_sort_order" value={defaultValues?.public_sort_order ?? 100} />
 
+      <div className="grid gap-4 rounded-xl border border-[#E6EAF0] bg-white p-4">
+        <div className="grid gap-4">
           <div className="space-y-2">
             <Label htmlFor="fiscal_document_id" className="text-[#1A1F36]">Constancia fiscal visible</Label>
             <Select

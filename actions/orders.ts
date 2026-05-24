@@ -176,6 +176,44 @@ export async function updateOrder(orderId: string, data: {
   return order
 }
 
+export async function updateClientOrderSort(clientId: string, orderedOrderIds: string[]) {
+  await requireAuth()
+  const admin = createAdminClient()
+  const cleanOrderIds = Array.from(new Set(orderedOrderIds.filter(Boolean)))
+
+  if (!cleanOrderIds.length) {
+    throw new Error('No hay órdenes para ordenar')
+  }
+
+  const { data: orders, error: fetchError } = await admin
+    .from('orders')
+    .select('id, client_id')
+    .eq('client_id', clientId)
+    .in('id', cleanOrderIds)
+
+  if (fetchError) throw new Error(fetchError.message)
+
+  const foundIds = new Set((orders ?? []).map((order) => order.id))
+  if (foundIds.size !== cleanOrderIds.length) {
+    throw new Error('No se pudo validar el orden de todas las órdenes')
+  }
+
+  const updates = cleanOrderIds.map((orderId, index) =>
+    admin
+      .from('orders')
+      .update({ public_sort_order: (index + 1) * 10 })
+      .eq('id', orderId)
+      .eq('client_id', clientId)
+  )
+
+  const results = await Promise.all(updates)
+  const failed = results.find((result) => result.error)
+  if (failed?.error) throw new Error(failed.error.message)
+
+  revalidatePath(`/admin/clients/${clientId}`)
+  revalidatePath('/admin/orders')
+}
+
 function calculateOrderAmounts({
   amount,
   requiresInvoice,

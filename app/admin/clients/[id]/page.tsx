@@ -9,6 +9,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog'
 import { ClientFollowups } from '@/components/admin/ClientFollowups'
+import { ClientOrderReorderList } from '@/components/admin/ClientOrderReorderList'
 import { formatCurrency, formatDateShort, getProgressPercent, cn } from '@/lib/utils'
 import type { ActivityLog, ClientFollowup } from '@/types'
 
@@ -32,6 +33,7 @@ export default async function ClientDetailPage({
     .from('orders')
     .select('*')
     .eq('client_id', id)
+    .order('public_sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   const [{ data: followups }, { data: activityLogs }] = await Promise.all([
@@ -222,36 +224,7 @@ export default async function ClientDetailPage({
           <h2 className="text-lg font-semibold text-[#1A1F36] mb-3">
             Órdenes activas ({activeOrders.length})
           </h2>
-          <div className="space-y-3">
-            {activeOrders.map((order) => {
-              const percent = getProgressPercent(order.paid_amount, order.total_amount)
-              return (
-                <Link key={order.id} href={`/admin/orders/${order.id}`} className="block">
-                  <div className="bg-white border border-[#E6EAF0] hover:border-[#C9D4E5] rounded-xl p-4 transition-colors">
-                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <p className="text-[#1A1F36] font-medium">{order.concept}</p>
-                      <Badge
-                        className={
-                          order.status === 'partial'
-                            ? 'bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30'
-                            : 'bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]'
-                        }
-                      >
-                        {order.status === 'partial' ? 'Parcial' : 'Pendiente'}
-                      </Badge>
-                    </div>
-                    <div className="h-1.5 bg-[#E6EAF0] rounded-full mb-2">
-                      <div className="h-full bg-[#2ED39A] rounded-full" style={{ width: `${percent}%` }} />
-                    </div>
-                    <div className="flex justify-between text-xs font-mono text-[#6B7280]">
-                      <span>{formatCurrency(order.paid_amount)} / {formatCurrency(order.total_amount)}</span>
-                      <span>{percent}%</span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+          <ClientOrderReorderList clientId={id} orders={activeOrders} />
         </div>
       )}
 
