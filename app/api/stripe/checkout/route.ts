@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     limit: 20,
     windowSeconds: 300,
     blockSeconds: 900,
+    failClosed: true,
   })
 
   if (rateLimitResponse) return rateLimitResponse
@@ -89,6 +90,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Stripe no está configurado en variables de entorno.' }, { status: 500 })
   }
 
+  const existingCheckout = await getReusableCheckoutSession(admin, stripe, paymentRequest.id)
+  if (existingCheckout) {
+    return NextResponse.json({ url: existingCheckout.url })
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card'],
@@ -142,10 +148,50 @@ export async function POST(request: Request) {
     })
 
   if (insertError) {
+    const duplicateCheckout = await getReusableCheckoutSession(admin, stripe, paymentRequest.id)
+    if (duplicateCheckout) {
+      return NextResponse.json({ url: duplicateCheckout.url })
+    }
+
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
   return NextResponse.json({ url: session.url })
+}
+
+async function getReusableCheckoutSession(
+  admin: ReturnType<typeof createAdminClient>,
+  stripe: ReturnType<typeof getStripeClient>,
+  paymentRequestId: string
+) {
+  const { data } = await admin
+    .from('stripe_checkout_sessions')
+    .select('stripe_session_id, status')
+    .eq('payment_request_id', paymentRequestId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!data?.stripe_session_id) return null
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(data.stripe_session_id)
+    if (session.status === 'open' && session.url) return session
+
+    await admin
+      .from('stripe_checkout_sessions')
+      .update({ status: session.status === 'complete' ? 'paid' : 'expired' })
+      .eq('stripe_session_id', data.stripe_session_id)
+      .eq('status', 'pending')
+  } catch (error) {
+    console.warn('No se pudo reutilizar sesión Stripe pendiente', {
+      paymentRequestId,
+      error,
+    })
+  }
+
+  return null
 }
 
 async function getPendingStripePaymentRequest(

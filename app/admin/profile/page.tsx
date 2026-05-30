@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { getUserSettings, saveDisplayName, saveNotificationSettings } from '@/actions/user-settings'
+import { getUserSettings } from '@/lib/user-settings'
+import { saveDisplayName, saveNotificationSettings } from '@/actions/user-settings'
 import { requireAdmin } from '@/lib/auth/admin'
 import { Mail, MessageCircle, ShieldCheck, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'

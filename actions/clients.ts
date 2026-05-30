@@ -68,10 +68,13 @@ export async function updateClient(id: string, data: ClientData) {
 export async function setClientPortalEnabled(id: string, enabled: boolean) {
   await requireAuth()
   const admin = createAdminClient()
+  const updates = enabled
+    ? { client_portal_enabled: true, client_portal_token: crypto.randomUUID() }
+    : { client_portal_enabled: false }
 
   const { error } = await admin
     .from('clients')
-    .update({ client_portal_enabled: enabled })
+    .update(updates)
     .eq('id', id)
 
   if (error) throw new Error(error.message)

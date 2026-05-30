@@ -9,6 +9,7 @@ type RateLimitOptions = {
   limit: number
   windowSeconds: number
   blockSeconds: number
+  failClosed?: boolean
 }
 
 type RateLimitResult = {
@@ -24,6 +25,7 @@ export async function enforceIpRateLimit({
   limit,
   windowSeconds,
   blockSeconds,
+  failClosed = false,
 }: RateLimitOptions) {
   const ip = getClientIp(request)
 
@@ -41,7 +43,7 @@ export async function enforceIpRateLimit({
 
     if (error) {
       console.error('Rate limit check failed', { scope, error: error.message })
-      return null
+      return getRateLimitFailureResponse(failClosed)
     }
 
     const result = Array.isArray(data) ? data[0] as RateLimitResult | undefined : data as RateLimitResult | undefined
@@ -63,21 +65,36 @@ export async function enforceIpRateLimit({
     )
   } catch (error) {
     console.error('Rate limit unexpected failure', { scope, error })
-    return null
+    return getRateLimitFailureResponse(failClosed)
   }
 }
 
 export function getClientIp(request: Request) {
   const headers = request.headers
-  const forwardedFor = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const vercelForwardedFor = headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
   const realIp = headers.get('x-real-ip')?.trim()
   const cloudflareIp = headers.get('cf-connecting-ip')?.trim()
-  const vercelForwardedFor = headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
-  const candidate = forwardedFor || vercelForwardedFor || realIp || cloudflareIp
+  const forwardedFor = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const candidate = vercelForwardedFor || realIp || cloudflareIp || forwardedFor
 
   if (!candidate) return null
 
   return stripPort(candidate)
+}
+
+function getRateLimitFailureResponse(failClosed: boolean) {
+  if (!failClosed) return null
+
+  return NextResponse.json(
+    { error: 'No se pudo validar el límite de intentos. Intenta de nuevo más tarde.' },
+    {
+      status: 503,
+      headers: {
+        'Retry-After': '60',
+        'Cache-Control': 'no-store',
+      },
+    }
+  )
 }
 
 function stripPort(value: string) {

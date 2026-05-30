@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { AlertTriangle, CheckCircle2, CreditCard, DollarSign, Plus, UsersRound } from 'lucide-react'
-import { getDisplayName } from '@/actions/user-settings'
+import { getDisplayName } from '@/lib/user-settings'
 import { requireAdmin } from '@/lib/auth/admin'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'

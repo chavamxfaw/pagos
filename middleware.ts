@@ -64,6 +64,7 @@ function getMiddlewareRateLimitResponse(request: NextRequest, pathname: string) 
       limit: 25,
       windowSeconds: 300,
       blockSeconds: 900,
+      failClosed: true,
     })
   }
 

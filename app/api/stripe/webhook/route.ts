@@ -53,19 +53,56 @@ function constructStripeEvent(stripe: Stripe, body: string, signature: string, s
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== 'paid') return
+
   const admin = createAdminClient()
   const { data: checkout } = await admin
     .from('stripe_checkout_sessions')
-    .select('*, orders(*, clients(*))')
+    .select('*, orders(*, clients(*)), stripe_payment_requests(status)')
     .eq('stripe_session_id', session.id)
+    .eq('status', 'pending')
     .maybeSingle()
 
-  if (!checkout || checkout.status === 'paid') return
+  if (!checkout) return
 
   const initialOrder = Array.isArray(checkout.orders) ? checkout.orders[0] : checkout.orders
   if (!initialOrder) return
 
   const paymentIntent = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null
+  const amountTotal = typeof session.amount_total === 'number' ? session.amount_total / 100 : null
+  const currency = session.currency?.toLowerCase()
+  const expectedTotal = Number(checkout.total_charged)
+  const pendingAmount = Math.max(0, Number(initialOrder.total_amount) - Number(initialOrder.paid_amount))
+  const paymentRequest = Array.isArray(checkout.stripe_payment_requests)
+    ? checkout.stripe_payment_requests[0]
+    : checkout.stripe_payment_requests
+
+  if (currency !== 'mxn' || amountTotal == null || Math.abs(amountTotal - expectedTotal) > 0.01) {
+    console.error('Stripe checkout amount mismatch', {
+      sessionId: session.id,
+      currency,
+      amountTotal,
+      expectedTotal,
+    })
+    return
+  }
+
+  if (checkout.payment_request_id && paymentRequest?.status !== 'pending') return
+  if (initialOrder.status === 'completed' || pendingAmount <= 0 || Number(checkout.amount) > pendingAmount) return
+
+  const { data: updatedCheckout, error: checkoutUpdateError } = await admin
+    .from('stripe_checkout_sessions')
+    .update({
+      status: 'paid',
+      stripe_payment_intent_id: paymentIntent,
+      paid_at: new Date().toISOString(),
+    })
+    .eq('id', checkout.id)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
+
+  if (checkoutUpdateError || !updatedCheckout) return
 
   const { data: payment, error: paymentError } = await admin
     .from('payments')
@@ -85,15 +122,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (paymentError) throw new Error(paymentError.message)
 
-  await admin
-    .from('stripe_checkout_sessions')
-    .update({
-      status: 'paid',
-      stripe_payment_intent_id: paymentIntent,
-      paid_at: new Date().toISOString(),
-    })
-    .eq('id', checkout.id)
-
   if (checkout.payment_request_id) {
     await admin
       .from('stripe_payment_requests')
@@ -110,8 +138,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     entity_id: payment.id,
     client_id: checkout.client_id,
     order_id: checkout.order_id,
-      payment_id: payment.id,
-      event_type: 'stripe_payment_succeeded',
+    payment_id: payment.id,
+    event_type: 'stripe_payment_succeeded',
     message: `Pago con tarjeta confirmado: ${formatCurrency(checkout.amount)} para ${initialOrder.concept}`,
     metadata: {
       stripe_session_id: session.id,

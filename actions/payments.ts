@@ -8,7 +8,7 @@ import { logActivity } from '@/lib/activity'
 import { notifyPaymentReceipt } from '@/lib/payments/notifications'
 import { resend } from '@/lib/resend/client'
 import { formatCurrency, getTodayDateString } from '@/lib/utils'
-import { getDisplayName } from '@/actions/user-settings'
+import { getDisplayName } from '@/lib/user-settings'
 import type { PaymentMethod } from '@/types'
 
 async function requireAuth() {

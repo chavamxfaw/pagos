@@ -3,6 +3,8 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { BankAccount, Client, FiscalDocument, Order, Payment, StripePaymentRequest } from '@/types'
 
+const PUBLIC_COMPLETED_DAYS = 30
+
 export type PublicClientOrder = Order & {
   payments: Payment[]
   bank_accounts: BankAccount | null
@@ -29,7 +31,12 @@ export async function getPublicClientPortal(token: string) {
     .order('public_sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
-  const orderIds = (orders ?? []).map((order) => order.id)
+  const visibleOrders = ((orders ?? []) as (Order & {
+    bank_accounts: BankAccount | null
+    fiscal_documents: FiscalDocument | null
+  })[]).filter((order) => !isExpiredCompletedOrder(order.status, order.completed_at, order.paid_amount, order.total_amount))
+
+  const orderIds = visibleOrders.map((order) => order.id)
   const { data: payments } = orderIds.length
     ? await admin
         .from('payments')
@@ -63,10 +70,21 @@ export async function getPublicClientPortal(token: string) {
 
   return {
     client: client as Client,
-    orders: ((orders ?? []) as (Order & { bank_accounts: BankAccount | null; fiscal_documents: FiscalDocument | null })[]).map((order) => ({
+    orders: visibleOrders.map((order) => ({
       ...order,
       payments: paymentsByOrder.get(order.id) ?? [],
       stripe_payment_requests: requestsByOrder.get(order.id) ?? [],
     })),
   }
+}
+
+function isExpiredCompletedOrder(status: string, completedAt: string | null, paidAmount: number, totalAmount: number) {
+  const isCompleted = status === 'completed' || (totalAmount > 0 && paidAmount >= totalAmount)
+  if (!isCompleted) return false
+  if (!completedAt) return false
+
+  const completedTime = new Date(completedAt).getTime()
+  const expiresAt = completedTime + PUBLIC_COMPLETED_DAYS * 24 * 60 * 60 * 1000
+
+  return Date.now() > expiresAt
 }

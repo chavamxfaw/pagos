@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/admin'
-import { getDisplayName } from '@/actions/user-settings'
+import { getDisplayName } from '@/lib/user-settings'
 import { sendOrderReminderNotification } from '@/lib/order-reminder-notifications'
 
 async function requireAuth() {

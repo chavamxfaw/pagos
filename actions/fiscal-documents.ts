@@ -35,6 +35,10 @@ export async function uploadFiscalDocument(formData: FormData) {
   const path = `constancias/${fileId}-${safeName || 'documento.pdf'}`
   const buffer = Buffer.from(await file.arrayBuffer())
 
+  if (!hasPdfHeader(buffer)) {
+    throw new Error('El archivo no parece ser un PDF válido.')
+  }
+
   const { error: uploadError } = await admin.storage
     .from(BUCKET)
     .upload(path, buffer, {
@@ -62,6 +66,11 @@ export async function uploadFiscalDocument(formData: FormData) {
   }
 
   revalidatePath('/admin/settings/fiscal-documents')
+}
+
+function hasPdfHeader(buffer: Buffer) {
+  if (buffer.length < 5) return false
+  return buffer.subarray(0, 5).toString('ascii') === '%PDF-'
 }
 
 export async function updateFiscalDocument(fiscalDocumentId: string, formData: FormData) {

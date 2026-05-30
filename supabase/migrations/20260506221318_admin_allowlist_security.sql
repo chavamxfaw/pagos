@@ -5,10 +5,8 @@ create table if not exists public.app_admin_users (
 
 alter table public.app_admin_users enable row level security;
 
-insert into public.app_admin_users (user_id)
-select id
-from auth.users
-on conflict (user_id) do nothing;
+-- Do not seed every auth user as admin.
+-- Add admin users explicitly in Supabase by inserting their auth.users.id into public.app_admin_users.
 
 drop policy if exists "authenticated_read_own_admin_membership" on public.app_admin_users;
 create policy "authenticated_read_own_admin_membership"
