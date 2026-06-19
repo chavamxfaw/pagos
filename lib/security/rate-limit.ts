@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-type RateLimitScope = 'auth' | 'public_link' | 'stripe_checkout'
+type RateLimitScope = 'auth' | 'public_link' | 'stripe_checkout' | 'agent_api'
 
 type RateLimitOptions = {
   request: Request

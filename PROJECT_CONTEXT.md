@@ -39,6 +39,11 @@ OTLA Pagos es una app Next.js para administrar clientes, ordenes, abonos, record
 - Link publico documento fiscal: `/d/[token]`
 - Stripe webhook: `/api/stripe/webhook`
 - Cron recordatorios: `/api/cron/due-reminders`
+- API privada para agente/OpenClaw:
+  - `GET /api/agent/summary`
+  - `GET|POST /api/agent/clients`
+  - `GET|POST /api/agent/orders`
+  - `POST /api/agent/payments`
 
 ## Entornos
 
@@ -84,6 +89,7 @@ RESEND_FROM_EMAIL=
 NEXT_PUBLIC_APP_URL=
 ADMIN_EMAIL_NOTIFICACIONES=
 CRON_SECRET=
+OTLA_AGENT_API_KEY=
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_WHATSAPP_FROM=
@@ -233,6 +239,70 @@ La ruta `/api/cron/due-reminders` busca ordenes con `payment_reminder_enabled = 
 
 Seguridad: `CRON_SECRET` es obligatorio. Si no existe, la ruta falla con 500 en lugar de quedar abierta accidentalmente.
 
+### API privada para agentes
+
+Pensada para conectar Telegram/OpenClaw sin exponer Supabase directamente.
+
+Autenticacion:
+
+```http
+Authorization: Bearer ${OTLA_AGENT_API_KEY}
+X-Agent-Name: openclaw
+```
+
+Endpoints actuales:
+
+- `GET /api/agent/summary`: totales y ordenes pendientes/parciales.
+- `GET /api/agent/clients?q=texto&limit=20`: busca clientes.
+- `POST /api/agent/clients`: crea cliente.
+- `GET /api/agent/orders?status=pending&client_id=uuid&q=texto&limit=30`: lista ordenes.
+- `POST /api/agent/orders`: crea orden.
+- `POST /api/agent/payments`: registra abono.
+
+Ejemplo crear cliente:
+
+```json
+{
+  "name": "Juan Perez",
+  "phone": "8112345678",
+  "email": "juan@test.com",
+  "company": "Empresa X"
+}
+```
+
+Ejemplo crear orden:
+
+```json
+{
+  "client_id": "uuid",
+  "concept": "Servicio web",
+  "amount": 15000,
+  "due_date": "2026-06-30",
+  "category": "service",
+  "tags": ["web", "mensualidad"]
+}
+```
+
+Ejemplo registrar abono:
+
+```json
+{
+  "order_id": "uuid",
+  "amount": 5000,
+  "payment_method": "transfer",
+  "concept": "Abono por transferencia",
+  "paid_at": "2026-06-18"
+}
+```
+
+Seguridad de agente:
+
+- Usa `OTLA_AGENT_API_KEY`.
+- Rate limit `agent_api`.
+- Las escrituras registran actividad con `event_type` prefijado por `agent_`.
+- No expone acciones destructivas como borrar cliente/orden.
+- Abonos por agente validan saldo pendiente y disparan notificaciones normales si el cliente tiene correo/telefono.
+
 ## Seguridad actual
 
 - Admin protegido por Supabase Auth y allowlist en `app_admin_users`.
@@ -242,6 +312,7 @@ Seguridad: `CRON_SECRET` es obligatorio. Si no existe, la ruta falla con 500 en 
   - `/p/*`, `/c/*`, `/d/*`: scope `public_link`
 - Rate limit adicional:
   - `/api/stripe/checkout`: scope `stripe_checkout`
+  - `/api/agent/*`: scope `agent_api`
   - Login y checkout Stripe usan fail-closed si no se puede validar el limite.
 - Tabla y funcion:
   - `ip_rate_limits`
