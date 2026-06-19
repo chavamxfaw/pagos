@@ -1,6 +1,6 @@
 # OTLA Pagos - Contexto del proyecto
 
-Ultima actualizacion: 2026-05-23
+Ultima actualizacion: 2026-06-18
 
 ## Resumen
 
@@ -82,14 +82,16 @@ SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
 NEXT_PUBLIC_APP_URL=
+ADMIN_EMAIL_NOTIFICACIONES=
+CRON_SECRET=
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_WHATSAPP_FROM=
 TWILIO_PAYMENT_REMINDER_CONTENT_SID=
 TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID=
 TWILIO_ADMIN_STRIPE_PAYMENT_CONTENT_SID=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+STRIPE_SECRET_KEY_TEST=
+STRIPE_WEBHOOK_SECRET_TEST=
 STRIPE_SECRET_KEY_LIVE=
 STRIPE_WEBHOOK_SECRET_LIVE=
 ```
@@ -106,6 +108,8 @@ Campos relevantes:
 - `client_portal_enabled`: activa/desactiva el link general.
 - `email`: opcional. Si no existe, no se envia correo.
 - `phone`: usado para WhatsApp cuando existe.
+
+Nota de seguridad: al reactivar el link general del cliente se rota `client_portal_token`, para invalidar links anteriores.
 
 ### Ordenes
 
@@ -167,6 +171,8 @@ Flujo actual:
 - En una orden se puede seleccionar una constancia y activar `public_show_fiscal_document`.
 - Si esta activo, el link aparece en `/p/[token]` y en la orden dentro de `/c/[token]`.
 
+Seguridad de archivo: al subir PDFs se valida que el archivo empiece con magic header `%PDF-`, no solo el MIME declarado por el navegador.
+
 ### Stripe
 
 Tablas principales:
@@ -182,6 +188,14 @@ Flujo:
 3. Solicitud puede ser monto fijo o monto abierto con minimo.
 4. Cliente paga desde link publico.
 5. Webhook registra el pago y dispara notificaciones.
+
+Seguridad/consistencia:
+
+- Solo puede existir una solicitud Stripe pendiente por orden.
+- Solo puede existir un checkout pendiente por solicitud de pago.
+- El checkout se reutiliza si el cliente vuelve a intentar pagar una solicitud pendiente.
+- El webhook valida `payment_status = paid`, moneda MXN, monto cobrado, saldo pendiente y estado de la solicitud antes de registrar abono.
+- El webhook marca primero el checkout como `paid` con condicion `status = pending` para reducir riesgo de doble procesamiento.
 
 Comision:
 
@@ -217,6 +231,8 @@ Vercel Cron configurado en `vercel.json`:
 
 La ruta `/api/cron/due-reminders` busca ordenes con `payment_reminder_enabled = true`, fecha limite y configuracion de dias antes. Evita duplicar con `payment_reminder_last_sent_on`.
 
+Seguridad: `CRON_SECRET` es obligatorio. Si no existe, la ruta falla con 500 en lugar de quedar abierta accidentalmente.
+
 ## Seguridad actual
 
 - Admin protegido por Supabase Auth y allowlist en `app_admin_users`.
@@ -224,11 +240,31 @@ La ruta `/api/cron/due-reminders` busca ordenes con `payment_reminder_enabled = 
 - Rate limit por IP en middleware:
   - `/login`: scope `auth`
   - `/p/*`, `/c/*`, `/d/*`: scope `public_link`
+- Rate limit adicional:
+  - `/api/stripe/checkout`: scope `stripe_checkout`
+  - Login y checkout Stripe usan fail-closed si no se puede validar el limite.
 - Tabla y funcion:
   - `ip_rate_limits`
   - `check_ip_rate_limit`
 - RLS endurecido por migraciones, especialmente `20260506221318_admin_allowlist_security.sql`.
 - Service role solo debe usarse en server actions/API server.
+- Headers globales en `next.config.ts`:
+  - `Content-Security-Policy`
+  - `Referrer-Policy`
+  - `X-Content-Type-Options`
+  - `Permissions-Policy`
+- `lib/user-settings.ts` concentra lecturas server-only de settings que usan service role.
+- Links publicos de orden completada:
+  - `/p/[token]` expira 30 dias despues de completar/liquidar.
+  - `/c/[token]` ya no muestra ordenes completadas que hayan expirado por la misma regla.
+- Migracion aplicada en Supabase produccion:
+  - `20260530190000_security_hardening.sql`
+  - `security_hardening`
+
+Pendiente de auditoria de seguridad:
+
+- Revisar manualmente `app_admin_users` en Supabase Cloud para confirmar que solo existan admins esperados. En el ultimo intento, el MCP pidio reautenticacion para consultar la tabla despues de aplicar migracion.
+- Migrar `middleware.ts` a `proxy` cuando convenga, porque Next.js muestra warning de deprecacion, aunque hoy no bloquea.
 
 Pendiente recomendado antes de SaaS:
 
@@ -267,16 +303,18 @@ Paleta marca OTLA:
 - Pendiente: `#F4B740`
 - Error/vencido: `#EF4444`
 
-## Cambios locales pendientes al 2026-05-23
+## Estado de deploy al 2026-06-18
 
-Estos cambios estan en local y no necesariamente en produccion:
+Ultimos commits relevantes:
 
-- `actions/orders.ts`: agrega `updateClientOrderSort`.
-- `app/admin/clients/[id]/page.tsx`: muestra ordenes activas con componente de reordenamiento.
-- `components/admin/OrderForm.tsx`: oculta el campo manual `public_sort_order`.
-- `components/admin/ClientOrderReorderList.tsx`: nuevo componente para reordenar ordenes del cliente con drag/drop y botones subir/bajar.
+- `16a0c76 Endurece seguridad de pagos y accesos`
+- `3bbe93c Agrega reordenamiento de ordenes por cliente`
+- `43be685 Agrega opciones publicas por orden`
+- `0113403 Agrega rate limit y recordatorios automaticos`
 
-Tambien hay archivos PNG sueltos sin trackear que no se deben commitear automaticamente salvo que se confirme su uso:
+El hardening de seguridad ya se empujo a GitHub y quedo desplegado en Vercel produccion. Se validaron headers en `https://pagos.sitios-dev.info/login` y `https://pagos.sitios-dev.info/manifest.json`.
+
+Archivos PNG sueltos sin trackear que no se deben commitear automaticamente salvo que se confirme su uso:
 
 - `favicon-otla.png`
 - `otla-logo.png`
