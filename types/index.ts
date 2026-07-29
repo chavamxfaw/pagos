@@ -135,6 +135,7 @@ export type StripeSettings = {
   commission_payer: 'merchant' | 'customer'
   fee_percent: number
   fixed_fee_amount: number
+  fee_tax_percent: number
   minimum_payment_amount: number
   created_at: string
   updated_at: string

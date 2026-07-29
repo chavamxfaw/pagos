@@ -26,12 +26,14 @@ export async function saveStripeSettings(formData: FormData) {
     commission_payer: formData.get('commission_payer') === 'customer' ? 'customer' : 'merchant',
     fee_percent: parseMoney(formData.get('fee_percent'), 3.6),
     fixed_fee_amount: parseMoney(formData.get('fixed_fee_amount'), 3),
+    fee_tax_percent: parseMoney(formData.get('fee_tax_percent'), 16),
     minimum_payment_amount: parseMoney(formData.get('minimum_payment_amount'), 100),
     updated_at: new Date().toISOString(),
   }
 
   if (payload.fee_percent < 0) throw new Error('La comisión porcentual no puede ser negativa.')
   if (payload.fixed_fee_amount < 0) throw new Error('La comisión fija no puede ser negativa.')
+  if (payload.fee_tax_percent < 0) throw new Error('El IVA de comisión no puede ser negativo.')
   if (payload.minimum_payment_amount < 1) throw new Error('El mínimo global debe ser mayor a 0.')
 
   const { error } = await admin

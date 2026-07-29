@@ -206,7 +206,8 @@ Seguridad/consistencia:
 Comision:
 
 - `commission_payer`: `merchant` o `customer`.
-- `fee_percent`, `fixed_fee_amount`, `minimum_payment_amount`.
+- `fee_percent`, `fixed_fee_amount`, `fee_tax_percent`, `minimum_payment_amount`.
+- Si la comision la paga el cliente, el cargo usa gross-up: calcula el total a cobrar para que el abono neto deseado quede cubierto despues de comision porcentual, comision fija e IVA/impuesto sobre la comision.
 
 ### Notificaciones
 

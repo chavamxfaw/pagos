@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+export { calculateStripeChargeAmount, calculateStripeFee, roundMoney } from '@/lib/stripe/math'
 import type { StripeSettings } from '@/types'
 
 export const DEFAULT_STRIPE_ACCOUNT_ID = 'acct_1SHFKe2R4B7Tceo0'
@@ -13,6 +14,7 @@ export const DEFAULT_STRIPE_SETTINGS: StripeSettings = {
   commission_payer: 'merchant',
   fee_percent: 3.6,
   fixed_fee_amount: 3,
+  fee_tax_percent: 16,
   minimum_payment_amount: 100,
   created_at: new Date(0).toISOString(),
   updated_at: new Date(0).toISOString(),
@@ -32,25 +34,4 @@ export async function getStripeSettings() {
   }
 
   return (data as StripeSettings | null) ?? DEFAULT_STRIPE_SETTINGS
-}
-
-export function calculateStripeFee(amount: number, settings: Pick<StripeSettings, 'fee_percent' | 'fixed_fee_amount'>) {
-  const fee = amount * (settings.fee_percent / 100) + settings.fixed_fee_amount
-  return roundMoney(fee)
-}
-
-export function calculateStripeChargeAmount(amount: number, settings: Pick<StripeSettings, 'commission_payer' | 'fee_percent' | 'fixed_fee_amount'>) {
-  const fee = calculateStripeFee(amount, settings)
-  const totalCharged = settings.commission_payer === 'customer' ? amount + fee : amount
-
-  return {
-    paymentAmount: roundMoney(amount),
-    feeAmount: settings.commission_payer === 'customer' ? fee : 0,
-    absorbedFee: settings.commission_payer === 'merchant' ? fee : 0,
-    totalCharged: roundMoney(totalCharged),
-  }
-}
-
-export function roundMoney(value: number) {
-  return Math.round(value * 100) / 100
 }

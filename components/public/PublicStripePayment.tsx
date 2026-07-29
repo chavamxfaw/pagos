@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { calculateStripeChargeAmount } from '@/lib/stripe/math'
 import { formatCurrency } from '@/lib/utils'
 import type { StripePaymentRequest, StripeSettings } from '@/types'
 
@@ -17,7 +18,7 @@ export function PublicStripePayment({
   token: string
   pendingAmount: number
   request: StripePaymentRequest
-  settings: Pick<StripeSettings, 'commission_payer' | 'fee_percent' | 'fixed_fee_amount' | 'minimum_payment_amount'>
+  settings: Pick<StripeSettings, 'commission_payer' | 'fee_percent' | 'fixed_fee_amount' | 'fee_tax_percent' | 'minimum_payment_amount'>
 }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -29,11 +30,11 @@ export function PublicStripePayment({
   )
   const parsedCustomAmount = Number.parseFloat(customAmount)
   const paymentAmount = isOpenRequest ? parsedCustomAmount : Math.min(request.amount ?? 0, pendingAmount)
-  const fee = settings.fee_percent > 0 || settings.fixed_fee_amount > 0
-    ? Math.round((paymentAmount * (settings.fee_percent / 100) + settings.fixed_fee_amount) * 100) / 100
-    : 0
-  const previewFee = isOpenRequest ? settings.commission_payer === 'customer' ? fee : 0 : request.fee_amount
-  const previewTotal = isOpenRequest ? paymentAmount + previewFee : request.total_charged
+  const openCharge = Number.isFinite(paymentAmount) && paymentAmount > 0
+    ? calculateStripeChargeAmount(paymentAmount, settings)
+    : null
+  const previewFee = isOpenRequest ? openCharge?.feeAmount ?? 0 : request.fee_amount
+  const previewTotal = isOpenRequest ? openCharge?.totalCharged ?? 0 : request.total_charged
 
   async function startCheckout() {
     setError(null)

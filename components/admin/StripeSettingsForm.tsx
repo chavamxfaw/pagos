@@ -7,11 +7,13 @@ import { saveStripeSettings } from '@/actions/stripe-settings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { calculateStripeChargeAmount } from '@/lib/stripe/math'
 import { formatCurrency } from '@/lib/utils'
 import type { StripeSettings } from '@/types'
 
 export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
   const [pending, startTransition] = useTransition()
+  const referenceCharge = calculateStripeChargeAmount(5000, settings)
 
   function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -98,14 +100,17 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
             </label>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-4 sm:grid-cols-4">
             <Field label="Comisión %" name="fee_percent" type="number" step="0.001" min="0" defaultValue={String(settings.fee_percent)} />
             <Field label="Comisión fija MXN" name="fixed_fee_amount" type="number" step="0.01" min="0" defaultValue={String(settings.fixed_fee_amount)} />
+            <Field label="IVA sobre comisión %" name="fee_tax_percent" type="number" step="0.001" min="0" defaultValue={String(settings.fee_tax_percent ?? 16)} />
             <Field label="Mínimo global MXN" name="minimum_payment_amount" type="number" step="0.01" min="1" defaultValue={String(settings.minimum_payment_amount)} />
           </div>
 
           <p className="mt-3 text-xs text-[#6B7280]">
-            Referencia {formatCurrency(5000)}: {formatCurrency(5000 + (5000 * settings.fee_percent / 100) + settings.fixed_fee_amount)}
+            Referencia {formatCurrency(5000)}: cargo a tarjeta {formatCurrency(referenceCharge.totalCharged)}
+            {settings.commission_payer === 'customer' && ` · comisión estimada ${formatCurrency(referenceCharge.feeAmount)}`}
+            {settings.commission_payer === 'merchant' && ` · comisión absorbida estimada ${formatCurrency(referenceCharge.absorbedFee)}`}
           </p>
         </div>
 
