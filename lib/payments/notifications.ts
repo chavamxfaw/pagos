@@ -24,8 +24,12 @@ export async function notifyPaymentReceipt({
   senderName,
 }: NotifyPaymentReceiptInput) {
   const resolvedSenderName = senderName ?? await getDefaultSenderName(admin)
+  const emailEnabled = order.notify_email_enabled ?? true
+  const whatsAppEnabled = order.notify_whatsapp_enabled ?? true
+  const normalizedAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? ''
+  const receiptLink = payment.receipt_token ? `${normalizedAppUrl}/r/${payment.receipt_token}` : undefined
 
-  if (order.clients.email) {
+  if (emailEnabled && order.clients.email) {
     try {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
@@ -40,6 +44,7 @@ export async function notifyPaymentReceipt({
           totalAmount: order.total_amount,
           token: order.token,
           appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+          receiptToken: payment.receipt_token,
           senderName: resolvedSenderName,
         }),
       })
@@ -48,10 +53,10 @@ export async function notifyPaymentReceipt({
     }
   }
 
-  if (order.clients.phone) {
+  if (whatsAppEnabled && order.clients.phone) {
     try {
       const remaining = Math.max(0, order.total_amount - order.paid_amount)
-      const statusLink = `${process.env.NEXT_PUBLIC_APP_URL}/p/${order.token}`
+      const statusLink = `${normalizedAppUrl}/p/${order.token}`
       const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
 
       if (contentSid) {
@@ -77,8 +82,9 @@ export async function notifyPaymentReceipt({
             `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
             remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
             `Consulta tu estado aquí: ${statusLink}`,
+            receiptLink ? `Recibo del abono: ${receiptLink}` : '',
             `De parte de: ${resolvedSenderName}`,
-          ].join('\n'),
+          ].filter(Boolean).join('\n'),
         })
       }
     } catch (whatsAppError) {

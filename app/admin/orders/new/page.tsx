@@ -23,6 +23,8 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
       due_date: (formData.get('due_date') as string) || undefined,
       payment_reminder_enabled: formData.get('payment_reminder_enabled') === 'on',
       payment_reminder_days_before: Number(formData.get('payment_reminder_days_before') ?? 1),
+      notify_email_enabled: formData.get('notify_email_enabled') === 'on',
+      notify_whatsapp_enabled: formData.get('notify_whatsapp_enabled') === 'on',
       bank_account_id: getBankAccountId(formData),
       public_sort_order: Number(formData.get('public_sort_order') ?? 100),
       public_show_fiscal_document: formData.get('public_show_fiscal_document') === 'on',

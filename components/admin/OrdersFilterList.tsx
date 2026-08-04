@@ -57,6 +57,7 @@ const paymentFilterLabels: Record<PaymentFilter, string> = {
   transfer: 'Transferencia',
   cash: 'Efectivo',
   card: 'Tarjeta',
+  stripe: 'Stripe',
   check: 'Cheque',
   other: 'Otro',
 }

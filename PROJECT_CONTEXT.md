@@ -1,84 +1,144 @@
 # OTLA Pagos - Contexto del proyecto
 
-Ultima actualizacion: 2026-06-18
+Ultima actualizacion: 2026-08-03 21:04 CST
 
-## Resumen
+Este documento resume el estado funcional, tecnico y operativo de OTLA Pagos para poder retomar el proyecto sin depender del historial del chat.
 
-OTLA Pagos es una app Next.js para administrar clientes, ordenes, abonos, recordatorios de pago, datos bancarios, documentos fiscales y links publicos para clientes. El flujo principal es:
+## Resumen Ejecutivo
 
-1. Admin crea clientes.
-2. Admin crea ordenes asociadas al cliente.
-3. Admin registra abonos manuales o genera solicitudes de pago con Stripe.
-4. Cliente consulta un link publico por orden (`/p/[token]`) o un link general por cliente (`/c/[token]`).
-5. El sistema puede enviar correos con Resend y WhatsApp con Twilio.
+OTLA Pagos es una aplicacion web para controlar clientes, ordenes, abonos, recordatorios, datos bancarios, documentos fiscales, links publicos para clientes, pagos con Stripe y una API privada para integracion con agentes como OpenClaw.
+
+Flujo principal:
+
+1. El administrador crea clientes.
+2. El administrador crea ordenes asociadas a clientes.
+3. El administrador registra abonos manuales o genera solicitudes de pago con Stripe.
+4. El cliente consulta su link publico por orden o su link general de cliente.
+5. El sistema puede enviar notificaciones por correo con Resend y WhatsApp con Twilio.
+6. OpenClaw puede consultar/resumir/crear clientes, ordenes y abonos mediante API privada.
 
 ## Stack
 
 - Framework: Next.js 16 App Router.
-- UI: React 19, Tailwind CSS v4, componentes locales tipo shadcn en `components/ui`.
-- Backend: Supabase Postgres/Auth/Storage.
+- Runtime UI: React 19.
+- Estilos: Tailwind CSS v4.
+- Componentes: componentes locales tipo shadcn en `components/ui`.
+- Backend: Supabase Postgres, Auth y Storage.
 - Deploy: Vercel.
+- Repo: GitHub.
 - Pagos: Stripe Checkout.
 - Email: Resend.
 - WhatsApp: Twilio WhatsApp.
-- PWA: manifest, service worker y registro en `components/PWARegister.tsx`.
+- PWA: manifest, service worker y registro client-side.
 
-## Rutas importantes
+## Ubicacion Local
 
-- Admin: `/admin`
-- Login: `/login`
-- Clientes: `/admin/clients`
-- Detalle cliente: `/admin/clients/[id]`
-- Ordenes: `/admin/orders`
-- Detalle orden: `/admin/orders/[id]`
-- Configuracion datos bancarios: `/admin/settings/bank-accounts`
-- Configuracion docs fiscales: `/admin/settings/fiscal-documents`
-- Configuracion Stripe: `/admin/settings/stripe`
-- Link publico por orden: `/p/[token]`
-- Link publico general por cliente: `/c/[token]`
-- Link publico documento fiscal: `/d/[token]`
-- Stripe webhook: `/api/stripe/webhook`
-- Cron recordatorios: `/api/cron/due-reminders`
-- API privada para agente/OpenClaw:
-  - `GET /api/agent/summary`
-  - `GET|POST /api/agent/clients`
-  - `GET|POST /api/agent/orders`
-  - `POST /api/agent/payments`
+Proyecto:
+
+```txt
+/Users/chavamini/Documents/web/pagos
+```
+
+Archivos de contexto/documentacion:
+
+- `PROJECT_CONTEXT.md`: este documento.
+- `OPENCLAW_AGENT_API.md`: documentacion de API privada para OpenClaw.
+- `DEPLOYMENT.md`: notas de deploy inicial.
+- `README.md`: README base.
 
 ## Entornos
 
 ### Local
 
-- App local: `http://localhost:3002`
-- `.env.local` apunta a Supabase local cuando se trabaja en local.
-- Comando:
+URL comun de trabajo:
+
+```txt
+http://localhost:3002
+```
+
+Comando:
 
 ```bash
 npm run dev
 ```
 
-Validacion:
+Validacion antes de deploy:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-Nota: en una revision reciente el Supabase local no estaba levantado como `supabase_db_pagos` y `localhost:3002` estaba apuntando a otra base local. Si el login local redirige a `/login?error=unauthorized`, revisar `supabase status` y que el proyecto local correcto este corriendo.
+Nota: si local redirige a `/login?error=unauthorized`, revisar que Supabase local corresponda al proyecto correcto. En revisiones previas, el build local aviso `Stripe settings table is not available yet` porque `.env.local` apuntaba a una base local que no tenia el esquema completo.
 
 ### Produccion
 
-- Dominio principal: `https://pagos.sitios-dev.info`
-- Proyecto Vercel: `pagos`
-- Repo GitHub: `https://github.com/chavamxfaw/pagos`
-- Supabase Cloud:
-  - Project name: `pagos`
-  - Project ref: `vxxanvvpesqerokpsvsh`
-  - URL: `https://vxxanvvpesqerokpsvsh.supabase.co`
+Dominio principal:
 
-## Variables de entorno esperadas
+```txt
+https://pagos.sitios-dev.info
+```
 
-No commitear valores reales de secretos. Ver `.env.example` y Vercel env vars.
+Vercel:
+
+```txt
+Project: chavamxs-projects/pagos
+```
+
+GitHub:
+
+```txt
+https://github.com/chavamxfaw/pagos
+```
+
+Supabase:
+
+```txt
+Project name: pagos
+Project ref: vxxanvvpesqerokpsvsh
+URL: https://vxxanvvpesqerokpsvsh.supabase.co
+```
+
+## Rutas Principales
+
+Admin:
+
+- `/login`
+- `/admin`
+- `/admin/clients`
+- `/admin/clients/new`
+- `/admin/clients/[id]`
+- `/admin/clients/[id]/edit`
+- `/admin/orders`
+- `/admin/orders/new`
+- `/admin/orders/[id]`
+- `/admin/orders/[id]/edit`
+- `/admin/profile`
+- `/admin/settings/bank-accounts`
+- `/admin/settings/fiscal-documents`
+- `/admin/settings/stripe`
+
+Publicas:
+
+- `/p/[token]`: link publico de una orden.
+- `/c/[token]`: link publico general de cliente.
+- `/d/[token]`: link publico de documento fiscal.
+- `/r/[token]`: recibo publico de un abono.
+
+APIs:
+
+- `/api/auth/callback`
+- `/api/cron/due-reminders`
+- `/api/stripe/checkout`
+- `/api/stripe/webhook`
+- `/api/agent/summary`
+- `/api/agent/clients`
+- `/api/agent/orders`
+- `/api/agent/payments`
+
+## Variables de Entorno
+
+No commitear valores reales. Ver `.env.example`.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -102,7 +162,13 @@ STRIPE_SECRET_KEY_LIVE=
 STRIPE_WEBHOOK_SECRET_LIVE=
 ```
 
-## Modelo funcional
+Notas:
+
+- `OTLA_AGENT_API_KEY` esta configurada en Vercel como variable sensitive.
+- La llave de OpenClaw fue rotada y validada en produccion el 2026-07-29. No debe guardarse en este archivo.
+- En OpenClaw debe usarse como secreto, no como texto en prompts visibles.
+
+## Modelo Funcional
 
 ### Clientes
 
@@ -110,12 +176,23 @@ Tabla principal: `clients`.
 
 Campos relevantes:
 
-- `client_portal_token`: token para link general del cliente.
-- `client_portal_enabled`: activa/desactiva el link general.
+- `name`
 - `email`: opcional. Si no existe, no se envia correo.
-- `phone`: usado para WhatsApp cuando existe.
+- `phone`: opcional. Si existe, puede usarse para WhatsApp.
+- `company`
+- `rfc`
+- `address`
+- `notes`
+- `client_portal_enabled`
+- `client_portal_token`
 
-Nota de seguridad: al reactivar el link general del cliente se rota `client_portal_token`, para invalidar links anteriores.
+Comportamiento:
+
+- El admin puede crear, editar, eliminar y buscar clientes.
+- El link general del cliente se puede activar/desactivar manualmente.
+- Al reactivar el link general se rota `client_portal_token` para invalidar links anteriores.
+- En detalle de cliente se muestran resumen financiero, seguimiento, bitacora y ordenes relacionadas.
+- Las ordenes del cliente pueden ordenarse para controlar el orden visible en el link general publico.
 
 ### Ordenes
 
@@ -123,28 +200,47 @@ Tabla principal: `orders`.
 
 Campos relevantes:
 
-- `concept`, `description`
+- `client_id`
+- `concept`
+- `description`
 - `category`: `service`, `product`, `project`, `subscription`, `other`
 - `tags`: arreglo para busqueda.
-- `total_amount`, `paid_amount`, `status`
-- `issued_at`, `due_date`
-- Factura/IVA:
-  - `requires_invoice`
-  - `tax_mode`: `none`, `included`, `added`
-  - `subtotal_amount`
-  - `tax_amount`
-  - `tax_rate`
-- Recordatorios:
-  - `payment_reminder_enabled`
-  - `payment_reminder_days_before`
-  - `payment_reminder_last_sent_on`
-- Link publico:
-  - `token`
-  - `public_sort_order`
-  - `public_show_fiscal_document`
-  - `fiscal_document_id`
-- Datos bancarios:
-  - `bank_account_id`
+- `total_amount`
+- `paid_amount`
+- `status`
+- `issued_at`
+- `due_date`
+- `token`
+- `public_sort_order`
+- `bank_account_id`
+- `fiscal_document_id`
+- `public_show_fiscal_document`
+- `notify_email_enabled`
+- `notify_whatsapp_enabled`
+
+Factura/IVA:
+
+- `requires_invoice`
+- `tax_mode`: `none`, `included`, `added`
+- `subtotal_amount`
+- `tax_amount`
+- `tax_rate`
+
+Recordatorios:
+
+- `payment_reminder_enabled`
+- `payment_reminder_days_before`
+- `payment_reminder_last_sent_on`
+
+Comportamiento:
+
+- Se pueden crear, editar, borrar y marcar como completadas.
+- El admin puede agregar abonos manuales.
+- El admin puede enviar recordatorios manuales.
+- El admin puede solicitar pagos Stripe desde la orden.
+- El admin puede prender/apagar por orden las notificaciones al cliente por correo y WhatsApp.
+- El link publico individual `/p/[token]` muestra estado, abonos, datos bancarios, Stripe si aplica, desglose fiscal y constancia fiscal si se activo.
+- Los links de orden completada permanecen visibles 30 dias despues de liquidarse; despues expiran.
 
 ### Abonos
 
@@ -152,32 +248,49 @@ Tabla principal: `payments`.
 
 Campos relevantes:
 
+- `order_id`
 - `amount`
 - `concept`
-- `payment_method`: `cash`, `transfer`, `card`, `check`, `other`
-- `paid_at`: fecha real del abono, puede ser anterior al dia de captura.
+- `payment_method`: `cash`, `transfer`, `card`, `check`, `stripe`, `other`
+- `paid_at`
+- `notes`
+- `receipt_token`
+- `receipt_issued_at`
 
-Cuando se registra un abono, se actualiza el estado de la orden y se pueden enviar notificaciones segun correo/telefono disponible.
+Comportamiento:
 
-### Datos bancarios
+- La fecha del abono puede ser anterior a la fecha de captura.
+- El sistema actualiza `paid_amount` y `status` de la orden.
+- Si el cliente tiene email/telefono, se disparan notificaciones normales segun configuracion de la orden.
+- El link publico muestra historial de abonos con metodo de pago.
+- Cada abono tiene recibo publico en `/r/[receipt_token]`, independiente de la expiracion del link de orden.
+- Los recibos se pueden compartir, copiar e imprimir/guardar como PDF desde el navegador.
+
+### Datos Bancarios
 
 Tabla principal: `bank_accounts`.
 
-Sirve para guardar cuentas propias y asociarlas a ordenes. Si una orden tiene cuenta bancaria asociada, el cliente la ve en el link publico y el admin puede copiar/enviar esos datos.
+Uso:
 
-### Documentos fiscales
+- El admin guarda cuentas bancarias propias.
+- Una orden puede asociarse a una cuenta bancaria.
+- Si la orden tiene cuenta bancaria asociada, aparece en el link publico como recordatorio de pago.
+- El admin puede copiar datos o enviarlos por WhatsApp.
+
+### Documentos Fiscales
 
 Tabla principal: `fiscal_documents`.
 
-Sirve para subir PDFs como constancia fiscal y generar links publicos `/d/[token]`.
+Uso:
 
-Flujo actual:
+- El admin sube PDFs, por ejemplo constancia fiscal.
+- Se genera link publico `/d/[token]`.
+- Una orden puede activar/desactivar si muestra una constancia fiscal.
+- Si esta activo, el link aparece en `/p/[token]` y dentro de esa orden en `/c/[token]`.
 
-- Admin sube/gestiona documentos fiscales en `/admin/settings/fiscal-documents`.
-- En una orden se puede seleccionar una constancia y activar `public_show_fiscal_document`.
-- Si esta activo, el link aparece en `/p/[token]` y en la orden dentro de `/c/[token]`.
+Seguridad de archivo:
 
-Seguridad de archivo: al subir PDFs se valida que el archivo empiece con magic header `%PDF-`, no solo el MIME declarado por el navegador.
+- Se valida magic header `%PDF-`, no solo MIME declarado por navegador.
 
 ### Stripe
 
@@ -191,43 +304,77 @@ Flujo:
 
 1. Admin configura Stripe en `/admin/settings/stripe`.
 2. Admin solicita pago Stripe desde la orden.
-3. Solicitud puede ser monto fijo o monto abierto con minimo.
+3. Solicitud puede ser de monto fijo o monto abierto con minimo.
 4. Cliente paga desde link publico.
-5. Webhook registra el pago y dispara notificaciones.
+5. Stripe webhook valida y registra abono.
+6. Se disparan notificaciones normales del pago.
+7. Se puede notificar al admin por correo/WhatsApp cuando alguien paga por Stripe.
 
 Seguridad/consistencia:
 
 - Solo puede existir una solicitud Stripe pendiente por orden.
-- Solo puede existir un checkout pendiente por solicitud de pago.
-- El checkout se reutiliza si el cliente vuelve a intentar pagar una solicitud pendiente.
-- El webhook valida `payment_status = paid`, moneda MXN, monto cobrado, saldo pendiente y estado de la solicitud antes de registrar abono.
-- El webhook marca primero el checkout como `paid` con condicion `status = pending` para reducir riesgo de doble procesamiento.
+- Solo puede existir un checkout pendiente por solicitud.
+- El checkout se reutiliza si el cliente vuelve a abrir la misma solicitud pendiente.
+- El webhook valida:
+  - `payment_status = paid`
+  - moneda MXN
+  - monto cobrado
+  - saldo pendiente
+  - estado de solicitud
+- El webhook marca primero el checkout como `paid` con condicion `status = pending` para reducir doble procesamiento.
 
-Comision:
+Configuracion de comision:
 
-- `commission_payer`: `merchant` o `customer`.
-- `fee_percent`, `fixed_fee_amount`, `fee_tax_percent`, `minimum_payment_amount`.
-- Si la comision la paga el cliente, el cargo usa gross-up: calcula el total a cobrar para que el abono neto deseado quede cubierto despues de comision porcentual, comision fija e IVA/impuesto sobre la comision.
+- `commission_payer`: `merchant` o `customer`
+- `fee_percent`
+- `fixed_fee_amount`
+- `fee_tax_percent`
+- `minimum_payment_amount`
+
+Formula importante:
+
+- Si el comercio absorbe comision, el cliente paga exactamente el abono.
+- Si el cliente paga comision, el sistema usa gross-up para calcular el total a cobrar y que el abono neto esperado quede cubierto despues de:
+  - comision porcentual
+  - comision fija
+  - IVA/impuesto sobre la comision
+
+Ejemplo reciente:
+
+- Abono deseado: `$6,000.00`
+- Configuracion: `3.6% + $3.00 + 16% IVA sobre comision`
+- Cargo estimado al cliente: `$6,265.11`
+- Comision estimada: `$265.11`
+- Neto esperado: `$6,000.00`
 
 ### Notificaciones
 
 Email:
 
-- Resend, desde `RESEND_FROM_EMAIL`.
+- Proveedor: Resend.
+- Remitente: `RESEND_FROM_EMAIL`.
 - Templates React Email en `emails/`.
+- Nombre remitente fue ajustado para usar marca OTLA en lugar de texto generico.
+- Los recibos de abono por correo incluyen CTA a `/r/[receipt_token]` cuando el abono tiene token.
+- Las notificaciones automaticas al cliente respetan `orders.notify_email_enabled`.
 
 WhatsApp:
 
-- Twilio WhatsApp.
-- Reminders usan `TWILIO_PAYMENT_REMINDER_CONTENT_SID`.
-- Datos bancarios usan `TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID`.
-- Aviso admin por pago Stripe usa `TWILIO_ADMIN_STRIPE_PAYMENT_CONTENT_SID`.
+- Proveedor: Twilio WhatsApp.
+- Requiere templates aprobados para conversaciones iniciadas por negocio.
+- Mensajes libres fuera de la ventana de 24 horas fallan con error de Twilio/WhatsApp.
+- Las notificaciones automaticas al cliente respetan `orders.notify_whatsapp_enabled`.
+- El envio manual de datos bancarios por WhatsApp se bloquea si la orden tiene WhatsApp desactivado.
 
-Importante: WhatsApp business initiated requiere template aprobado. Mensajes libres fallan fuera de la ventana de 24 horas.
+Templates relevantes:
 
-### Recordatorios automaticos
+- `TWILIO_PAYMENT_REMINDER_CONTENT_SID`: recordatorio/estado de pago.
+- `TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID`: datos bancarios.
+- `TWILIO_ADMIN_STRIPE_PAYMENT_CONTENT_SID`: aviso a admin por pago Stripe.
 
-Vercel Cron configurado en `vercel.json`:
+### Recordatorios Automaticos
+
+Vercel Cron:
 
 ```json
 {
@@ -236,130 +383,231 @@ Vercel Cron configurado en `vercel.json`:
 }
 ```
 
-La ruta `/api/cron/due-reminders` busca ordenes con `payment_reminder_enabled = true`, fecha limite y configuracion de dias antes. Evita duplicar con `payment_reminder_last_sent_on`.
+La ruta `/api/cron/due-reminders` busca ordenes con:
 
-Seguridad: `CRON_SECRET` es obligatorio. Si no existe, la ruta falla con 500 en lugar de quedar abierta accidentalmente.
+- `payment_reminder_enabled = true`
+- `due_date` configurado
+- `payment_reminder_days_before` compatible con la fecha actual
 
-### API privada para agentes
+Evita duplicados con `payment_reminder_last_sent_on`.
 
-Pensada para conectar Telegram/OpenClaw sin exponer Supabase directamente.
+Seguridad:
+
+- `CRON_SECRET` es obligatorio.
+- Si no existe, la ruta falla con 500 para evitar dejarla abierta por accidente.
+
+## API Privada para OpenClaw
+
+Documentacion completa:
+
+```txt
+OPENCLAW_AGENT_API.md
+```
+
+Base URL:
+
+```txt
+https://pagos.sitios-dev.info/api/agent
+```
 
 Autenticacion:
 
 ```http
-Authorization: Bearer ${OTLA_AGENT_API_KEY}
+Authorization: Bearer TU_OTLA_AGENT_API_KEY
 X-Agent-Name: openclaw
 ```
 
-Endpoints actuales:
+Endpoints:
 
-- `GET /api/agent/summary`: totales y ordenes pendientes/parciales.
-- `GET /api/agent/clients?q=texto&limit=20`: busca clientes.
-- `POST /api/agent/clients`: crea cliente.
-- `GET /api/agent/orders?status=pending&client_id=uuid&q=texto&limit=30`: lista ordenes.
-- `POST /api/agent/orders`: crea orden.
-- `POST /api/agent/payments`: registra abono.
+- `GET /api/agent/summary`
+- `GET /api/agent/clients`
+- `POST /api/agent/clients`
+- `GET /api/agent/orders`
+- `POST /api/agent/orders`
+- `POST /api/agent/payments`
 
-Ejemplo crear cliente:
+Alcance:
 
-```json
-{
-  "name": "Juan Perez",
-  "phone": "8112345678",
-  "email": "juan@test.com",
-  "company": "Empresa X"
-}
-```
+- Consultar resumen.
+- Buscar/listar clientes.
+- Crear clientes.
+- Buscar/listar ordenes.
+- Crear ordenes.
+- Registrar abonos.
 
-Ejemplo crear orden:
+Restricciones:
 
-```json
-{
-  "client_id": "uuid",
-  "concept": "Servicio web",
-  "amount": 15000,
-  "due_date": "2026-06-30",
-  "category": "service",
-  "tags": ["web", "mensualidad"]
-}
-```
+- No puede borrar clientes.
+- No puede borrar ordenes.
+- No puede borrar abonos.
+- No puede modificar configuracion.
+- No puede leer secretos.
 
-Ejemplo registrar abono:
-
-```json
-{
-  "order_id": "uuid",
-  "amount": 5000,
-  "payment_method": "transfer",
-  "concept": "Abono por transferencia",
-  "paid_at": "2026-06-18"
-}
-```
-
-Seguridad de agente:
+Seguridad:
 
 - Usa `OTLA_AGENT_API_KEY`.
-- Rate limit `agent_api`.
-- Las escrituras registran actividad con `event_type` prefijado por `agent_`.
-- No expone acciones destructivas como borrar cliente/orden.
-- Abonos por agente validan saldo pendiente y disparan notificaciones normales si el cliente tiene correo/telefono.
+- Rate limit dedicado `agent_api`.
+- Escrituras registran actividad con eventos prefijados por agente.
+- Los abonos validan saldo pendiente.
+- Las notificaciones solo se disparan si existen datos de contacto.
 
-## Seguridad actual
+Validacion realizada en produccion:
 
-- Admin protegido por Supabase Auth y allowlist en `app_admin_users`.
+- Sin token: `401 Unauthorized`.
+- Con token correcto: `200 OK`.
+
+## Seguridad Actual
+
+Autenticacion/admin:
+
+- Admin protegido por Supabase Auth.
 - `middleware.ts` protege `/admin`.
-- Rate limit por IP en middleware:
-  - `/login`: scope `auth`
-  - `/p/*`, `/c/*`, `/d/*`: scope `public_link`
-- Rate limit adicional:
-  - `/api/stripe/checkout`: scope `stripe_checkout`
-  - `/api/agent/*`: scope `agent_api`
-  - Login y checkout Stripe usan fail-closed si no se puede validar el limite.
-- Tabla y funcion:
-  - `ip_rate_limits`
-  - `check_ip_rate_limit`
+- Allowlist mediante `app_admin_users`.
+- Service role solo debe usarse en server actions y API server.
+
+Rate limit:
+
+- `/login`: scope `auth`.
+- `/p/*`, `/c/*`, `/d/*`: scope `public_link`.
+- `/api/stripe/checkout`: scope `stripe_checkout`.
+- `/api/agent/*`: scope `agent_api`.
+
+Tablas/funciones:
+
+- `ip_rate_limits`
+- `check_ip_rate_limit`
+
+Headers globales en `next.config.ts`:
+
+- `Content-Security-Policy`
+- `Referrer-Policy`
+- `X-Content-Type-Options`
+- `Permissions-Policy`
+
+Hardening aplicado:
+
 - RLS endurecido por migraciones, especialmente `20260506221318_admin_allowlist_security.sql`.
-- Service role solo debe usarse en server actions/API server.
-- Headers globales en `next.config.ts`:
-  - `Content-Security-Policy`
-  - `Referrer-Policy`
-  - `X-Content-Type-Options`
-  - `Permissions-Policy`
-- `lib/user-settings.ts` concentra lecturas server-only de settings que usan service role.
-- Links publicos de orden completada:
-  - `/p/[token]` expira 30 dias despues de completar/liquidar.
-  - `/c/[token]` ya no muestra ordenes completadas que hayan expirado por la misma regla.
-- Migracion aplicada en Supabase produccion:
-  - `20260530190000_security_hardening.sql`
-  - `security_hardening`
+- Cron protegido con `CRON_SECRET` fail-closed.
+- PDF validado por magic header.
+- Settings server-only concentrados en `lib/user-settings.ts`.
+- Stripe webhook con validaciones de monto, moneda, estado y saldo.
+- Agent API protegida por bearer token y rate limit.
 
-Pendiente de auditoria de seguridad:
+Pendientes recomendados:
 
-- Revisar manualmente `app_admin_users` en Supabase Cloud para confirmar que solo existan admins esperados. En el ultimo intento, el MCP pidio reautenticacion para consultar la tabla despues de aplicar migracion.
-- Migrar `middleware.ts` a `proxy` cuando convenga, porque Next.js muestra warning de deprecacion, aunque hoy no bloquea.
-
-Pendiente recomendado antes de SaaS:
-
-- Multi-tenant real: organizaciones, miembros, scoping por tenant en todas las queries.
-- Auditoria de politicas RLS despues de multi-tenant.
+- Migrar `middleware.ts` a `proxy` cuando convenga, porque Next.js 16 muestra warning de deprecacion.
+- Auditoria periodica de `app_admin_users`.
 - Backups automatizados fuera de Supabase.
-- Rate limiting adicional por usuario/accion sensible, no solo IP.
+- Rate limit por usuario/accion sensible ademas de IP.
+- Multi-tenant real antes de convertirlo en SaaS.
 
-## UI / UX actual
+## Estado de Migraciones
+
+Supabase produccion tiene historial con varias migraciones remotas que no existen como archivos locales, porque en etapas previas se aplicaron cambios directos desde dashboard/CLI/MCP.
+
+Situacion operativa:
+
+- `supabase db push --dry-run` puede fallar por drift de historial.
+- Para cambios puntuales en produccion, se ha usado MCP `apply_migration` con SQL de migracion y verificacion posterior con query.
+- No reparar historial remoto automaticamente sin revisar, porque podria marcar migraciones remotas como revertidas.
+
+Migraciones recientes relevantes:
+
+- `20260618190000_agent_api_rate_limit_scope.sql`
+- `20260729190000_stripe_fee_tax_percent.sql`
+- `20260804012856_payment_receipts_order_notifications.sql`
+
+Todas fueron aplicadas en Supabase produccion.
+
+La migracion `20260804012856_payment_receipts_order_notifications.sql` agrega:
+
+- `orders.notify_email_enabled`
+- `orders.notify_whatsapp_enabled`
+- `payments.receipt_token`
+- `payments.receipt_issued_at`
+- indice unico `payments_receipt_token_idx`
+- soporte `stripe` en el check constraint de `payments.payment_method`
+
+Verificacion remota realizada:
+
+- Proyecto Supabase correcto: `vxxanvvpesqerokpsvsh`.
+- `supabase migration list --linked` muestra `20260804012856` aplicada.
+- `supabase db dump --linked --schema public` confirma columnas e indice.
+
+Nota local/Docker:
+
+- `.env.local` apunta a `http://127.0.0.1:54321`.
+- Los puertos locales `54321/54322/54323/54324/54327` estaban ocupados por otro proyecto Docker (`vendlytics-local`).
+- `supabase status` en `pagos` puede fallar con `No such container: supabase_db_pagos` si no esta levantado el stack local de este proyecto.
+- No detener contenedores de otros proyectos automaticamente.
+
+Metodo usado para aplicar la migracion reciente por drift:
+
+- Se creo un workdir temporal en `/tmp` con placeholders para migraciones remotas faltantes y la migracion nueva real.
+- Se ejecuto `supabase migration up --linked --workdir ...`.
+- Esto evito usar `supabase db push` directo sobre un historial con drift.
+
+## PWA
+
+El proyecto tiene configuracion PWA:
+
+- `public/manifest.json`
+- `public/sw.js`
+- Registro de service worker en componente cliente.
+- Metas de iOS y theme color en layout.
+
+Nota:
+
+- PWA instalable no equivale automaticamente a push notifications.
+- Push notifications requeriria implementar Push API, suscripciones, permisos, VAPID keys y backend de envio.
+
+## UI / UX Actual
 
 Admin:
 
-- Sidebar con secciones principal, gestion, configuracion y cuenta.
+- Sidebar con secciones:
+  - Principal
+  - Gestion
+  - Configuracion
+  - Cuenta
+- Sidebar colapsable con iconos.
 - Buscador global en header.
-- Dashboard con metricas, ordenes recientes, pagos por metodo y abonos recientes.
-- Clientes con filtros, acciones rapidas y export CSV.
-- Ordenes con filtros, tabs de estado, cards y acciones.
+- Notificaciones en header.
+- Dashboard con:
+  - metricas principales
+  - resumen visual
+  - ordenes recientes
+  - pagos por metodo
+  - abonos recientes
+- Clientes con:
+  - filtros
+  - acciones rapidas
+  - export CSV
+  - detalle con resumen y ordenes
+- Ordenes con:
+  - tabs por estado
+  - filtros
+  - cards
+  - acciones rapidas por card
+  - export CSV
 
 Links publicos:
 
-- `/p/[token]`: estado de una orden.
+- `/p/[token]`: estado de cuenta por orden.
 - `/c/[token]`: resumen global del cliente y ordenes.
-- Muestran datos bancarios, pagos, historial, Stripe cuando aplica, desglose fiscal y constancia fiscal si se activo.
+- `/r/[token]`: recibo publico de un abono manual o Stripe.
+- Se rediseñaron hacia un estilo mas limpio, moderno y centrado en estado financiero.
+- Muestran:
+  - total
+  - pagado
+  - pendiente
+  - progreso
+  - historial de abonos
+  - datos bancarios
+  - Stripe cuando aplica
+  - desglose fiscal
+  - constancia fiscal si se activo
+  - link a recibo por abono cuando existe `receipt_token`
 
 Paleta marca OTLA:
 
@@ -375,27 +623,193 @@ Paleta marca OTLA:
 - Pendiente: `#F4B740`
 - Error/vencido: `#EF4444`
 
-## Estado de deploy al 2026-06-18
+## Integraciones Externas
 
-Ultimos commits relevantes:
+### Supabase
 
+Uso:
+
+- Auth.
+- Postgres.
+- Storage para documentos fiscales.
+- RLS y politicas.
+
+Skill/MCP:
+
+- Para tareas Supabase, usar skill `supabase:supabase`.
+- MCP project id/ref correcto: `vxxanvvpesqerokpsvsh`.
+- Produccion ya tiene aplicada la migracion de recibos/notificaciones por orden `20260804012856`.
+- Hay drift entre historial remoto y archivos locales de migraciones; revisar antes de usar comandos que sincronicen todo el historial.
+- Local Docker de `pagos` no estaba activo al ultimo corte; habia otros stacks ocupando los puertos default.
+
+### Vercel
+
+Uso:
+
+- Deploy production.
+- Variables de entorno.
+- Cron.
+
+Validacion comun:
+
+```bash
+curl -I -s https://pagos.sitios-dev.info/admin
+```
+
+Debe responder `307` hacia `/login` si no hay sesion.
+
+### GitHub
+
+Repo:
+
+```txt
+https://github.com/chavamxfaw/pagos
+```
+
+Rama principal:
+
+```txt
+main
+```
+
+### Resend
+
+Dominio usado para correo:
+
+```txt
+notificaciones.sitios-dev.info
+```
+
+### Twilio WhatsApp
+
+Uso:
+
+- Recordatorios de pago.
+- Datos bancarios.
+- Avisos a admin por Stripe.
+
+Importante:
+
+- Los templates deben estar aprobados para envios iniciados por negocio.
+
+### Stripe
+
+Modo:
+
+- Configurable entre `test` y `live` desde settings.
+
+Webhook:
+
+- Usar secret segun modo:
+  - `STRIPE_WEBHOOK_SECRET_TEST`
+  - `STRIPE_WEBHOOK_SECRET_LIVE`
+
+## Ultimos Cambios Relevantes
+
+Cambios locales recientes para recibos y notificaciones por orden:
+
+- Se agrego ruta publica `/r/[token]` para recibos de abonos.
+- Se agrego generacion de recibo por cada pago con `receipt_token` y `receipt_issued_at`.
+- El historial publico de abonos muestra accion para ver recibo.
+- Los correos de recibo incluyen CTA para descargar/ver recibo.
+- Las ordenes tienen configuracion `notify_email_enabled` y `notify_whatsapp_enabled`.
+- Los recordatorios y recibos al cliente respetan esas preferencias por orden.
+- `payment_method` ya contempla `stripe`.
+- Validacion local: `npm run lint` paso.
+- Validacion local: `npm run build` paso.
+- Warning conocido: Next.js 16 recomienda migrar `middleware.ts` a `proxy`.
+
+Estado de despliegue de estos cambios:
+
+- La migracion `20260804012856` ya esta aplicada y verificada en Supabase produccion.
+- No asumir que el codigo de recibos/notificaciones esta desplegado en Vercel o empujado a GitHub hasta revisar `git status`, commits y ultimo deploy.
+
+Commits recientes:
+
+- `74a989e Ajusta calculo de comision Stripe`
+- `aa435da Agrega API privada para agente`
+- `baf38c9 Actualiza contexto del proyecto`
 - `16a0c76 Endurece seguridad de pagos y accesos`
-- `3bbe93c Agrega reordenamiento de ordenes por cliente`
-- `43be685 Agrega opciones publicas por orden`
-- `0113403 Agrega rate limit y recordatorios automaticos`
 
-El hardening de seguridad ya se empujo a GitHub y quedo desplegado en Vercel produccion. Se validaron headers en `https://pagos.sitios-dev.info/login` y `https://pagos.sitios-dev.info/manifest.json`.
+Deploy reciente:
 
-Archivos PNG sueltos sin trackear que no se deben commitear automaticamente salvo que se confirme su uso:
+- Se hizo deploy production en Vercel despues de configurar/rotar `OTLA_AGENT_API_KEY`.
+- Se valido `GET /api/agent/summary`:
+  - sin token: `401`
+  - con token: `200`
+
+## Archivos Clave
+
+Acciones:
+
+- `actions/clients.ts`
+- `actions/orders.ts`
+- `actions/payments.ts`
+- `actions/bank-accounts.ts`
+- `actions/fiscal-documents.ts`
+- `actions/stripe-settings.ts`
+- `actions/stripe-payment-requests.ts`
+
+API:
+
+- `app/api/agent/summary/route.ts`
+- `app/api/agent/clients/route.ts`
+- `app/api/agent/orders/route.ts`
+- `app/api/agent/payments/route.ts`
+- `app/api/stripe/checkout/route.ts`
+- `app/api/stripe/webhook/route.ts`
+- `app/api/cron/due-reminders/route.ts`
+
+Publicas:
+
+- `app/p/[token]/page.tsx`
+- `app/c/[token]/page.tsx`
+- `app/d/[token]/page.tsx`
+- `app/r/[token]/page.tsx`
+
+Librerias:
+
+- `lib/agent/api.ts`
+- `lib/payment-receipts.ts`
+- `lib/stripe/config.ts`
+- `lib/stripe/math.ts`
+- `lib/stripe/client.ts`
+- `lib/security/rate-limit.ts`
+- `lib/public-orders.ts`
+- `lib/public-clients.ts`
+- `lib/order-reminder-notifications.ts`
+- `lib/payments/notifications.ts`
+- `lib/admin-stripe-notifications.ts`
+- `lib/user-settings.ts`
+
+UI:
+
+- `components/admin/`
+- `components/public/`
+- `components/public/ReceiptActions.tsx`
+- `components/ui/`
+
+Config:
+
+- `middleware.ts`
+- `next.config.ts`
+- `vercel.json`
+- `.env.example`
+- `supabase/migrations/`
+- `supabase/migrations/20260804012856_payment_receipts_order_notifications.sql`
+
+## Archivos No Trackeados a Cuidar
+
+Estos archivos han aparecido como no rastreados. No commitearlos automaticamente salvo que se confirme su uso:
 
 - `favicon-otla.png`
 - `otla-logo.png`
 - `otla-white.png`
 - `render-otla.png`
 
-## Flujo recomendado de trabajo
+## Flujo Recomendado de Trabajo
 
-1. Hacer cambios local.
+1. Hacer cambios localmente.
 2. Probar en `http://localhost:3002`.
 3. Ejecutar:
 
@@ -404,40 +818,46 @@ npm run lint
 npm run build
 ```
 
-4. Si hay migraciones, aplicarlas primero en Supabase produccion solo cuando el usuario autorice.
-5. Commit/push a GitHub.
-6. Deploy Vercel production.
-7. Verificar:
+4. Si hay migraciones:
+   - revisar SQL
+   - aplicar en Supabase solo con autorizacion
+   - verificar con query
+5. Commit de archivos relacionados solamente.
+6. Push a GitHub.
+7. Deploy a Vercel production.
+8. Verificar produccion.
 
-```bash
-curl -I -s https://pagos.sitios-dev.info/admin
-```
+## Criterios de Seguridad Operativa
 
-Debe redirigir a `/login` si no hay sesion.
+- No imprimir secretos en docs o commits.
+- No usar `git reset --hard` sin confirmacion explicita.
+- No revertir cambios del usuario sin autorizacion.
+- No reparar historial de migraciones Supabase sin revisar drift.
+- No crear endpoints destructivos para agentes externos sin nueva capa de autorizacion.
+- Mantener service role fuera del cliente.
+- Mantener OpenClaw limitado a acciones no destructivas.
 
-## Archivos clave
+## Pendientes Estratégicos
 
-- `actions/orders.ts`: crear/editar/borrar/completar ordenes y ordenar publicamente.
-- `actions/payments.ts`: abonos manuales y reenvio/notificacion.
-- `actions/clients.ts`: clientes y link general.
-- `actions/bank-accounts.ts`: datos bancarios y envio por WhatsApp.
-- `actions/fiscal-documents.ts`: documentos fiscales.
-- `actions/stripe-payment-requests.ts`: solicitudes de pago Stripe.
-- `actions/stripe-settings.ts`: configuracion Stripe.
-- `lib/public-orders.ts`: carga datos para `/p/[token]`.
-- `lib/public-clients.ts`: carga datos para `/c/[token]`.
-- `lib/order-reminder-notifications.ts`: recordatorios manuales/automaticos.
-- `lib/payments/notifications.ts`: recibos/notificaciones de abono.
-- `lib/admin-stripe-notifications.ts`: avisos al admin por Stripe.
-- `lib/security/rate-limit.ts`: rate limit.
-- `middleware.ts`: proteccion admin y rate limit.
-- `vercel.json`: cron.
-- `supabase/migrations/`: historial de esquema.
+Antes de SaaS:
 
-## Notas operativas
+- Multi-tenant real:
+  - organizaciones
+  - miembros
+  - roles
+  - scoping por tenant en queries y RLS
+- Backups automatizados fuera de Supabase.
+- Auditoria de logs/actividad mas completa.
+- Rate limits por usuario y tipo de accion.
+- Panel de configuracion de notificaciones.
+- Politica de cuotas de WhatsApp por usuario/tenant.
 
-- No usar `git reset --hard` ni revertir cambios sin confirmacion.
-- Excluir cambios no relacionados al commitear, especialmente assets sueltos.
-- Si Vercel build muestra warning de `middleware` deprecado, no bloquea; eventualmente conviene migrar a `proxy`.
-- Si en build local aparece `Stripe settings table is not available yet`, puede ser por desalineacion de Supabase local; no necesariamente bloquea produccion.
-- Para cambios de Supabase en produccion, preferir MCP `apply_migration` con SQL de migracion y luego verificar con query.
+Mejoras producto:
+
+- Vista calendario para vencimientos y recordatorios.
+- Mejor analitica de cobranza.
+- Estado de cartera por cliente.
+- Flujo para comprobantes enviados por cliente.
+- Stripe con reglas por orden mas avanzadas.
+- Exportaciones/reportes.
+- Integracion futura con conciliacion bancaria por referencia.

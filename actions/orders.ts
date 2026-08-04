@@ -24,6 +24,8 @@ export async function createOrder(data: {
   due_date?: string
   payment_reminder_enabled?: boolean
   payment_reminder_days_before?: number
+  notify_email_enabled?: boolean
+  notify_whatsapp_enabled?: boolean
   bank_account_id?: string
   public_sort_order?: number
   public_show_fiscal_document?: boolean
@@ -50,6 +52,8 @@ export async function createOrder(data: {
       payment_reminder_enabled: Boolean(data.due_date && data.payment_reminder_enabled),
       payment_reminder_days_before: getReminderDaysBefore(data.payment_reminder_days_before),
       payment_reminder_last_sent_on: null,
+      notify_email_enabled: data.notify_email_enabled ?? true,
+      notify_whatsapp_enabled: data.notify_whatsapp_enabled ?? true,
       bank_account_id: data.bank_account_id || null,
       public_sort_order: getPublicSortOrder(data.public_sort_order),
       public_show_fiscal_document: Boolean(data.public_show_fiscal_document && data.fiscal_document_id),
@@ -87,6 +91,8 @@ export async function updateOrder(orderId: string, data: {
   due_date?: string
   payment_reminder_enabled?: boolean
   payment_reminder_days_before?: number
+  notify_email_enabled?: boolean
+  notify_whatsapp_enabled?: boolean
   bank_account_id?: string
   public_sort_order?: number
   public_show_fiscal_document?: boolean
@@ -144,6 +150,8 @@ export async function updateOrder(orderId: string, data: {
       payment_reminder_enabled: nextReminderEnabled,
       payment_reminder_days_before: nextReminderDaysBefore,
       ...(shouldResetReminderSentOn ? { payment_reminder_last_sent_on: null } : {}),
+      notify_email_enabled: data.notify_email_enabled ?? true,
+      notify_whatsapp_enabled: data.notify_whatsapp_enabled ?? true,
       bank_account_id: data.bank_account_id || null,
       public_sort_order: getPublicSortOrder(data.public_sort_order),
       public_show_fiscal_document: Boolean(data.public_show_fiscal_document && data.fiscal_document_id),

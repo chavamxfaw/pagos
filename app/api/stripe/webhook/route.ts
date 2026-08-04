@@ -110,7 +110,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       order_id: checkout.order_id,
       amount: checkout.amount,
       concept: 'Pago con tarjeta Stripe',
-      payment_method: 'card',
+      payment_method: 'stripe',
       payment_reference: paymentIntent ?? session.id,
       notes: checkout.fee_amount > 0
         ? `Pago por Stripe. Comisión cargada al cliente: ${formatCurrency(checkout.fee_amount)}.`

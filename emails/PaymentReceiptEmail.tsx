@@ -22,6 +22,7 @@ interface PaymentReceiptEmailProps {
   totalAmount: number
   token: string
   appUrl: string
+  receiptToken?: string
   senderName?: string
 }
 
@@ -33,6 +34,15 @@ function fmt(amount: number) {
 }
 
 function fmtDate(date: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number)
+    return new Intl.DateTimeFormat('es-MX', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(year, month - 1, day))
+  }
+
   return new Intl.DateTimeFormat('es-MX', {
     day: '2-digit',
     month: 'long',
@@ -51,6 +61,7 @@ export function PaymentReceiptEmail({
   totalAmount,
   token,
   appUrl,
+  receiptToken,
   senderName,
 }: PaymentReceiptEmailProps) {
   const remaining = totalAmount - paidAmount
@@ -58,6 +69,7 @@ export function PaymentReceiptEmail({
   const isCompleted = paidAmount >= totalAmount
   const normalizedAppUrl = appUrl.replace(/\/$/, '')
   const statusLink = `${normalizedAppUrl}/p/${token}`
+  const receiptLink = receiptToken ? `${normalizedAppUrl}/r/${receiptToken}` : null
   const logoUrl = `${normalizedAppUrl}/otla-white.png`
 
   return (
@@ -144,6 +156,12 @@ export function PaymentReceiptEmail({
             <Link href={statusLink} style={button}>
               Ver mi estado de cuenta
             </Link>
+
+            {receiptLink && (
+              <Link href={receiptLink} style={secondaryButton}>
+                Descargar recibo
+              </Link>
+            )}
 
             {isCompleted && (
               <Text style={footerNote}>
@@ -304,6 +322,20 @@ const button = {
   fontSize: '14px',
   textAlign: 'center' as const,
   margin: '16px 0',
+}
+
+const secondaryButton = {
+  display: 'block',
+  backgroundColor: '#FFFFFF',
+  color: '#1A1F36',
+  padding: '12px 24px',
+  borderRadius: '12px',
+  border: '1px solid #D8DEE8',
+  textDecoration: 'none',
+  fontWeight: '600',
+  fontSize: '14px',
+  textAlign: 'center' as const,
+  margin: '10px 0 16px',
 }
 
 const footerNote = {

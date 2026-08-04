@@ -15,7 +15,7 @@ export type Client = {
 export type OrderStatus = 'pending' | 'partial' | 'completed' | 'cancelled' | 'paused' | 'disputed'
 export type OrderTaxMode = 'none' | 'included' | 'added'
 export type OrderCategory = 'service' | 'product' | 'project' | 'subscription' | 'other'
-export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'check' | 'other'
+export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'stripe' | 'check' | 'other'
 
 export type Order = {
   id: string
@@ -37,6 +37,8 @@ export type Order = {
   payment_reminder_enabled: boolean
   payment_reminder_days_before: number
   payment_reminder_last_sent_on: string | null
+  notify_email_enabled: boolean
+  notify_whatsapp_enabled: boolean
   bank_account_id: string | null
   public_sort_order: number
   public_show_fiscal_document: boolean
@@ -60,6 +62,8 @@ export type Payment = {
   payment_reference: string | null
   notes: string | null
   paid_at: string
+  receipt_token: string
+  receipt_issued_at: string
   created_at: string
 }
 

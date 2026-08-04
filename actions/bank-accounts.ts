@@ -108,6 +108,10 @@ export async function sendBankInstructions(orderId: string, bankAccountId: strin
     throw new Error('El cliente no tiene teléfono registrado.')
   }
 
+  if (typedOrder.notify_whatsapp_enabled === false) {
+    throw new Error('WhatsApp está desactivado para esta orden.')
+  }
+
   const message = buildBankInstructionsMessage({
     order: typedOrder,
     bankAccount: typedBankAccount,

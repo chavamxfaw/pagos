@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { CalendarDays, CheckCircle2, ChevronDown, ExternalLink, FileText } from 'lucide-react'
+import { CalendarDays, CheckCircle2, ChevronDown, ExternalLink, FileText, ReceiptText } from 'lucide-react'
 import { PublicBankDetails } from '@/components/public/PublicBankDetails'
 import { PublicStripePayment } from '@/components/public/PublicStripePayment'
 import { cn, formatCurrency, formatDateShort, getOrderStatusLabel, getPaymentMethodLabel, getProgressPercent } from '@/lib/utils'
@@ -196,6 +196,15 @@ export function PublicOrdersAccordion({
                                 {formatDateShort(payment.paid_at ?? payment.created_at)} · {getPaymentMethodLabel(payment.payment_method)}
                                 {payment.payment_reference ? ` · Ref: ${payment.payment_reference}` : ''}
                               </p>
+                              {payment.receipt_token && (
+                                <Link
+                                  href={`/r/${payment.receipt_token}`}
+                                  className="mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[#E6EAF0] bg-white px-2.5 text-xs font-semibold text-[#4A8BFF] hover:bg-[#F8FAFF]"
+                                >
+                                  <ReceiptText className="size-3.5" />
+                                  Ver recibo
+                                </Link>
+                              )}
                             </div>
                             <span className="shrink-0 font-mono text-sm font-bold text-[#2ED39A]">
                               +{formatCurrency(payment.amount)}

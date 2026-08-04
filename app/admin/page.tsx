@@ -324,7 +324,7 @@ function getPaymentsByMethod(payments: Payment[]) {
   const totals = payments.reduce<Record<PaymentMethod, number>>((acc, payment) => {
     acc[payment.payment_method] = (acc[payment.payment_method] ?? 0) + payment.amount
     return acc
-  }, { cash: 0, transfer: 0, card: 0, check: 0, other: 0 })
+  }, { cash: 0, transfer: 0, card: 0, stripe: 0, check: 0, other: 0 })
 
   return (Object.entries(totals) as [PaymentMethod, number][])
     .filter(([, total]) => total > 0)

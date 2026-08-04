@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit3, Mail, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Edit3, Mail, ReceiptText, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogClose,
@@ -37,6 +38,25 @@ export function PaymentActions({
 
   return (
     <div className="flex items-center gap-1">
+      {payment.receipt_token && (
+        <Button
+          render={
+            <Link
+              href={`/r/${payment.receipt_token}`}
+              target="_blank"
+              rel="noreferrer"
+            />
+          }
+          variant="outline"
+          size="icon"
+          className="size-8 border-[#E6EAF0] text-[#6B7280] hover:bg-[#F8FAFF] hover:text-[#1A1F36]"
+          aria-label="Ver recibo"
+          title="Ver recibo"
+        >
+          <ReceiptText className="size-3.5" />
+        </Button>
+      )}
+
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogTrigger
           render={

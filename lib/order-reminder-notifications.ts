@@ -33,8 +33,10 @@ export async function sendOrderReminderNotification({
   ].filter(Boolean).join('\n')
 
   const channels: string[] = []
+  const emailEnabled = order.notify_email_enabled ?? true
+  const whatsAppEnabled = order.notify_whatsapp_enabled ?? true
 
-  if (order.clients.email) {
+  if (emailEnabled && order.clients.email) {
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
       to: order.clients.email,
@@ -54,7 +56,7 @@ export async function sendOrderReminderNotification({
     channels.push('correo')
   }
 
-  if (order.clients.phone) {
+  if (whatsAppEnabled && order.clients.phone) {
     const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
     if (contentSid) {
       await sendWhatsAppTemplate({
@@ -77,7 +79,7 @@ export async function sendOrderReminderNotification({
   }
 
   if (!channels.length) {
-    throw new Error('El cliente no tiene correo ni teléfono registrado.')
+    throw new Error('No hay canales disponibles para esta orden. Revisa correo, teléfono y configuración de notificaciones.')
   }
 
   await logActivity(admin, {

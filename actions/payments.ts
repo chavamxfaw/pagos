@@ -140,6 +140,10 @@ export async function resendPaymentReceipt(paymentId: string) {
     throw new Error('El cliente no tiene correo registrado')
   }
 
+  if (order.notify_email_enabled === false) {
+    throw new Error('El correo está desactivado para esta orden')
+  }
+
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: client.email,
@@ -153,6 +157,7 @@ export async function resendPaymentReceipt(paymentId: string) {
       totalAmount: order.total_amount,
       token: order.token,
       appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+      receiptToken: payment.receipt_token,
       senderName,
     }),
   })

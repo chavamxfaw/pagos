@@ -238,6 +238,15 @@ export default async function OrderDetailPage({
             </div>
           </div>
         )}
+
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-[#E6EAF0] pt-4 text-xs">
+          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_email_enabled ? 'bg-[#EAFBF5] text-[#129B70]' : 'bg-[#E6EAF0] text-[#6B7280]'}`}>
+            Correo {typedOrder.notify_email_enabled ? 'activo' : 'apagado'}
+          </span>
+          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_whatsapp_enabled ? 'bg-[#EAFBF5] text-[#129B70]' : 'bg-[#E6EAF0] text-[#6B7280]'}`}>
+            WhatsApp {typedOrder.notify_whatsapp_enabled ? 'activo' : 'apagado'}
+          </span>
+        </div>
       </div>
 
       <OrderActionsBar

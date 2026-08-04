@@ -77,6 +77,7 @@ export function getPaymentMethodLabel(method: PaymentMethod): string {
     cash: 'Efectivo',
     transfer: 'Transferencia',
     card: 'Tarjeta',
+    stripe: 'Stripe',
     check: 'Cheque',
     other: 'Otro',
   }

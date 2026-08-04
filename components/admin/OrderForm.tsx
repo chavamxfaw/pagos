@@ -45,6 +45,8 @@ export function OrderForm({
   const [dueDate, setDueDate] = useState(defaultValues?.due_date ?? '')
   const [paymentReminderEnabled, setPaymentReminderEnabled] = useState(defaultValues?.payment_reminder_enabled ?? false)
   const [paymentReminderDaysBefore, setPaymentReminderDaysBefore] = useState(String(defaultValues?.payment_reminder_days_before ?? 1))
+  const [notifyEmailEnabled, setNotifyEmailEnabled] = useState(defaultValues?.notify_email_enabled ?? true)
+  const [notifyWhatsappEnabled, setNotifyWhatsappEnabled] = useState(defaultValues?.notify_whatsapp_enabled ?? true)
   const [selectedFiscalDocumentId, setSelectedFiscalDocumentId] = useState(defaultValues?.fiscal_document_id ?? 'none')
   const [showFiscalDocument, setShowFiscalDocument] = useState(defaultValues?.public_show_fiscal_document ?? false)
   const selectedClient = clients.find((client) => client.id === selectedClientId)
@@ -170,6 +172,43 @@ export function OrderForm({
           )}
         </div>
       )}
+
+      <div className="rounded-xl border border-[#E6EAF0] bg-white p-4">
+        <div className="mb-4">
+          <p className="text-sm font-semibold text-[#1A1F36]">Notificaciones al cliente</p>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Controla si esta orden puede mandar avisos automáticos o manuales al cliente.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[#E6EAF0] bg-[#F8FAFF] p-3">
+            <input
+              type="checkbox"
+              name="notify_email_enabled"
+              checked={notifyEmailEnabled}
+              onChange={(event) => setNotifyEmailEnabled(event.target.checked)}
+              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+            />
+            <span>
+              <span className="block text-sm font-medium text-[#1A1F36]">Correo</span>
+              <span className="block text-xs text-[#6B7280]">Recibos y recordatorios si el cliente tiene correo.</span>
+            </span>
+          </label>
+          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[#E6EAF0] bg-[#F8FAFF] p-3">
+            <input
+              type="checkbox"
+              name="notify_whatsapp_enabled"
+              checked={notifyWhatsappEnabled}
+              onChange={(event) => setNotifyWhatsappEnabled(event.target.checked)}
+              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+            />
+            <span>
+              <span className="block text-sm font-medium text-[#1A1F36]">WhatsApp</span>
+              <span className="block text-xs text-[#6B7280]">Recibos, recordatorios y datos bancarios si hay teléfono.</span>
+            </span>
+          </label>
+        </div>
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="bank_account_id" className="text-[#1A1F36]">Datos bancarios para esta orden</Label>
