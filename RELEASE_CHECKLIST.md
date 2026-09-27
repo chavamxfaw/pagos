@@ -1,6 +1,16 @@
 # CRM release checklist
 
-This branch is a prerelease. Do not merge or promote it until the coordinated application/database release is validated.
+## Production cutover — 2026-09-27
+
+Application commit `f3abfc4` was manually deployed to production after the authorized maintenance window and the eleven September database migrations. Production deployment: `dpl_AJu3FLivREnCmkQ6aAYV7VyzDMSg`. The existing public domain remains `https://pagos.sitios-dev.info`.
+
+The private backup and exact migration execution mapping are retained outside this repository. Historical customer, order and payment row digests were unchanged. The new receipt queue started empty; historical receipts were not queued. Local verification passed 66 unit/mock/permission tests, lint and TypeScript; isolated preview and production builds passed.
+
+Google OAuth consent/brand publication and a real connection remain pending. New sender-aware WhatsApp templates remain pending. The legal notice is explicitly a draft without a public address. No live charge or customer message was used as a test, and an authenticated end-to-end production walkthrough remains required.
+
+**Do not redeploy the old `main` commit or roll back the application alone against the migrated database.** The source was published on `codex/crm-prerelease-20260927`; `main` has not been merged. Future releases must use compatible code and reconcile migration names before applying anything: the migration API assigned execution timestamps, as already happened in the older migration history.
+
+## Checklist for future coordinated releases
 
 1. Verify the target Supabase and Vercel projects and environment names without printing secret values.
 2. Export a fresh private database/roles/Auth/Storage backup, restore to an isolated environment and verify integrity.
