@@ -257,8 +257,8 @@ export function OrdersFilterList({
             onClick={() => setStatus(item)}
             className={`h-10 shrink-0 rounded-full border px-4 text-sm font-medium transition ${
               status === item
-                ? 'border-transparent bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white shadow-sm'
-                : 'border-[#E6EAF0] bg-white text-[#6B7280] hover:text-[#1A1F36]'
+                ? 'border-transparent bg-primary text-primary-foreground shadow-none'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground'
             }`}
           >
             {statusFilterLabels[item]}
@@ -266,15 +266,15 @@ export function OrdersFilterList({
         ))}
       </div>
 
-      <div className="min-w-0 rounded-3xl border border-[#E3E8F0] bg-white/90 p-3 shadow-[0_10px_30px_rgba(26,31,54,0.02)]">
+      <div className="min-w-0 rounded-xl border border-border bg-card p-3 shadow-none">
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
         <div className="relative min-w-0">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8A94A6]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar por concepto, cliente, descripción o tags..."
-            className="h-10 bg-white border-[#E6EAF0] pl-9 text-[#1A1F36]"
+            className="h-10 bg-card border-border pl-9 text-foreground"
           />
         </div>
 
@@ -282,92 +282,92 @@ export function OrdersFilterList({
           type="button"
           variant="outline"
           onClick={() => setShowFilters((current) => !current)}
-          className="h-10 w-full min-w-0 justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#F8FAFF] lg:w-auto"
+          className="h-10 w-full min-w-0 justify-center border-border text-foreground hover:bg-secondary lg:w-auto"
           aria-expanded={showFilters}
         >
-          <SlidersHorizontal className="size-4 text-[#6C5CE7]" />
+          <SlidersHorizontal className="size-4 text-primary" />
           Filtros
           {activeFilterCount > 0 && (
-            <span className="ml-1 rounded-full bg-[#6C5CE7]/10 px-1.5 py-0.5 text-[11px] font-bold text-[#6C5CE7]">
+            <span className="ml-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
               {activeFilterCount}
             </span>
           )}
         </Button>
 
-        <Button type="button" variant="outline" onClick={exportOrders} disabled={!filteredOrders.length} className="h-10 w-full min-w-0 justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] lg:w-auto">
+        <Button type="button" variant="outline" onClick={exportOrders} disabled={!filteredOrders.length} className="h-10 w-full min-w-0 justify-center border-border text-foreground hover:bg-muted lg:w-auto">
           <Download className="size-4" />
           Exportar CSV
         </Button>
         </div>
 
         {showFilters && (
-          <div className="mt-3 border-t border-[#E6EAF0] pt-3">
+          <div className="mt-3 border-t border-border pt-3">
             <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Select value={clientId} onValueChange={(value) => value && setClientId(value)}>
-                <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="h-10 w-full bg-card border-border text-foreground">
                   <SelectValue>{clientId === 'all' ? 'Todos los clientes' : clients.find(([id]) => id === clientId)?.[1]}</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
-                  <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Todos los clientes</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted">Todos los clientes</SelectItem>
                   {clients.map(([id, name]) => (
-                    <SelectItem key={id} value={id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">{name}</SelectItem>
+                    <SelectItem key={id} value={id} className="text-foreground focus:bg-muted">{name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={category} onValueChange={(value) => setCategory(value as CategoryFilter)}>
-                <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="h-10 w-full bg-card border-border text-foreground">
                   <SelectValue>{categoryFilterLabels[category]}</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
-                  <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Categoría: todas</SelectItem>
-                  <SelectItem value="service" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Servicios</SelectItem>
-                  <SelectItem value="product" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Productos</SelectItem>
-                  <SelectItem value="project" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Proyectos</SelectItem>
-                  <SelectItem value="subscription" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Mensualidades</SelectItem>
-                  <SelectItem value="other" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Otros</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted">Categoría: todas</SelectItem>
+                  <SelectItem value="service" className="text-foreground focus:bg-muted">Servicios</SelectItem>
+                  <SelectItem value="product" className="text-foreground focus:bg-muted">Productos</SelectItem>
+                  <SelectItem value="project" className="text-foreground focus:bg-muted">Proyectos</SelectItem>
+                  <SelectItem value="subscription" className="text-foreground focus:bg-muted">Mensualidades</SelectItem>
+                  <SelectItem value="other" className="text-foreground focus:bg-muted">Otros</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={invoice} onValueChange={(value) => setInvoice(value as InvoiceFilter)}>
-                <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="h-10 w-full bg-card border-border text-foreground">
                   <SelectValue>{invoiceFilterLabels[invoice]}</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
-                  <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Factura: todas</SelectItem>
-                  <SelectItem value="invoice" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Con factura</SelectItem>
-                  <SelectItem value="no_invoice" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Sin factura</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted">Factura: todas</SelectItem>
+                  <SelectItem value="invoice" className="text-foreground focus:bg-muted">Con factura</SelectItem>
+                  <SelectItem value="no_invoice" className="text-foreground focus:bg-muted">Sin factura</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentFilter)}>
-                <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="h-10 w-full bg-card border-border text-foreground">
                   <SelectValue>{paymentFilterLabels[paymentMethod]}</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
-                  <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Pago: todos</SelectItem>
-                  <SelectItem value="transfer" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Transferencia</SelectItem>
-                  <SelectItem value="cash" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Efectivo</SelectItem>
-                  <SelectItem value="card" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Tarjeta</SelectItem>
-                  <SelectItem value="check" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cheque</SelectItem>
-                  <SelectItem value="other" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Otro</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted">Pago: todos</SelectItem>
+                  <SelectItem value="transfer" className="text-foreground focus:bg-muted">Transferencia</SelectItem>
+                  <SelectItem value="cash" className="text-foreground focus:bg-muted">Efectivo</SelectItem>
+                  <SelectItem value="card" className="text-foreground focus:bg-muted">Tarjeta</SelectItem>
+                  <SelectItem value="check" className="text-foreground focus:bg-muted">Cheque</SelectItem>
+                  <SelectItem value="other" className="text-foreground focus:bg-muted">Otro</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="h-10 bg-white border-[#E6EAF0] text-[#1A1F36]" aria-label="Desde" />
-              <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="h-10 bg-white border-[#E6EAF0] text-[#1A1F36]" aria-label="Hasta" />
+              <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="h-10 bg-card border-border text-foreground" aria-label="Desde" />
+              <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="h-10 bg-card border-border text-foreground" aria-label="Hasta" />
               <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-                <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="h-10 w-full bg-card border-border text-foreground">
                   <SelectValue>{sortLabels[sort]}</SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
-                  <SelectItem value="recent" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Más recientes</SelectItem>
-                  <SelectItem value="pending_amount" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Mayor pendiente</SelectItem>
-                  <SelectItem value="total_amount" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Mayor total</SelectItem>
-                  <SelectItem value="client" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cliente A-Z</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="recent" className="text-foreground focus:bg-muted">Más recientes</SelectItem>
+                  <SelectItem value="pending_amount" className="text-foreground focus:bg-muted">Mayor pendiente</SelectItem>
+                  <SelectItem value="total_amount" className="text-foreground focus:bg-muted">Mayor total</SelectItem>
+                  <SelectItem value="client" className="text-foreground focus:bg-muted">Cliente A-Z</SelectItem>
                 </SelectContent>
               </Select>
-              <Button type="button" variant="outline" onClick={resetFilters} className="h-10 border-[#D8DEE8] text-[#1A1F36] hover:bg-[#F8FAFF]">
+              <Button type="button" variant="outline" onClick={resetFilters} className="h-10 border-border text-foreground hover:bg-secondary">
                 <X className="size-4" />
                 Limpiar
               </Button>
@@ -376,18 +376,18 @@ export function OrdersFilterList({
         )}
       </div>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-[#E3E8F0] bg-white/80 px-4 py-3 text-sm text-[#6B7280] shadow-[0_8px_24px_rgba(26,31,54,0.015)] md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-none md:flex-row md:items-center md:justify-between">
         <span>
-          <strong className="font-mono text-[#1A1F36]">{filteredOrders.length}</strong> orden{filteredOrders.length === 1 ? '' : 'es'} en esta vista
+          <strong className="tabular-nums text-foreground">{filteredOrders.length}</strong> orden{filteredOrders.length === 1 ? '' : 'es'} en esta vista
         </span>
         <div className="flex flex-wrap gap-x-5 gap-y-1">
-          <span>Por cobrar <strong className="font-mono text-[#1A1F36]">{formatCurrency(totalPending)}</strong></span>
-          <span>Cobrado <strong className="font-mono text-[#1A1F36]">{formatCurrency(totalCollected)}</strong></span>
+          <span>Por cobrar <strong className="tabular-nums text-foreground">{formatCurrency(totalPending)}</strong></span>
+          <span>Cobrado <strong className="tabular-nums text-foreground">{formatCurrency(totalCollected)}</strong></span>
         </div>
       </div>
 
       {!filteredOrders.length ? (
-        <div className="text-center py-16 text-[#8A94A6]">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg mb-2">Sin resultados</p>
           <p className="text-sm">Sin coincidencias.</p>
         </div>
@@ -413,58 +413,58 @@ function OrderCard({ order }: { order: OrderRow }) {
   const timing = getOrderTiming(order)
 
   return (
-    <div className="relative flex h-full flex-col rounded-2xl border border-[#E3E8F0] bg-white/90 p-5 shadow-[0_8px_24px_rgba(26,31,54,0.02)] transition hover:border-[#C9D4E5] hover:bg-white hover:shadow-[0_12px_30px_rgba(26,31,54,0.04)]">
+    <div className="relative flex h-full flex-col rounded-xl border border-border bg-card p-5 shadow-none transition hover:border-border hover:bg-card hover:shadow-none">
       <OrderActionsMenu order={order} />
       <Link href={`/admin/orders/${order.id}`} className="block h-full">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0 pr-10">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#6C5CE7]/10 px-2.5 py-1 text-[11px] font-semibold text-[#6C5CE7]">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
                 {categoryFilterLabels[(order.category ?? 'service') as CategoryFilter].replace('Categoría: ', '')}
               </span>
-              {order.requires_invoice && <span className="rounded-full bg-[#2ED39A]/10 px-2.5 py-1 text-[11px] font-semibold text-[#2ED39A]">Factura</span>}
+              {order.requires_invoice && <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Factura</span>}
             </div>
-            <p className="text-[#1A1F36] font-semibold truncate">{order.concept}</p>
-            <p className="text-[#6B7280] text-sm truncate">{order.clients.name}</p>
+            <p className="text-foreground font-semibold truncate">{order.concept}</p>
+            <p className="text-muted-foreground text-sm truncate">{order.clients.name}</p>
             <div className="mt-1 flex flex-wrap gap-2 text-xs">
-              {timing.label && <span className={timing.key === 'overdue' ? 'text-[#EF4444]' : 'text-[#F4B740]'}>{timing.label}</span>}
+              {timing.label && <span className={timing.key === 'overdue' ? 'text-destructive' : 'text-amber-700'}>{timing.label}</span>}
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2 pr-8">
-            <span className="text-[#1A1F36] text-sm font-mono">{formatCurrency(order.total_amount)}</span>
+            <span className="text-foreground text-sm tabular-nums">{formatCurrency(order.total_amount)}</span>
             <StatusBadge status={order.status} />
           </div>
         </div>
 
-        <div className="h-2 bg-[#E6EAF0] rounded-full mb-3">
-          <div className="h-full rounded-full bg-[#2ED39A] transition-all" style={{ width: `${percent}%` }} />
+        <div className="h-2 bg-muted rounded-full mb-3">
+          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} />
         </div>
 
-        <div className="mt-auto grid gap-2 text-xs font-mono text-[#6B7280]">
+        <div className="mt-auto grid gap-2 text-xs tabular-nums text-muted-foreground">
           <div className="flex justify-between gap-3">
             <span>Pagado</span>
-            <span className="text-[#1A1F36]">{formatCurrency(order.paid_amount)}</span>
+            <span className="text-foreground">{formatCurrency(order.paid_amount)}</span>
           </div>
           {!['completed', 'cancelled'].includes(order.status) ? (
             <div className="flex justify-between gap-3">
               <span>Pendiente</span>
-              <span className="text-[#F4B740]">{formatCurrency(remaining)}</span>
+              <span className="text-amber-700">{formatCurrency(remaining)}</span>
             </div>
           ) : (
             <div className="flex justify-between gap-3">
               <span>Estado</span>
-              <span className="text-[#2ED39A]">{getOrderStatusLabel(order.status)}</span>
+              <span className="text-emerald-700">{getOrderStatusLabel(order.status)}</span>
             </div>
           )}
         </div>
 
-        <p className="mt-3 border-t border-[#E6EAF0] pt-3 text-xs text-[#A2ABBA]">
+        <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
           Emitida {formatDateShort(order.issued_at ?? order.created_at)}
         </p>
         {!!order.tags?.length && (
-          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#E6EAF0] pt-3">
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3">
             {order.tags.slice(0, 4).map((tag) => (
-              <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-[#F5F7FB] px-2 py-1 text-[11px] font-medium text-[#6B7280]">
+              <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-[11px] font-medium text-muted-foreground">
                 <Tags className="size-3" />
                 {tag}
               </span>
@@ -525,7 +525,7 @@ function OrderActionsMenu({ order }: { order: OrderRow }) {
           event.stopPropagation()
           setOpen((current) => !current)
         }}
-        className="absolute right-4 top-4 z-10 size-9 rounded-xl border-[#E6EAF0] bg-white text-[#8A94A6] shadow-none hover:bg-[#F8FAFF] hover:text-[#1A1F36]"
+        className="absolute right-4 top-4 z-10 size-9 rounded-xl border-border bg-card text-muted-foreground shadow-none hover:bg-secondary hover:text-foreground"
         aria-label={`Acciones para ${order.concept}`}
         aria-expanded={open}
       >
@@ -541,7 +541,7 @@ function OrderActionsMenu({ order }: { order: OrderRow }) {
             onClick={() => setOpen(false)}
           />
           <div
-            className="fixed z-50 w-56 overflow-hidden rounded-xl border border-[#E6EAF0] bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]"
+            className="fixed z-50 w-56 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-lg"
             style={{ top: menuPosition.top, right: menuPosition.right }}
           >
             <QuickActionLink href={`/admin/orders/${order.id}`} icon={<Eye className="size-4" />} onClick={() => setOpen(false)}>
@@ -553,9 +553,9 @@ function OrderActionsMenu({ order }: { order: OrderRow }) {
             <button
               type="button"
               onClick={copyPublicLink}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF]"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <Copy className="size-4 text-[#6B7280]" />
+              <Copy className="size-4 text-muted-foreground" />
               Copiar link
             </button>
             <Dialog>
@@ -563,21 +563,21 @@ function OrderActionsMenu({ order }: { order: OrderRow }) {
                 render={
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#EF4444] transition-colors hover:bg-[#EF4444]/10"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <Trash2 className="size-4" />
                     Eliminar
                   </button>
                 }
               />
-              <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+              <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-[#1A1F36]">Borrar orden</DialogTitle>
-                  <DialogDescription className="text-[#6B7280]">
+                  <DialogTitle className="text-foreground">Borrar orden</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     Esto eliminará la orden {order.concept} y sus abonos asociados. Esta acción no se puede deshacer.
                   </DialogDescription>
                 </DialogHeader>
-                <DialogFooter className="border-[#E6EAF0] bg-white/90">
+                <DialogFooter className="border-border bg-card">
                   <DialogClose render={<Button type="button" variant="outline" />}>
                     Cancelar
                   </DialogClose>
@@ -585,7 +585,7 @@ function OrderActionsMenu({ order }: { order: OrderRow }) {
                     <Button
                       type="submit"
                       variant="destructive"
-                      className="w-full bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 sm:w-auto"
+                      className="w-full bg-destructive/10 text-destructive hover:bg-destructive/20 sm:w-auto"
                     >
                       Borrar orden
                     </Button>
@@ -616,19 +616,19 @@ function QuickActionLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF]"
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
     >
-      <span className="text-[#6B7280]">{icon}</span>
+      <span className="text-muted-foreground">{icon}</span>
       {children}
     </Link>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'completed') return <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30">Liquidado</Badge>
-  if (status === 'partial') return <Badge className="bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30">Parcial</Badge>
-  if (status === 'cancelled') return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">Cancelado</Badge>
-  if (status === 'paused') return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pausado</Badge>
-  if (status === 'disputed') return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">En disputa</Badge>
-  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pendiente</Badge>
+  if (status === 'completed') return <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30">Liquidado</Badge>
+  if (status === 'partial') return <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30">Parcial</Badge>
+  if (status === 'cancelled') return <Badge className="bg-destructive/10 text-destructive border-destructive/30">Cancelado</Badge>
+  if (status === 'paused') return <Badge className="bg-muted text-muted-foreground border-border">Pausado</Badge>
+  if (status === 'disputed') return <Badge className="bg-destructive/10 text-destructive border-destructive/30">En disputa</Badge>
+  return <Badge className="bg-muted text-muted-foreground border-border">Pendiente</Badge>
 }

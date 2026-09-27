@@ -68,12 +68,12 @@ export function BankInstructionsPanel({
 
   if (!bankAccounts.length) {
     return (
-      <section className="mb-6 rounded-2xl border border-dashed border-[#D8DEE8] bg-white p-5">
-        <p className="text-sm font-semibold text-[#1A1F36]">Datos bancarios</p>
-        <p className="mt-1 text-sm text-[#6B7280]">
+      <section className="mb-6 rounded-xl border border-dashed border-border bg-card p-5">
+        <p className="text-sm font-semibold text-foreground">Datos bancarios</p>
+        <p className="mt-1 text-sm text-muted-foreground">
           Agrega una cuenta bancaria para copiar o enviar instrucciones de pago desde esta orden.
         </p>
-        <a href="/admin/settings/bank-accounts" className="mt-3 inline-flex text-sm font-semibold text-[#4A8BFF] hover:text-[#6C5CE7]">
+        <a href="/admin/settings/bank-accounts" className="mt-3 inline-flex text-sm font-semibold text-primary hover:text-primary">
           Configurar datos bancarios
         </a>
       </section>
@@ -81,25 +81,26 @@ export function BankInstructionsPanel({
   }
 
   return (
-    <section className="mb-6 rounded-2xl border border-[#E6EAF0] bg-white p-5 shadow-sm">
+    <section className="mb-6 rounded-xl border border-border bg-card p-5 shadow-none">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6C5CE7]">Datos bancarios</p>
-          <h2 className="mt-1 text-lg font-bold text-[#1A1F36]">Instrucciones de pago</h2>
-          <p className="mt-1 text-sm text-[#6B7280]">
-            Pendiente actual: <span className="font-mono font-semibold text-[#F4B740]">{formatCurrency(remaining)}</span>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Datos bancarios</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Instrucciones de pago</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pendiente actual: <span className="tabular-nums font-semibold text-amber-700">{formatCurrency(remaining)}</span>
           </p>
         </div>
-        <a href="/admin/settings/bank-accounts" className="text-sm font-semibold text-[#4A8BFF] hover:text-[#6C5CE7]">
+        <a href="/admin/settings/bank-accounts" className="text-sm font-semibold text-primary hover:text-primary">
           Administrar cuentas
         </a>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
         <select
+          aria-label="Cuenta bancaria para instrucciones de pago"
           value={selectedId}
           onChange={(event) => setSelectedId(event.target.value)}
-          className="h-10 rounded-lg border border-[#D8DEE8] bg-white px-3 text-sm text-[#1A1F36] outline-none transition-colors focus:border-[#4A8BFF] focus:ring-2 focus:ring-[#4A8BFF]/20"
+          className="h-10 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/20"
         >
           {bankAccounts.map((account) => (
             <option key={account.id} value={account.id}>
@@ -112,7 +113,7 @@ export function BankInstructionsPanel({
           type="button"
           variant="outline"
           onClick={copyInstructions}
-          className="w-full justify-center border-[#D8DEE8] text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto"
+          className="w-full justify-center border-border text-foreground hover:bg-muted sm:w-auto"
         >
           <Copy className="size-4" />
           {copied ? 'Copiado' : 'Copiar datos'}
@@ -125,10 +126,10 @@ export function BankInstructionsPanel({
       </div>
 
       {!order.clients.phone && (
-        <p className="mt-3 text-xs text-[#EF4444]">El cliente no tiene teléfono registrado para WhatsApp.</p>
+        <p className="mt-3 text-xs text-destructive">El cliente no tiene teléfono registrado para WhatsApp.</p>
       )}
-      <p className="mt-3 text-xs text-[#8A94A6]">
-        El envío por WhatsApp usa el template aprobado cuando está configurado. Si Twilio no lo tiene disponible, se intenta como mensaje libre.
+      <p className="mt-3 text-xs text-muted-foreground">
+        WhatsApp usa la plantilla aprobada configurada; las versiones antiguas pueden no incluir el remitente. La versión con remitente requiere aprobación en Twilio. Sin plantilla, el mensaje libre depende de la ventana de conversación del proveedor.
       </p>
     </section>
   )
@@ -139,7 +140,7 @@ function SendSubmitButton({ disabled, sending }: { disabled: boolean; sending: b
     <Button
       type="submit"
       disabled={disabled}
-      className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white shadow-sm hover:brightness-105 disabled:opacity-50 sm:w-auto"
+      className="w-full justify-center bg-primary text-primary-foreground shadow-none hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
     >
       <Send className="size-4" />
       {sending ? 'Enviando...' : 'Enviar por WhatsApp'}

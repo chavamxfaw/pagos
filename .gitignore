@@ -44,3 +44,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Private pre-release evidence; never publish to this public repository.
+/preview-images/
+/PREPUBLICATION_AUDIT_*.md
+/REMEDIATION_*.md
+/ACCESS_VALIDATION_*.md
+/UI_QA.md
+/CALENDAR_VIEW_QA.md
+/LOCAL_PREVIEW.md

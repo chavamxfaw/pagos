@@ -4,6 +4,8 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { createClient } from '@/lib/supabase/server'
 import { updateOrder } from '@/actions/orders'
 import { OrderForm } from '@/components/admin/OrderForm'
+import { requireAdmin } from '@/lib/auth/admin'
+import { failedOrderQueries, OrderQueryError } from '../../QueryError'
 import type { Order, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
@@ -14,38 +16,46 @@ export default async function EditOrderPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const user = await requireAdmin()
   const supabase = await createClient()
+  const { data: projects, error: projectsError } = await supabase.from('crm_projects').select('id,title,client_id').eq('owner_user_id', user.id).order('title')
 
-  const { data: order } = await supabase
+  const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('*')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
+  const orderFailures = failedOrderQueries('edit', [{ label: 'orden', error: orderError }])
+  if (orderFailures.length) return <OrderQueryError title="Editar orden" resources={orderFailures} retryHref={`/admin/orders/${id}/edit`} />
   if (!order) notFound()
 
-  const { data: clients } = await supabase
+  const { data: clients, error: clientsError } = await supabase
     .from('clients')
     .select('*')
     .order('name')
 
-  const { data: bankAccounts } = await supabase
+  const { data: bankAccounts, error: banksError } = await supabase
     .from('bank_accounts')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
-  const { data: fiscalDocuments } = await supabase
+  const { data: fiscalDocuments, error: fiscalError } = await supabase
     .from('fiscal_documents')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
+
+  const failures = failedOrderQueries('edit', [{ label: 'contactos', error: clientsError }, { label: 'proyectos', error: projectsError }, { label: 'cuentas bancarias', error: banksError }, { label: 'documentos fiscales', error: fiscalError }])
+  if (failures.length) return <OrderQueryError title="Editar orden" resources={failures} retryHref={`/admin/orders/${id}/edit`} />
 
   async function updateOrderAction(prevState: State, formData: FormData): Promise<State> {
     'use server'
     try {
       await updateOrder(id, {
         client_id: formData.get('client_id') as string,
+        crm_project_id: (formData.get('crm_project_id') as string) || null,
         concept: formData.get('concept') as string,
         category: formData.get('category') as never,
         tags: formData.get('tags') as string,
@@ -73,24 +83,26 @@ export default async function EditOrderPage({
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto w-full max-w-2xl p-4 md:p-8">
       <div className="mb-7">
         <Link
           href={`/admin/orders/${id}`}
-          className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors"
+          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
         >
           ← {order.concept}
         </Link>
-        <h1 className="text-2xl font-heading font-semibold text-[#1A1F36] mt-2">Editar orden</h1>
+        <h1 className="text-2xl font-heading font-semibold text-foreground mt-2">Editar orden</h1>
       </div>
 
-      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <OrderForm
           action={updateOrderAction}
           clients={clients ?? []}
           bankAccounts={bankAccounts ?? []}
           fiscalDocuments={fiscalDocuments ?? []}
           defaultValues={order as Order}
+          defaultProjectId={order.crm_project_id ?? undefined}
+          projects={projects ?? []}
           submitLabel="Guardar cambios"
         />
       </div>

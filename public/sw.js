@@ -1,15 +1,11 @@
-const SHELL_CACHE = 'otla-shell-v1'
-const STATIC_CACHE = 'otla-static-v1'
-const API_CACHE = 'otla-api-v1'
+const SHELL_CACHE = 'otla-shell-v4'
+const STATIC_CACHE = 'otla-static-v4'
 
 const APP_SHELL = [
   '/offline.html',
   '/manifest.json',
-  '/pwa-icon-192.png',
-  '/pwa-icon-512.png',
-  '/apple-touch-icon.png',
-  '/otla-logo.png',
-  '/otla-white.png',
+  '/otla-app-icon-v2.png',
+  '/otla-logo-v2.png',
 ]
 
 self.addEventListener('install', (event) => {
@@ -24,7 +20,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => ![SHELL_CACHE, STATIC_CACHE, API_CACHE].includes(key))
+          .filter((key) => ![SHELL_CACHE, STATIC_CACHE].includes(key))
           .map((key) => caches.delete(key))
       )
     )
@@ -47,7 +43,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request, API_CACHE))
+    // Private CRM data and live availability must never be served from offline caches.
+    event.respondWith(fetch(request).catch(() => new Response(JSON.stringify({ error: 'Sin conexión. Actualiza antes de continuar.' }), {
+      status: 503, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    })))
     return
   }
 
@@ -67,24 +66,4 @@ async function cacheFirst(request, cacheName) {
     cache.put(request, response.clone())
   }
   return response
-}
-
-async function networkFirst(request, cacheName) {
-  const cache = await caches.open(cacheName)
-
-  try {
-    const response = await fetch(request)
-    if (response.ok) {
-      cache.put(request, response.clone())
-    }
-    return response
-  } catch {
-    const cached = await cache.match(request)
-    if (cached) return cached
-
-    return new Response(JSON.stringify({ error: 'offline' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
 }

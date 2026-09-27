@@ -8,10 +8,12 @@ import { notifyPaymentReceipt } from '@/lib/payments/notifications'
 import { enforceIpRateLimit } from '@/lib/security/rate-limit'
 import { getTodayDateString } from '@/lib/utils'
 import type { OrderCategory, PaymentMethod } from '@/types'
+import { validateOrderProject } from '@/lib/crm/service'
 
 export type AgentContext = {
   admin: ReturnType<typeof createAdminClient>
   actor: string
+  ownerId: string
 }
 
 export type AgentOrderInput = {
@@ -28,6 +30,7 @@ export type AgentOrderInput = {
   bank_account_id?: unknown
   requires_invoice?: unknown
   tax_mode?: unknown
+  crm_project_id?: unknown
 }
 
 const ORDER_CATEGORIES = new Set<OrderCategory>(['service', 'product', 'project', 'subscription', 'other'])
@@ -57,10 +60,13 @@ export async function requireAgent(request: Request): Promise<AgentContext | Nex
     return jsonError('Unauthorized', 401)
   }
 
-  return {
-    admin: createAdminClient(),
-    actor: request.headers.get('x-agent-name')?.slice(0, 80) || 'openclaw',
-  }
+  const admin = createAdminClient()
+  const ownerId = process.env.OTLA_AGENT_OWNER_ID
+  // Explicit owner binding; adding another admin never expands the agent's identity.
+  if (!ownerId) return jsonError('Agent owner is not configured', 503)
+  const { data: owner, error } = await admin.from('app_admin_users').select('user_id').eq('user_id', ownerId).maybeSingle()
+  if (error || !owner) return jsonError('Agent owner is unavailable', 503)
+  return { admin, actor: 'openclaw', ownerId: owner.user_id }
 }
 
 export function jsonOk(data: unknown, init?: ResponseInit) {
@@ -79,7 +85,8 @@ export function jsonError(message: string, status = 400) {
 
 export async function readJsonObject(request: Request) {
   try {
-    const body = await request.json()
+    const {readLimitedText}=await import('@/lib/security/request-body')
+    const body = JSON.parse(await readLimitedText(request))
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return null
     }
@@ -163,6 +170,7 @@ export async function createAgentOrder(
   body: AgentOrderInput
 ) {
   const data = normalizeOrderPayload(body)
+  const projectId = await validateOrderProject({db:context.admin,ownerId:context.ownerId},body.crm_project_id,data.client_id)
 
   const { data: client, error: clientError } = await context.admin
     .from('clients')
@@ -178,6 +186,7 @@ export async function createAgentOrder(
     .from('orders')
     .insert({
       client_id: data.client_id,
+      crm_project_id: projectId,
       concept: data.concept,
       description: data.description,
       category: data.category,
@@ -225,7 +234,8 @@ export async function createAgentOrder(
 
 export async function createAgentPayment(
   context: AgentContext,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  idempotencyKey: string
 ) {
   const orderId = requireString(body.order_id, 'order_id', 80)
   const amount = requirePositiveAmount(body.amount)
@@ -237,25 +247,11 @@ export async function createAgentPayment(
     throw new Error('paid_at no puede ser una fecha futura')
   }
 
-  const { data: order, error: orderError } = await context.admin
-    .from('orders')
-    .select('*')
-    .eq('id', orderId)
-    .single()
-
-  if (orderError || !order) throw new Error('Orden no encontrada')
-  if (order.status === 'completed' || order.status === 'cancelled') {
-    throw new Error('La orden no permite nuevos abonos')
-  }
-
-  const pendingAmount = roundMoney(Number(order.total_amount) - Number(order.paid_amount))
-  if (amount > pendingAmount) {
-    throw new Error(`El abono no puede exceder el saldo pendiente de ${pendingAmount.toFixed(2)}`)
-  }
-
-  const { data: payment, error } = await context.admin
-    .from('payments')
-    .insert({
+  if (!/^[A-Za-z0-9:_-]{16,128}$/.test(idempotencyKey)) throw new Error('Idempotency-Key es requerido (16–128 caracteres)')
+  const { data: result, error } = await context.admin.rpc('record_agent_payment', {
+    p_key: idempotencyKey,
+    p_actor: context.ownerId,
+    p_payload: {
       order_id: orderId,
       amount,
       concept,
@@ -263,44 +259,39 @@ export async function createAgentPayment(
       payment_reference: normalizeOptionalString(body.payment_reference, 180),
       notes: normalizeOptionalString(body.notes, 1200),
       paid_at: paidAt,
-    })
-    .select()
-    .single()
+    },
+  })
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error('No se pudo registrar el abono. Verifica saldo e idempotencia.')
+  const payment = result.payment
 
   const { data: updatedOrder } = await context.admin
     .from('orders')
-    .select('*')
+    .select('*, clients(*)')
     .eq('id', orderId)
     .single()
 
-  await logActivity(context.admin, {
+  if (!result.replayed) await logActivity(context.admin, {
     entity_type: 'payment',
     entity_id: payment.id,
-    client_id: order.client_id,
+    client_id: updatedOrder?.client_id,
     order_id: orderId,
     payment_id: payment.id,
     event_type: 'agent_payment_created',
-    message: `Abono registrado por agente: ${amount.toFixed(2)} para ${order.concept}`,
+    message: `Abono registrado por agente: ${amount.toFixed(2)}`,
     metadata: {
       actor: context.actor,
+      actor_id: context.ownerId,
       amount,
       payment_method: paymentMethod,
       paid_at: paidAt,
     },
   })
 
-  const { data: client } = await context.admin
-    .from('clients')
-    .select('*')
-    .eq('id', order.client_id)
-    .single()
-
-  if (updatedOrder && client) {
+  if (updatedOrder?.clients) {
     await notifyPaymentReceipt({
       admin: context.admin,
-      order: { ...updatedOrder, clients: client },
+      order: updatedOrder,
       payment,
     })
   }

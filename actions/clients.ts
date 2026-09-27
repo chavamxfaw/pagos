@@ -47,7 +47,8 @@ export async function createClient_action(data: ClientData) {
     .single()
 
   if (error) throw new Error(error.message)
-  revalidatePath('/admin/clients')
+  // Contacts feed CRM, order pickers, search and the home summary.
+  revalidatePath('/admin', 'layout')
   return client
 }
 
@@ -61,8 +62,7 @@ export async function updateClient(id: string, data: ClientData) {
     .eq('id', id)
 
   if (error) throw new Error(error.message)
-  revalidatePath('/admin/clients')
-  revalidatePath(`/admin/clients/${id}`)
+  revalidatePath('/admin', 'layout')
 }
 
 export async function setClientPortalEnabled(id: string, enabled: boolean) {
@@ -91,7 +91,5 @@ export async function deleteClient(id: string) {
     .eq('id', id)
 
   if (error) throw new Error(error.message)
-  revalidatePath('/admin/clients')
-  revalidatePath('/admin/orders')
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
 }

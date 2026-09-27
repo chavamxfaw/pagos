@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, LogOut, UserRound } from 'lucide-react'
 
@@ -14,6 +15,7 @@ export function AdminUserMenu({
   initials: string
 }) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,7 +31,8 @@ export function AdminUserMenu({
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
     await supabase.auth.signOut()
-    window.location.href = '/login'
+    router.replace('/login')
+    router.refresh()
   }
 
   return (
@@ -37,36 +40,36 @@ export function AdminUserMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-2 rounded-full border border-transparent px-1 py-1 transition-colors hover:border-[#E6EAF0] hover:bg-[#F8FAFF]"
+        className="flex items-center gap-2 rounded-full border border-transparent px-1 py-1 transition-colors hover:border-border hover:bg-muted"
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        <span className="flex size-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-sm font-bold text-white shadow-lg shadow-[#4A8BFF]/20">
+        <span className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white ">
           {initials}
         </span>
         <span className="hidden min-w-0 text-left md:block">
-          <span className="block max-w-36 truncate text-sm font-semibold text-[#1A1F36]">{displayName}</span>
+          <span className="block max-w-36 truncate text-sm font-semibold text-foreground">{displayName}</span>
         </span>
-        <ChevronDown className="hidden size-4 text-[#6B7280] md:block" />
+        <ChevronDown className="hidden size-4 text-muted-foreground md:block" />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-2xl border border-[#E6EAF0] bg-white shadow-[0_18px_45px_rgba(26,31,54,0.14)]"
+          className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-xl border border-border bg-white shadow-[0_18px_45px_rgba(26,31,54,0.14)]"
         >
-          <div className="border-b border-[#E6EAF0] bg-[#F8FAFF] px-4 py-4">
-            <p className="text-sm font-semibold text-[#1A1F36]">{displayName}</p>
-            <p className="mt-0.5 truncate text-xs text-[#6B7280]">{email}</p>
+          <div className="border-b border-border bg-muted px-4 py-4">
+            <p className="text-sm font-semibold text-foreground">{displayName}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{email}</p>
           </div>
           <div className="p-2">
             <Link
               href="/admin/profile"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF]"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               role="menuitem"
             >
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#6C5CE7]">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-secondary text-primary">
                 <UserRound className="size-4" />
               </span>
               Mi perfil

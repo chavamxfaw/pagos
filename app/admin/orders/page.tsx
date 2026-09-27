@@ -14,7 +14,7 @@ export default async function OrdersPage({
   const resolvedSearchParams = await searchParams
   const supabase = await createClient()
 
-  const { data: orders } = await supabase
+  const { data: orders, error } = await supabase
     .from('orders')
     .select('*, clients(*), payments(payment_method)')
     .order('created_at', { ascending: false })
@@ -25,20 +25,21 @@ export default async function OrdersPage({
     <div className="mx-auto w-full max-w-[1500px] min-w-0 space-y-6 overflow-x-hidden p-4 md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Cobranza</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1A1F36]">Órdenes</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">{typedOrders.length} órdenes en total</p>
+          <p className="text-xs font-medium text-primary">Pagos y cobranza</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Órdenes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{typedOrders.length} órdenes en total</p>
         </div>
-        <Link href="/admin/orders/new" className={cn(buttonVariants(), "h-11 w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto")}>
+        <Link href="/admin/orders/new" className={cn(buttonVariants(), "h-11 w-full bg-primary text-primary-foreground font-semibold shadow-none hover:bg-primary/90 sm:w-auto")}>
           <Plus className="size-4" />
           Nueva orden
         </Link>
       </div>
 
-      {!typedOrders.length ? (
-        <div className="text-center py-20 text-[#8A94A6]">
-          <p className="text-lg mb-2">Sin órdenes aún</p>
-          <Link href="/admin/orders/new" className="text-[#2ED39A] hover:text-[#26BA88] text-sm">
+      {error ? <div role="alert" className="rounded-xl border border-border bg-card p-6"><h2 className="font-medium text-foreground">No pudimos cargar las órdenes</h2><p className="mt-2 text-sm text-muted-foreground">Revisa la conexión e inténtalo nuevamente.</p><Link className="mt-4 inline-block text-sm text-primary hover:underline" href="/admin/orders">Volver a intentar →</Link></div> : !typedOrders.length ? (
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted-foreground">
+          <p className="mb-2 font-medium text-foreground">Sin órdenes aún</p>
+          <p className="mb-4 text-sm">Crea una orden para organizar cobros y compartir su enlace de pago.</p>
+          <Link href="/admin/orders/new" className="text-primary hover:underline text-sm">
             Crear primera orden →
           </Link>
         </div>

@@ -80,32 +80,32 @@ export function PublicStripePayment({
   }
 
   return (
-    <section className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
+    <section className="rounded-xl border border-border bg-white p-4">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#6C5CE7]">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-primary">
           <CreditCard className="size-5" />
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6C5CE7]">Pago con tarjeta</p>
-          <h2 className="text-sm font-semibold text-[#1A1F36]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Pago con tarjeta</p>
+          <h2 className="text-sm font-semibold text-foreground">
             {request.concept}
           </h2>
         </div>
       </div>
 
       {!isOpenRequest ? (
-        <div className="mb-4 rounded-xl border border-[#E6EAF0] bg-[#F8FAFF] p-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A94A6]">Monto solicitado</p>
-          <p className="mt-1 font-mono text-2xl font-bold text-[#1A1F36]">{formatCurrency(paymentAmount)}</p>
+        <div className="mb-4 rounded-xl border border-border bg-muted/40 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Monto solicitado</p>
+          <p className="mt-1 font-mono text-2xl font-semibold text-foreground">{formatCurrency(paymentAmount)}</p>
           {request.requires_invoice && (
-            <p className="mt-1 text-xs text-[#6B7280]">
+            <p className="mt-1 text-xs text-muted-foreground">
               Factura: {request.tax_mode === 'added' ? 'IVA agregado' : 'IVA incluido'}
             </p>
           )}
         </div>
       ) : (
         <div className="mb-4 space-y-2">
-          <label htmlFor={`stripe_amount_${orderId}`} className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A94A6]">
+          <label htmlFor={`stripe_amount_${orderId}`} className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Monto a abonar
           </label>
           <input
@@ -118,29 +118,29 @@ export function PublicStripePayment({
             value={customAmount}
             onChange={(event) => setCustomAmount(event.target.value)}
             placeholder={formatCurrency(minimumAmount)}
-            className="min-h-11 w-full rounded-xl border border-[#D8DEE8] bg-white px-3 font-mono text-lg font-semibold text-[#1A1F36] outline-none transition-colors focus:border-[#6C5CE7] focus:ring-2 focus:ring-[#EEF2FF]"
+            className="min-h-11 w-full rounded-xl border border-border bg-white px-3 font-mono text-lg font-semibold text-foreground outline-none transition-colors focus:border-[#6C5CE7] focus:ring-2 focus:ring-primary/5"
           />
-          <p className="text-xs text-[#6B7280]">
+          <p className="text-xs text-muted-foreground">
             Mínimo {formatCurrency(minimumAmount)} · Máximo {formatCurrency(pendingAmount)}
           </p>
         </div>
       )}
 
       {isOpenRequest && Number.isFinite(paymentAmount) && paymentAmount > 0 && (
-        <div className="mb-4 rounded-xl border border-[#E6EAF0] bg-[#F8FAFF] p-3 text-sm">
+        <div className="mb-4 rounded-xl border border-border bg-muted/40 p-3 text-sm">
           <div className="flex justify-between gap-3">
-            <span className="text-[#6B7280]">Abono</span>
-            <span className="font-mono font-semibold text-[#1A1F36]">{formatCurrency(paymentAmount)}</span>
+            <span className="text-muted-foreground">Abono</span>
+            <span className="font-mono font-semibold text-foreground">{formatCurrency(paymentAmount)}</span>
           </div>
           {previewFee > 0 && (
             <div className="mt-1 flex justify-between gap-3">
-              <span className="text-[#6B7280]">Comisión</span>
-              <span className="font-mono font-semibold text-[#1A1F36]">{formatCurrency(previewFee)}</span>
+              <span className="text-muted-foreground">Comisión</span>
+              <span className="font-mono font-semibold text-foreground">{formatCurrency(previewFee)}</span>
             </div>
           )}
-          <div className="mt-2 flex justify-between gap-3 border-t border-[#E6EAF0] pt-2">
-            <span className="font-semibold text-[#1A1F36]">Total a tarjeta</span>
-            <span className="font-mono font-bold text-[#1A1F36]">{formatCurrency(previewTotal)}</span>
+          <div className="mt-2 flex justify-between gap-3 border-t border-border pt-2">
+            <span className="font-semibold text-foreground">Total a tarjeta</span>
+            <span className="font-mono font-semibold text-foreground">{formatCurrency(previewTotal)}</span>
           </div>
         </div>
       )}
@@ -149,18 +149,18 @@ export function PublicStripePayment({
         type="button"
         disabled={loading || (isOpenRequest && (!Number.isFinite(paymentAmount) || paymentAmount <= 0))}
         onClick={() => startCheckout()}
-        className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white"
+        className="w-full justify-center bg-primary text-white"
       >
         {loading ? 'Abriendo...' : !isOpenRequest ? `Pagar ${formatCurrency(previewTotal)}` : 'Continuar a pago'}
       </Button>
 
       {settings.commission_payer === 'customer' && previewFee > 0 && (
-        <p className="mt-3 text-xs text-[#6B7280]">
+        <p className="mt-3 text-xs text-muted-foreground">
           El cargo incluye comisión estimada de {formatCurrency(previewFee)}.
         </p>
       )}
       {settings.commission_payer === 'merchant' && (
-        <p className="mt-1 text-xs text-[#6B7280]">
+        <p className="mt-1 text-xs text-muted-foreground">
           La comisión de tarjeta la absorbe OTLA; tu abono se aplica completo.
         </p>
       )}

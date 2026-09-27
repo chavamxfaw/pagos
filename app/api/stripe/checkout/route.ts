@@ -3,6 +3,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { enforceIpRateLimit } from '@/lib/security/rate-limit'
 import { calculateStripeChargeAmount, getStripeSettings, roundMoney } from '@/lib/stripe/config'
 import { getStripeClient } from '@/lib/stripe/client'
+import type Stripe from 'stripe'
+import { canRetryCreation, checkoutDisposition, reconciliationMessage } from '@/lib/stripe/checkout-state'
+import { readLimitedText } from '@/lib/security/request-body'
 
 type CheckoutRequest = {
   orderId?: string
@@ -23,7 +26,23 @@ export async function POST(request: Request) {
 
   if (rateLimitResponse) return rateLimitResponse
 
-  const body = (await request.json()) as CheckoutRequest
+  let body: CheckoutRequest
+  try {
+    const parsed: unknown = JSON.parse(await readLimitedText(request))
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid request')
+    const value = parsed as Record<string, unknown>
+    if (typeof value.orderId !== 'string' || !uuid.test(value.orderId)
+      || typeof value.paymentRequestId !== 'string' || !uuid.test(value.paymentRequestId)
+      || typeof value.token !== 'string' || !value.token.trim() || value.token.length > 200
+      || (value.amount !== undefined && (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0))) {
+      throw new Error('Invalid request')
+    }
+    body = value as CheckoutRequest
+  } catch (error) {
+    const oversized = error instanceof Error && error.message === 'Solicitud demasiado grande'
+    return NextResponse.json({ error: oversized ? 'Solicitud demasiado grande.' : 'Solicitud de pago no válida.' }, { status: oversized ? 413 : 400 })
+  }
   const admin = createAdminClient()
   const settings = await getStripeSettings()
 
@@ -42,6 +61,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Orden no encontrada.' }, { status: 404 })
   }
 
+  if (order.status === 'cancelled') {
+    return NextResponse.json({ error: 'Esta orden está cancelada.' }, { status: 409 })
+  }
   if (order.status === 'completed' || order.paid_amount >= order.total_amount) {
     return NextResponse.json({ error: 'Esta orden ya está liquidada.' }, { status: 400 })
   }
@@ -90,12 +112,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Stripe no está configurado en variables de entorno.' }, { status: 500 })
   }
 
-  const existingCheckout = await getReusableCheckoutSession(admin, stripe, paymentRequest.id)
-  if (existingCheckout) {
-    return NextResponse.json({ url: existingCheckout.url })
-  }
-
-  const session = await stripe.checkout.sessions.create({
+  const parameters: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     payment_method_types: ['card'],
     customer_email: order.clients?.email ?? undefined,
@@ -126,72 +143,53 @@ export async function POST(request: Request) {
     },
     success_url: `${appUrl}/p/${order.token}?stripe=success`,
     cancel_url: `${appUrl}/p/${order.token}?stripe=cancelled`,
-  })
+  }
 
-  const { error: insertError } = await admin
-    .from('stripe_checkout_sessions')
-    .insert({
-      order_id: order.id,
-      client_id: order.client_id,
-      payment_request_id: paymentRequest.id,
-      stripe_session_id: session.id,
-      amount: charge.paymentAmount,
-      fee_amount: charge.feeAmount,
-      total_charged: charge.totalCharged,
-      commission_payer: paymentRequest.commission_payer,
-      status: 'pending',
-      metadata: {
+  try {
+    const { data: checkout, error: reserveError } = await admin.rpc('reserve_stripe_checkout', {
+      p_order: order.id,
+      p_request: paymentRequest.id,
+      p_amount: charge.paymentAmount,
+      p_fee: charge.feeAmount,
+      p_total: charge.totalCharged,
+      p_metadata: {
         absorbed_fee: charge.absorbedFee,
         mode: settings.mode,
         checkout_source: isOpenRequest ? 'open_request' : 'fixed_request',
+        create_params: parameters,
       },
     })
-
-  if (insertError) {
-    const duplicateCheckout = await getReusableCheckoutSession(admin, stripe, paymentRequest.id)
-    if (duplicateCheckout) {
-      return NextResponse.json({ url: duplicateCheckout.url })
+    if (reserveError || !checkout || checkout.status !== 'pending') throw new Error('Checkout unavailable')
+    // Preserve the provider account/mode and exact parameters across concurrent retries.
+    if (checkout.metadata?.mode && checkout.metadata.mode !== settings.mode) throw new Error('Checkout mode changed')
+    let session: Stripe.Checkout.Session
+    if (checkout.stripe_session_id.startsWith('creating:')) {
+      if (!canRetryCreation(checkout.created_at) || !checkout.metadata?.create_params) throw new Error('Creation needs reconciliation')
+      session = await stripe.checkout.sessions.create(checkout.metadata.create_params, {
+        idempotencyKey: `checkout:${checkout.id}`,
+      })
+      const { error: attachError } = await admin.from('stripe_checkout_sessions')
+        .update({ stripe_session_id: session.id }).eq('id', checkout.id)
+        .eq('stripe_session_id', checkout.stripe_session_id).eq('status', 'pending')
+      if (attachError) throw new Error('Checkout attachment pending')
+      // Another request or webhook may complete the session while attachment was in flight.
+      session = await stripe.checkout.sessions.retrieve(session.id)
+    } else {
+      session = await stripe.checkout.sessions.retrieve(checkout.stripe_session_id)
     }
-
-    return NextResponse.json({ error: insertError.message }, { status: 500 })
+    const disposition = checkoutDisposition(session)
+    if (disposition === 'reuse') return NextResponse.json({ url: session.url })
+    if (disposition === 'expired') {
+      const { error: expireError } = await admin.from('stripe_checkout_sessions').update({ status: 'expired' })
+        .eq('id', checkout.id).eq('status', 'pending')
+      if (expireError) throw new Error('Expiration pending')
+      return NextResponse.json({ error: 'La sesión venció. Vuelve a abrir el pago.' }, { status: 409 })
+    }
+    // Complete is NOT paid in our ledger until the webhook transaction commits.
+    return NextResponse.json({ error: reconciliationMessage }, { status: 409 })
+  } catch {
+    return NextResponse.json({ error: reconciliationMessage }, { status: 409 })
   }
-
-  return NextResponse.json({ url: session.url })
-}
-
-async function getReusableCheckoutSession(
-  admin: ReturnType<typeof createAdminClient>,
-  stripe: ReturnType<typeof getStripeClient>,
-  paymentRequestId: string
-) {
-  const { data } = await admin
-    .from('stripe_checkout_sessions')
-    .select('stripe_session_id, status')
-    .eq('payment_request_id', paymentRequestId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!data?.stripe_session_id) return null
-
-  try {
-    const session = await stripe.checkout.sessions.retrieve(data.stripe_session_id)
-    if (session.status === 'open' && session.url) return session
-
-    await admin
-      .from('stripe_checkout_sessions')
-      .update({ status: session.status === 'complete' ? 'paid' : 'expired' })
-      .eq('stripe_session_id', data.stripe_session_id)
-      .eq('status', 'pending')
-  } catch (error) {
-    console.warn('No se pudo reutilizar sesión Stripe pendiente', {
-      paymentRequestId,
-      error,
-    })
-  }
-
-  return null
 }
 
 async function getPendingStripePaymentRequest(

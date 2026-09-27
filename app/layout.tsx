@@ -1,34 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { PWARegister } from "@/components/PWARegister";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "OTLA Pagos",
+    default: "OTLA · Mi espacio de trabajo",
     template: "%s · OTLA",
   },
-  applicationName: "OTLA Pagos",
-  description: "Control de pagos, órdenes y seguimiento de cobranza.",
+  applicationName: "OTLA",
+  description: "Contactos, proyectos, agenda y pagos en un solo lugar.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -37,11 +18,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/pwa-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/pwa-icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/otla-app-icon-v2.png", sizes: "1254x1254", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/otla-app-icon-v2.png", sizes: "1254x1254", type: "image/png" },
     ],
   },
   robots: {
@@ -66,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${jakarta.variable} ${mono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <head>
         <link rel="manifest" href="/manifest.json" />

@@ -4,6 +4,9 @@ import { sendOrderReminderNotification } from '@/lib/order-reminder-notification
 import { resend } from '@/lib/resend/client'
 import { addDaysToDateString, formatCurrency, formatDateShort, getTodayDateString } from '@/lib/utils'
 import type { Client, Order } from '@/types'
+import { recoverCalendarBookings } from '@/lib/calendar/recovery'
+import { processPendingPaymentReceipts } from '@/lib/payments/notifications'
+import { getDefaultSenderName } from '@/lib/user-settings'
 
 type DueOrder = {
   id: string
@@ -33,6 +36,12 @@ export async function GET(request: Request) {
   if (authHeader !== `Bearer ${cronSecret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
+
+  const maintenance=await Promise.allSettled([
+    recoverCalendarBookings(),
+    processPendingPaymentReceipts(createAdminClient()),
+  ])
+  if(maintenance.some(result=>result.status==='rejected'))console.error('Alguna tarea de recuperación requiere revisión')
 
   const adminEmail = process.env.ADMIN_EMAIL_NOTIFICACIONES || process.env.ADMIN_EMAIL
   if (!adminEmail) {
@@ -137,7 +146,7 @@ async function sendAutomaticClientReminders(supabase: ReturnType<typeof createAd
       await sendOrderReminderNotification({
         admin: supabase,
         order,
-        senderName: 'OTLA',
+        senderName: await getDefaultSenderName(),
         source: 'automatic',
       })
 
@@ -198,8 +207,8 @@ function buildDueReminderHtml({
     <html>
       <body style="margin:0;background:#F5F7FB;font-family:Arial,sans-serif;color:#1A1F36;">
         <div style="max-width:680px;margin:0 auto;padding:28px 16px;">
-          <div style="background:linear-gradient(135deg,#6C5CE7 0%,#4A8BFF 100%);border-radius:22px 22px 0 0;padding:28px;text-align:center;">
-            <img src="${appUrl}/otla-white.png" width="132" alt="OTLA" style="display:inline-block;max-width:132px;height:auto;" />
+          <div style="background:#FFFFFF;border-radius:22px 22px 0 0;padding:28px;text-align:center;">
+            <img src="${appUrl}/otla-logo-v2.png" width="132" alt="OTLA" style="display:inline-block;max-width:132px;height:auto;" />
           </div>
           <div style="background:#FFFFFF;border:1px solid #E6EAF0;border-top:0;border-radius:0 0 22px 22px;padding:28px;">
             <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6B7280;">Vencen mañana</p>
@@ -213,7 +222,7 @@ function buildDueReminderHtml({
             <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
               ${rows}
             </table>
-            <p style="margin:24px 0 0;font-size:12px;color:#8A94A6;">OTLA · Control de pagos</p>
+            <p style="margin:24px 0 0;font-size:12px;color:#8A94A6;">OTLA · Tu espacio de trabajo</p>
           </div>
         </div>
       </body>

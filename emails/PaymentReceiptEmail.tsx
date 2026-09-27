@@ -70,7 +70,7 @@ export function PaymentReceiptEmail({
   const normalizedAppUrl = appUrl.replace(/\/$/, '')
   const statusLink = `${normalizedAppUrl}/p/${token}`
   const receiptLink = receiptToken ? `${normalizedAppUrl}/r/${receiptToken}` : null
-  const logoUrl = `${normalizedAppUrl}/otla-white.png`
+  const logoUrl = `${normalizedAppUrl}/otla-logo-v2.png`
 
   return (
     <Html>
@@ -173,7 +173,7 @@ export function PaymentReceiptEmail({
             {senderName && (
               <Text style={senderLine}>De parte de: {senderName}</Text>
             )}
-            <Text style={footer}>OTLA · Control de pagos</Text>
+            <Text style={footer}>OTLA · Tu espacio de trabajo</Text>
           </Section>
         </Container>
       </Body>
@@ -197,8 +197,7 @@ const container = {
 }
 
 const brandHeader = {
-  backgroundImage: 'linear-gradient(135deg, #6C5CE7 0%, #4A8BFF 100%)',
-  backgroundColor: '#4A8BFF',
+  backgroundColor: '#FFFFFF',
   padding: '28px 24px',
   textAlign: 'center' as const,
 }

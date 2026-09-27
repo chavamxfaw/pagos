@@ -1,0 +1,1 @@
+export default function LoadingMessages(){return <div className="space-y-4 p-6" role="status" aria-label="Cargando mensajes"><div className="h-8 w-40 animate-pulse rounded bg-muted"/><div className="h-96 animate-pulse rounded-xl bg-muted"/><span className="sr-only">Cargando mensajes…</span></div>}

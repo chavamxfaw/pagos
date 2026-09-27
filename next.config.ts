@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: blob: https:",
           "font-src 'self' data:",
-          "connect-src 'self' http://localhost:54321 http://127.0.0.1:54321 ws://localhost:54321 ws://127.0.0.1:54321 https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+          `connect-src 'self' ${process.env.NODE_ENV==='development'?'http://localhost:54321 http://127.0.0.1:54321 ws://localhost:54321 ws://127.0.0.1:54321 http://127.0.0.1:54421 ws://127.0.0.1:54421':''} https://*.supabase.co wss://*.supabase.co https://api.stripe.com`,
           "frame-src https://js.stripe.com https://hooks.stripe.com",
           "frame-ancestors 'none'",
           "form-action 'self'",

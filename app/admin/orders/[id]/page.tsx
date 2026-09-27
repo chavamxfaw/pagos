@@ -14,6 +14,7 @@ import { sendOrderReminder } from '@/actions/reminders'
 import { cancelStripePaymentRequest, createStripePaymentRequest } from '@/actions/stripe-payment-requests'
 import { formatCurrency, formatDateShort, getOrderStatusLabel, getOrderTiming, getProgressPercent } from '@/lib/utils'
 import type { BankAccount, OrderWithClient, Payment, PaymentMethod, StripePaymentRequest } from '@/types'
+import { failedOrderQueries, OrderQueryError } from '../QueryError'
 
 type PaymentState = { error?: string; success?: boolean } | null
 
@@ -110,32 +111,37 @@ export default async function OrderDetailPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: order } = await supabase
+  const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('*, clients(*)')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
+  const orderFailures = failedOrderQueries('detail', [{ label: 'orden', error: orderError }])
+  if (orderFailures.length) return <OrderQueryError title="Detalle de orden" resources={orderFailures} retryHref={`/admin/orders/${id}`} />
   if (!order) notFound()
+  if (!order.clients) return <OrderQueryError title="Detalle de orden" resources={['contacto de la orden']} retryHref={`/admin/orders/${id}`} />
 
-  const { data: payments } = await supabase
+  const { data: payments, error: paymentsError } = await supabase
     .from('payments')
     .select('*')
     .eq('order_id', id)
     .order('created_at', { ascending: false })
 
-  const { data: bankAccounts } = await supabase
+  const { data: bankAccounts, error: banksError } = await supabase
     .from('bank_accounts')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
-  const { data: stripePaymentRequests } = await supabase
+  const { data: stripePaymentRequests, error: requestsError } = await supabase
     .from('stripe_payment_requests')
     .select('*')
     .eq('order_id', id)
     .order('created_at', { ascending: false })
 
+  const failures = failedOrderQueries('detail', [{ label: 'abonos', error: paymentsError }, { label: 'cuentas bancarias', error: banksError }, { label: 'solicitudes de pago', error: requestsError }])
+  if (failures.length) return <OrderQueryError title="Detalle de orden" resources={failures} retryHref={`/admin/orders/${id}`} />
   const typedOrder = order as OrderWithClient
   const typedPayments = (payments ?? []) as Payment[]
   const typedBankAccounts = (bankAccounts ?? []) as BankAccount[]
@@ -154,30 +160,30 @@ export default async function OrderDetailPage({
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
       <div className="mb-6">
-        <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
+        <Link href="/admin/orders" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
           ← Órdenes
         </Link>
       </div>
 
       {/* Order header */}
-      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6 mb-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-xl font-bold text-[#1A1F36] truncate">{typedOrder.concept}</h1>
+      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground">{typedOrder.concept}</h1>
               <StatusBadge status={typedOrder.status} />
               {timing.label && <TimingBadge timing={timing.key} label={timing.label} />}
             </div>
             <Link
               href={`/admin/clients/${typedOrder.client_id}`}
-              className="text-[#6B7280] hover:text-[#2ED39A] transition-colors text-sm"
+              className="text-muted-foreground hover:text-emerald-700 transition-colors text-sm"
             >
               {typedOrder.clients.name}
             </Link>
             {typedOrder.description && (
-              <p className="text-[#6B7280] text-sm mt-2">{typedOrder.description}</p>
+              <p className="text-muted-foreground text-sm mt-2">{typedOrder.description}</p>
             )}
-            <p className="text-[#8A94A6] text-xs mt-1">
+            <p className="text-muted-foreground text-xs mt-1">
               Emitida {formatDateShort(typedOrder.issued_at ?? typedOrder.created_at)}
               {typedOrder.due_date ? ` · Límite ${formatDateShort(typedOrder.due_date)}` : ''}
             </p>
@@ -187,13 +193,13 @@ export default async function OrderDetailPage({
         {/* Progress bar — elemento central */}
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-[#6B7280]">Progreso de pago</span>
-            <span className="text-[#1A1F36] font-mono font-semibold">{percent}%</span>
+            <span className="text-muted-foreground">Progreso de pago</span>
+            <span className="text-foreground tabular-nums font-semibold">{percent}%</span>
           </div>
-          <div className="h-4 bg-[#E6EAF0] rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-label="Progreso de pago" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                isCompleted ? 'bg-[#2ED39A]' : percent > 0 ? 'bg-[#2ED39A]' : 'bg-[#D8DEE8]'
+                isCompleted ? 'bg-emerald-500' : percent > 0 ? 'bg-emerald-500' : 'bg-muted'
               }`}
               style={{ width: `${percent}%` }}
             />
@@ -201,49 +207,49 @@ export default async function OrderDetailPage({
         </div>
 
         {/* Amounts */}
-        <div className="grid grid-cols-1 gap-4 border-t border-[#E6EAF0] pt-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Total</p>
-            <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total</p>
+            <p className="text-foreground tabular-nums font-semibold">{formatCurrency(typedOrder.total_amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Pagado</p>
-            <p className="text-[#2ED39A] font-mono font-semibold">{formatCurrency(typedOrder.paid_amount)}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Pagado</p>
+            <p className="text-emerald-700 tabular-nums font-semibold">{formatCurrency(typedOrder.paid_amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Pendiente</p>
-            <p className={`font-mono font-semibold ${isCompleted ? 'text-[#2ED39A]' : 'text-[#F4B740]'}`}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Pendiente</p>
+            <p className={`tabular-nums font-semibold ${isCompleted ? 'text-emerald-700' : 'text-amber-700'}`}>
               {isCompleted ? '—' : formatCurrency(remaining)}
             </p>
           </div>
         </div>
 
         {typedOrder.requires_invoice && (
-          <div className="mt-4 grid grid-cols-1 gap-4 border-t border-[#E6EAF0] pt-4 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Subtotal</p>
-              <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Subtotal</p>
+              <p className="text-foreground tabular-nums font-semibold">{formatCurrency(typedOrder.subtotal_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                 IVA {Math.round(typedOrder.tax_rate * 100)}%
               </p>
-              <p className="text-[#1A1F36] font-mono font-semibold">{formatCurrency(typedOrder.tax_amount)}</p>
+              <p className="text-foreground tabular-nums font-semibold">{formatCurrency(typedOrder.tax_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-[#6B7280] uppercase tracking-wider mb-1">Modo factura</p>
-              <p className="text-[#1A1F36] text-sm">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Modo factura</p>
+              <p className="text-foreground text-sm">
                 {typedOrder.tax_mode === 'included' ? 'IVA incluido' : 'IVA agregado'}
               </p>
             </div>
           </div>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-[#E6EAF0] pt-4 text-xs">
-          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_email_enabled ? 'bg-[#EAFBF5] text-[#129B70]' : 'bg-[#E6EAF0] text-[#6B7280]'}`}>
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4 text-xs">
+          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_email_enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
             Correo {typedOrder.notify_email_enabled ? 'activo' : 'apagado'}
           </span>
-          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_whatsapp_enabled ? 'bg-[#EAFBF5] text-[#129B70]' : 'bg-[#E6EAF0] text-[#6B7280]'}`}>
+          <span className={`rounded-full px-2.5 py-1 font-semibold ${typedOrder.notify_whatsapp_enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
             WhatsApp {typedOrder.notify_whatsapp_enabled ? 'activo' : 'apagado'}
           </span>
         </div>
@@ -275,10 +281,10 @@ export default async function OrderDetailPage({
 
       {/* Payment timeline */}
       <div>
-        <h2 className="text-lg font-semibold text-[#1A1F36] mb-4">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
           Historial de abonos
           {typedPayments.length > 0 && (
-            <span className="text-[#6B7280] font-normal text-sm ml-2">({typedPayments.length})</span>
+            <span className="text-muted-foreground font-normal text-sm ml-2">({typedPayments.length})</span>
           )}
         </h2>
         <PaymentTimeline
@@ -301,29 +307,29 @@ export default async function OrderDetailPage({
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'completed') {
-    return <Badge className="bg-[#2ED39A]/10 text-[#2ED39A] border-[#2ED39A]/30">Liquidado</Badge>
+    return <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30">Liquidado</Badge>
   }
   if (status === 'partial') {
-    return <Badge className="bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30">Parcial</Badge>
+    return <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30">Parcial</Badge>
   }
   if (status === 'cancelled') {
-    return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">Cancelado</Badge>
+    return <Badge className="bg-destructive/10 text-destructive border-destructive/30">Cancelado</Badge>
   }
   if (status === 'paused') {
-    return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">Pausado</Badge>
+    return <Badge className="bg-muted text-muted-foreground border-border">Pausado</Badge>
   }
   if (status === 'disputed') {
-    return <Badge className="bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30">En disputa</Badge>
+    return <Badge className="bg-destructive/10 text-destructive border-destructive/30">En disputa</Badge>
   }
-  return <Badge className="bg-[#E6EAF0] text-[#6B7280] border-[#D8DEE8]">{getOrderStatusLabel(status)}</Badge>
+  return <Badge className="bg-muted text-muted-foreground border-border">{getOrderStatusLabel(status)}</Badge>
 }
 
 function TimingBadge({ timing, label }: { timing: string; label: string }) {
   const className = timing === 'overdue'
-    ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30'
+    ? 'bg-destructive/10 text-destructive border-destructive/30'
     : timing === 'due_today' || timing === 'due_soon'
-      ? 'bg-[#F4B740]/10 text-[#F4B740] border-[#F4B740]/30'
-      : 'bg-[#EEF2FF] text-[#4A8BFF] border-[#4A8BFF]/20'
+      ? 'bg-amber-500/10 text-amber-700 border-amber-500/30'
+      : 'bg-primary/8 text-primary border-primary/20'
 
   return <Badge className={className}>{label}</Badge>
 }

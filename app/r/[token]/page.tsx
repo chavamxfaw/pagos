@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { CheckCircle2, ExternalLink, ReceiptText } from 'lucide-react'
+import { ExternalLink, ReceiptText } from 'lucide-react'
+import { PublicLinkHeader } from '@/components/public/PublicLinkHeader'
 import { ReceiptActions } from '@/components/public/ReceiptActions'
 import { getPublicPaymentReceipt } from '@/lib/payment-receipts'
 import { formatCurrency, formatDate, formatDateShort, getPaymentMethodLabel } from '@/lib/utils'
@@ -32,32 +32,26 @@ export default async function PublicPaymentReceiptPage({
   ].filter(Boolean).join('\n')
 
   return (
-    <main className="min-h-screen bg-[#F5F7FB] px-3 py-5 text-[#1A1F36] print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-background px-3 py-5 text-foreground print:bg-white print:px-0 print:py-0">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-5 flex items-center justify-between gap-4 print:hidden">
-          <Image src="/otla-logo.png" alt="OTLA" width={96} height={48} className="h-12 w-auto" />
-          <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-[#EAFBF5] px-3 text-xs font-semibold text-[#129B70]">
-            <CheckCircle2 className="size-4" />
-            Recibo verificado
-          </span>
-        </div>
+        <div className="print:hidden"><PublicLinkHeader /></div>
 
-        <section className="overflow-hidden rounded-3xl border border-[#E6EAF0] bg-white shadow-[0_18px_50px_rgba(26,31,54,0.06)] print:rounded-none print:border-0 print:shadow-none">
-          <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-8 text-white sm:px-8">
+        <section className="overflow-hidden rounded-xl border border-border bg-white  print:rounded-none print:border-0 print:shadow-none">
+          <div className="border-b border-border bg-secondary/40 px-5 py-6 text-foreground sm:px-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
+                <p className="mb-2 text-sm font-medium text-primary">
                   Recibo de abono
                 </p>
-                <h1 className="text-3xl font-bold">{order.clients.name}</h1>
-                <p className="mt-2 text-sm text-white/75">{order.concept}</p>
+                <h1 className="break-words text-2xl font-semibold tracking-tight">{order.clients.name}</h1>
+                <p className="mt-2 break-words text-sm text-muted-foreground">{order.concept}</p>
               </div>
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-                <ReceiptText className="size-7" />
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+                <ReceiptText className="size-5" />
               </span>
             </div>
 
-            <div className="mt-8 grid overflow-hidden rounded-2xl border border-white/20 sm:grid-cols-3">
+            <div className="mt-6 grid overflow-hidden rounded-xl border border-border bg-white sm:grid-cols-3">
               <ReceiptMetric label="Abono" value={formatCurrency(payment.amount)} />
               <ReceiptMetric label="Pagado actual" value={formatCurrency(order.paid_amount)} />
               <ReceiptMetric label={isCompleted ? 'Estado' : 'Pendiente'} value={isCompleted ? 'Liquidado' : formatCurrency(remaining)} />
@@ -70,7 +64,7 @@ export default async function PublicPaymentReceiptPage({
               text={receiptText}
             />
 
-            <div className="grid gap-4 rounded-2xl border border-[#E6EAF0] bg-[#F8FAFF] p-4 sm:grid-cols-2">
+            <div className="grid gap-4 rounded-xl border border-border bg-muted/40 p-4 sm:grid-cols-2">
               <Detail label="Fecha del abono" value={formatReceiptDate(payment.paid_at ?? payment.created_at)} />
               <Detail label="Fecha de emisión" value={formatDate(payment.receipt_issued_at ?? payment.created_at)} />
               <Detail label="Método" value={getPaymentMethodLabel(payment.payment_method)} />
@@ -86,31 +80,31 @@ export default async function PublicPaymentReceiptPage({
             </div>
 
             {order.requires_invoice && (
-              <div className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6C5CE7]">Desglose fiscal</p>
+              <div className="rounded-xl border border-border bg-white p-4">
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Desglose fiscal</p>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <BalanceCard label="Subtotal" value={formatCurrency(order.subtotal_amount)} />
                   <BalanceCard label={`IVA ${Math.round(order.tax_rate * 100)}%`} value={formatCurrency(order.tax_amount)} />
                   <BalanceCard label="Total" value={formatCurrency(order.total_amount)} />
                 </div>
-                <p className="mt-3 text-xs text-[#6B7280]">
+                <p className="mt-3 text-xs text-muted-foreground">
                   {order.tax_mode === 'included' ? 'El monto capturado ya incluye IVA.' : 'El IVA fue agregado al subtotal capturado.'}
                 </p>
               </div>
             )}
 
             {payment.notes && (
-              <div className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A94A6]">Notas</p>
-                <p className="mt-2 text-sm text-[#1A1F36]">{payment.notes}</p>
+              <div className="rounded-xl border border-border bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Notas</p>
+                <p className="mt-2 text-sm text-foreground">{payment.notes}</p>
               </div>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-[#E6EAF0] pt-5 text-sm text-[#6B7280] sm:flex-row sm:items-center sm:justify-between">
-              <span>OTLA · Control de pagos · {formatDateShort(payment.created_at)}</span>
+            <div className="flex flex-col gap-3 border-t border-border pt-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <span>OTLA · Tu espacio de trabajo · {formatDateShort(payment.created_at)}</span>
               <Link
                 href={`/p/${order.token}`}
-                className="print:hidden inline-flex min-h-10 items-center gap-2 font-semibold text-[#4A8BFF] hover:text-[#6C5CE7]"
+                className="print:hidden inline-flex min-h-10 items-center gap-2 font-semibold text-primary hover:text-primary"
               >
                 Ver estado de cuenta
                 <ExternalLink className="size-4" />
@@ -125,9 +119,9 @@ export default async function PublicPaymentReceiptPage({
 
 function ReceiptMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-white/20 px-4 py-4 first:border-0 sm:border-l">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/65">{label}</p>
-      <p className="mt-2 font-mono text-lg font-bold text-white">{value}</p>
+    <div className="border-border px-4 py-4 not-last:border-b sm:not-last:border-b-0 sm:not-last:border-r">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-2 text-xl font-semibold tabular-nums text-primary">{value}</p>
     </div>
   )
 }
@@ -135,8 +129,8 @@ function ReceiptMetric({ label, value }: { label: string; value: string }) {
 function Detail({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A94A6]">{label}</p>
-      <p className={`mt-1 break-words text-sm font-semibold text-[#1A1F36] ${mono ? 'font-mono' : ''}`}>{value}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className={`mt-1 break-words text-sm font-semibold text-foreground ${mono ? 'font-mono' : ''}`}>{value}</p>
     </div>
   )
 }
@@ -151,9 +145,9 @@ function BalanceCard({
   tone?: 'paid' | 'pending'
 }) {
   return (
-    <div className="rounded-2xl border border-[#E6EAF0] bg-[#F8FAFF] p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A94A6]">{label}</p>
-      <p className={`mt-2 font-mono text-base font-bold ${tone === 'paid' ? 'text-[#2ED39A]' : tone === 'pending' ? 'text-[#F4B740]' : 'text-[#1A1F36]'}`}>
+    <div className="rounded-xl border border-border bg-muted/40 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className={`mt-2 font-mono text-base font-semibold ${tone === 'paid' ? 'text-emerald-700' : tone === 'pending' ? 'text-amber-700' : 'text-foreground'}`}>
         {value}
       </p>
     </div>

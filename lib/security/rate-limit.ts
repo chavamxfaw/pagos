@@ -29,7 +29,7 @@ export async function enforceIpRateLimit({
 }: RateLimitOptions) {
   const ip = getClientIp(request)
 
-  if (!ip) return null
+  if (!ip) return getRateLimitFailureResponse(failClosed)
 
   try {
     const admin = createAdminClient()
@@ -48,7 +48,8 @@ export async function enforceIpRateLimit({
 
     const result = Array.isArray(data) ? data[0] as RateLimitResult | undefined : data as RateLimitResult | undefined
 
-    if (!result || result.allowed) return null
+    if (!result) return getRateLimitFailureResponse(failClosed)
+    if (result.allowed) return null
 
     return NextResponse.json(
       {

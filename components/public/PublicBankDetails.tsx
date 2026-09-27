@@ -36,18 +36,18 @@ export function PublicBankDetails({
   }
 
   return (
-    <section className={compact ? 'rounded-2xl border border-[#E6EAF0] bg-white p-4' : 'rounded-2xl border border-[#E6EAF0] bg-white p-5'}>
+    <section className={compact ? 'rounded-xl border border-border bg-white p-4' : 'rounded-xl border border-border bg-white p-5'}>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#6C5CE7]">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-secondary text-primary">
           <Landmark className="size-5" />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6C5CE7]">Datos para pago</p>
-          <h2 className="text-sm font-semibold text-[#1A1F36]">{bankAccount.alias}</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Datos para pago</p>
+          <h2 className="text-sm font-semibold text-foreground">{bankAccount.alias}</h2>
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl bg-[#F8FAFF] p-4 text-sm ring-1 ring-[#E6EAF0]">
+      <div className="grid gap-3 rounded-xl bg-muted/40 p-4 text-sm ring-1 ring-border">
         <BankRow label="Monto pendiente" value={formatCurrency(Math.max(0, pendingAmount))} strong />
         <BankRow label="Banco" value={bankAccount.bank_name} />
         <BankRow label="Titular" value={bankAccount.account_holder} />
@@ -55,7 +55,7 @@ export function PublicBankDetails({
         {bankAccount.account_number && <BankRow label="Cuenta" value={bankAccount.account_number} mono />}
         {bankAccount.card_number && <BankRow label="Tarjeta" value={bankAccount.card_number} mono />}
         {bankAccount.instructions && (
-          <p className="border-t border-[#E6EAF0] pt-3 text-[#6B7280]">{bankAccount.instructions}</p>
+          <p className="border-t border-border pt-3 text-muted-foreground">{bankAccount.instructions}</p>
         )}
       </div>
 
@@ -63,7 +63,7 @@ export function PublicBankDetails({
         type="button"
         variant="outline"
         onClick={copyDetails}
-        className="mt-4 w-full justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF]"
+        className="mt-4 w-full justify-center border-border bg-white text-foreground hover:bg-muted/40"
       >
         <Copy className="size-4" />
         {copied ? 'Datos copiados' : 'Copiar datos de pago'}
@@ -85,8 +85,8 @@ function BankRow({
 }) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-      <span className="text-[#6B7280]">{label}</span>
-      <span className={`${mono ? 'font-mono' : ''} ${strong ? 'font-mono font-bold text-[#F4B740]' : 'font-semibold text-[#1A1F36]'}`}>
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`${mono ? 'font-mono' : ''} ${strong ? 'font-mono font-semibold text-amber-700' : 'font-semibold text-foreground'}`}>
         {value}
       </span>
     </div>

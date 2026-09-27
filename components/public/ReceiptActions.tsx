@@ -32,7 +32,7 @@ export function ReceiptActions({
       <Button
         type="button"
         onClick={() => window.print()}
-        className="min-h-11 justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white shadow-sm hover:brightness-105"
+        className="min-h-11 justify-center bg-primary text-white shadow-sm hover:brightness-105"
       >
         <Download className="size-4" />
         Descargar PDF
@@ -41,7 +41,7 @@ export function ReceiptActions({
         type="button"
         variant="outline"
         onClick={copyReceipt}
-        className="min-h-11 justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF]"
+        className="min-h-11 justify-center border-border bg-white text-foreground hover:bg-muted/40"
       >
         <Copy className="size-4" />
         Copiar recibo
@@ -50,7 +50,7 @@ export function ReceiptActions({
         type="button"
         variant="outline"
         onClick={shareReceipt}
-        className="min-h-11 justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF]"
+        className="min-h-11 justify-center border-border bg-white text-foreground hover:bg-muted/40"
       >
         <Share2 className="size-4" />
         Compartir

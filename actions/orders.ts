@@ -5,6 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/admin'
 import { logActivity } from '@/lib/activity'
 import { getTodayDateString } from '@/lib/utils'
+import { validateOrderProject } from '@/lib/crm/service'
+import { expireOrderCheckouts } from '@/lib/stripe/cancel-order'
 import type { OrderCategory, OrderStatus } from '@/types'
 
 async function requireAuth() {
@@ -13,6 +15,7 @@ async function requireAuth() {
 
 export async function createOrder(data: {
   client_id: string
+  crm_project_id?: string | null
   concept: string
   description?: string
   category?: OrderCategory
@@ -31,8 +34,9 @@ export async function createOrder(data: {
   public_show_fiscal_document?: boolean
   fiscal_document_id?: string
 }) {
-  await requireAuth()
+  const user = await requireAuth()
   const admin = createAdminClient()
+  const projectId = await validateOrderProject({ db: admin, ownerId: user.id }, data.crm_project_id, data.client_id)
   const amounts = calculateOrderAmounts({
     amount: data.amount,
     requiresInvoice: data.requires_invoice ?? false,
@@ -43,6 +47,7 @@ export async function createOrder(data: {
     .from('orders')
     .insert({
       client_id: data.client_id,
+      crm_project_id: projectId,
       concept: data.concept,
       description: data.description,
       category: getOrderCategory(data.category),
@@ -80,6 +85,7 @@ export async function createOrder(data: {
 
 export async function updateOrder(orderId: string, data: {
   client_id: string
+  crm_project_id?: string | null
   concept: string
   description?: string
   category?: OrderCategory
@@ -99,18 +105,19 @@ export async function updateOrder(orderId: string, data: {
   fiscal_document_id?: string
   status?: OrderStatus
 }) {
-  await requireAuth()
+  const user = await requireAuth()
   const admin = createAdminClient()
 
   const { data: currentOrder, error: fetchError } = await admin
     .from('orders')
-    .select('client_id, paid_amount, completed_at, status, due_date, payment_reminder_enabled, payment_reminder_days_before')
+    .select('client_id, crm_project_id, paid_amount, completed_at, status, due_date, payment_reminder_enabled, payment_reminder_days_before')
     .eq('id', orderId)
     .single()
 
   if (fetchError || !currentOrder) {
     throw new Error(fetchError?.message ?? 'Orden no encontrada')
   }
+  const projectId = await validateOrderProject({ db: admin, ownerId: user.id }, data.crm_project_id === undefined ? currentOrder.crm_project_id : data.crm_project_id, data.client_id)
 
   const amounts = calculateOrderAmounts({
     amount: data.amount,
@@ -123,6 +130,9 @@ export async function updateOrder(orderId: string, data: {
   }
 
   const status = getEditableStatus(data.status, currentOrder.paid_amount, amounts.total_amount)
+  if (status === 'cancelled' && currentOrder.status !== 'cancelled') {
+    await expireOrderCheckouts(admin, orderId)
+  }
   const completedAt = status === 'completed'
     ? currentOrder.completed_at ?? new Date().toISOString()
     : null
@@ -141,6 +151,7 @@ export async function updateOrder(orderId: string, data: {
     .from('orders')
     .update({
       client_id: data.client_id,
+      crm_project_id: projectId,
       concept: data.concept,
       description: data.description,
       category: getOrderCategory(data.category),

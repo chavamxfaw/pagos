@@ -49,55 +49,55 @@ export function StripePaymentRequestDialog({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full justify-center border-[#D8DEE8] text-xs text-[#1A1F36] hover:bg-[#E6EAF0] sm:w-auto"
+            className="w-full justify-center border-border text-xs text-foreground hover:bg-muted sm:w-auto"
           >
             <CreditCard className="mr-2 size-4" />
             Solicitar pago Stripe
           </Button>
         }
       />
-      <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+      <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#1A1F36]">Crear solicitud Stripe</DialogTitle>
+          <DialogTitle className="text-foreground">Crear solicitud Stripe</DialogTitle>
         </DialogHeader>
 
         <form action={onSubmit} className="space-y-4">
           <input type="hidden" name="order_id" value={orderId} />
           <input type="hidden" name="request_type" value={requestType} />
 
-          <div className="rounded-xl border border-[#E6EAF0] bg-[#F8FAFF] p-3 text-sm text-[#6B7280]">
-            Saldo disponible para solicitar: <span className="font-mono font-semibold text-[#1A1F36]">{formatCurrency(pendingAmount)}</span>
+          <div className="rounded-xl border border-border bg-secondary p-3 text-sm text-muted-foreground">
+            Saldo disponible para solicitar: <span className="tabular-nums font-semibold text-foreground">{formatCurrency(pendingAmount)}</span>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
               <input
                 type="radio"
                 checked={requestType === 'fixed'}
                 onChange={() => setRequestType('fixed')}
-                className="mt-1 size-4 accent-[#6C5CE7]"
+                className="mt-1 size-4 accent-primary"
               />
               <span>
-                <span className="block text-sm font-medium text-[#1A1F36]">Monto fijo</span>
-                <span className="block text-xs text-[#6B7280]">El cliente paga exactamente este monto.</span>
+                <span className="block text-sm font-medium text-foreground">Monto fijo</span>
+                <span className="block text-xs text-muted-foreground">El cliente paga exactamente este monto.</span>
               </span>
             </label>
-            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
               <input
                 type="radio"
                 checked={requestType === 'open'}
                 onChange={() => setRequestType('open')}
-                className="mt-1 size-4 accent-[#6C5CE7]"
+                className="mt-1 size-4 accent-primary"
               />
               <span>
-                <span className="block text-sm font-medium text-[#1A1F36]">Monto abierto</span>
-                <span className="block text-xs text-[#6B7280]">El cliente decide cuánto abonar.</span>
+                <span className="block text-sm font-medium text-foreground">Monto abierto</span>
+                <span className="block text-xs text-muted-foreground">El cliente decide cuánto abonar.</span>
               </span>
             </label>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stripe_request_amount" className="text-[#1A1F36]">
+            <Label htmlFor="stripe_request_amount" className="text-foreground">
               {requestType === 'fixed' ? 'Monto a solicitar *' : 'Abono mínimo'}
             </Label>
             <Input
@@ -109,44 +109,44 @@ export function StripePaymentRequestDialog({
               max={pendingAmount}
               required={requestType === 'fixed'}
               placeholder="0.00"
-              className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono text-lg"
+              className="bg-card border-border text-foreground tabular-nums text-lg"
             />
             {requestType === 'open' && (
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-muted-foreground">
                 Si lo dejas vacío se usará el mínimo global de Stripe. El máximo siempre será el saldo pendiente.
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stripe_request_concept" className="text-[#1A1F36]">Concepto</Label>
+            <Label htmlFor="stripe_request_concept" className="text-foreground">Concepto</Label>
             <Input
               id="stripe_request_concept"
               name="concept"
               placeholder="Anticipo, segunda parcialidad..."
-              className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+              className="bg-card border-border text-foreground"
             />
           </div>
 
-          <label className="flex items-start gap-3 rounded-xl border border-[#E6EAF0] bg-white p-3">
+          <label className="flex items-start gap-3 rounded-xl border border-border bg-card p-3">
             <input
               type="checkbox"
               name="requires_invoice"
-              className="mt-1 size-4 rounded border-[#D8DEE8] accent-[#6C5CE7]"
+              className="mt-1 size-4 rounded border-border accent-primary"
             />
             <span>
-              <span className="block text-sm font-medium text-[#1A1F36]">Este pago requiere factura</span>
-              <span className="block text-xs text-[#6B7280]">Queda marcado en la solicitud para referencia operativa.</span>
+              <span className="block text-sm font-medium text-foreground">Este pago requiere factura</span>
+              <span className="block text-xs text-muted-foreground">Queda marcado en la solicitud para referencia operativa.</span>
             </span>
           </label>
 
           <div className="space-y-2">
-            <Label htmlFor="stripe_request_tax_mode" className="text-[#1A1F36]">IVA de esta solicitud</Label>
+            <Label htmlFor="stripe_request_tax_mode" className="text-foreground">IVA de esta solicitud</Label>
             <select
               id="stripe_request_tax_mode"
               name="tax_mode"
               defaultValue="included"
-              className="min-h-11 w-full rounded-lg border border-[#D8DEE8] bg-white px-3 text-sm text-[#1A1F36]"
+              className="min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
             >
               <option value="included">IVA incluido</option>
               <option value="added">IVA agregado</option>
@@ -154,20 +154,20 @@ export function StripePaymentRequestDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stripe_request_notes" className="text-[#1A1F36]">Notas</Label>
+            <Label htmlFor="stripe_request_notes" className="text-foreground">Notas</Label>
             <Textarea
               id="stripe_request_notes"
               name="notes"
               rows={2}
               placeholder="Acuerdo con cliente, referencia interna..."
-              className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none"
+              className="bg-card border-border text-foreground resize-none"
             />
           </div>
 
           <Button
             type="submit"
             disabled={pending}
-            className="w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105"
+            className="w-full bg-primary text-primary-foreground font-semibold shadow-none hover:bg-primary/90"
           >
             {pending ? 'Creando...' : 'Crear solicitud'}
           </Button>

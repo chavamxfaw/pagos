@@ -27,12 +27,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
-    await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
-  }
-
-  if (event.type === 'checkout.session.expired') {
-    await markCheckoutSession(event.data.object as Stripe.Checkout.Session, 'expired')
+  try {
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+      await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+    }
+    if (event.type === 'checkout.session.expired') {
+      await markCheckoutSession(event.data.object as Stripe.Checkout.Session, 'expired')
+    }
+  } catch {
+    // Never acknowledge an unrecorded payment: Stripe must retry and reconciliation must remain possible.
+    console.error('Stripe event could not be reconciled', { eventId: event.id })
+    return NextResponse.json({ error: 'Reconciliation pending' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })
@@ -56,91 +61,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (session.payment_status !== 'paid') return
 
   const admin = createAdminClient()
-  const { data: checkout } = await admin
-    .from('stripe_checkout_sessions')
-    .select('*, orders(*, clients(*)), stripe_payment_requests(status)')
-    .eq('stripe_session_id', session.id)
-    .eq('status', 'pending')
-    .maybeSingle()
-
-  if (!checkout) return
-
-  const initialOrder = Array.isArray(checkout.orders) ? checkout.orders[0] : checkout.orders
-  if (!initialOrder) return
-
   const paymentIntent = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null
-  const amountTotal = typeof session.amount_total === 'number' ? session.amount_total / 100 : null
-  const currency = session.currency?.toLowerCase()
-  const expectedTotal = Number(checkout.total_charged)
-  const pendingAmount = Math.max(0, Number(initialOrder.total_amount) - Number(initialOrder.paid_amount))
-  const paymentRequest = Array.isArray(checkout.stripe_payment_requests)
-    ? checkout.stripe_payment_requests[0]
-    : checkout.stripe_payment_requests
+  const { data: result, error } = await admin.rpc('complete_stripe_checkout', {
+    p_session: session.id,
+    p_intent: paymentIntent,
+    p_total: typeof session.amount_total === 'number' ? session.amount_total / 100 : null,
+    p_currency: session.currency?.toLowerCase() ?? null,
+    p_paid_at: getTodayDateString(),
+  })
+  if (error) throw new Error('Stripe transaction failed')
+  if (!result?.payment) return
+  const { payment, checkout } = result
 
-  if (currency !== 'mxn' || amountTotal == null || Math.abs(amountTotal - expectedTotal) > 0.01) {
-    console.error('Stripe checkout amount mismatch', {
-      sessionId: session.id,
-      currency,
-      amountTotal,
-      expectedTotal,
-    })
-    return
-  }
-
-  if (checkout.payment_request_id && paymentRequest?.status !== 'pending') return
-  if (initialOrder.status === 'completed' || pendingAmount <= 0 || Number(checkout.amount) > pendingAmount) return
-
-  const { data: updatedCheckout, error: checkoutUpdateError } = await admin
-    .from('stripe_checkout_sessions')
-    .update({
-      status: 'paid',
-      stripe_payment_intent_id: paymentIntent,
-      paid_at: new Date().toISOString(),
-    })
-    .eq('id', checkout.id)
-    .eq('status', 'pending')
-    .select('id')
-    .maybeSingle()
-
-  if (checkoutUpdateError || !updatedCheckout) return
-
-  const { data: payment, error: paymentError } = await admin
-    .from('payments')
-    .insert({
-      order_id: checkout.order_id,
-      amount: checkout.amount,
-      concept: 'Pago con tarjeta Stripe',
-      payment_method: 'stripe',
-      payment_reference: paymentIntent ?? session.id,
-      notes: checkout.fee_amount > 0
-        ? `Pago por Stripe. Comisión cargada al cliente: ${formatCurrency(checkout.fee_amount)}.`
-        : 'Pago por Stripe.',
-      paid_at: getTodayDateString(),
-    })
-    .select()
-    .single()
-
-  if (paymentError) throw new Error(paymentError.message)
-
-  if (checkout.payment_request_id) {
-    await admin
-      .from('stripe_payment_requests')
-      .update({
-        status: 'paid',
-        paid_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', checkout.payment_request_id)
-  }
-
-  await logActivity(admin, {
+  if (!result.replayed) await logActivity(admin, {
     entity_type: 'payment',
     entity_id: payment.id,
     client_id: checkout.client_id,
     order_id: checkout.order_id,
     payment_id: payment.id,
     event_type: 'stripe_payment_succeeded',
-    message: `Pago con tarjeta confirmado: ${formatCurrency(checkout.amount)} para ${initialOrder.concept}`,
+    message: `Pago con tarjeta confirmado: ${formatCurrency(checkout.amount)}`,
     metadata: {
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntent,
@@ -159,7 +99,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (updatedOrder?.clients) {
     await notifyPaymentReceipt({ admin, order: updatedOrder, payment })
-    await notifyAdminStripePayment({ admin, order: updatedOrder, payment, checkout })
+    if (!result.replayed) await notifyAdminStripePayment({ admin, order: updatedOrder, payment, checkout })
   }
 
   revalidatePath(`/admin/orders/${checkout.order_id}`)
@@ -170,23 +110,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
 async function markCheckoutSession(session: Stripe.Checkout.Session, status: 'expired' | 'cancelled') {
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('stripe_checkout_sessions')
     .update({ status })
     .eq('stripe_session_id', session.id)
     .eq('status', 'pending')
-
-  const { data: checkout } = await admin
-    .from('stripe_checkout_sessions')
-    .select('payment_request_id')
-    .eq('stripe_session_id', session.id)
-    .maybeSingle()
-
-  if (checkout?.payment_request_id) {
-    await admin
-      .from('stripe_payment_requests')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', checkout.payment_request_id)
-      .eq('status', 'pending')
-  }
+  if (error) throw new Error('Checkout expiration pending')
+  // Session expiry does not cancel the payment request: a newer session may already exist.
 }

@@ -40,7 +40,7 @@ export function AdminStripePaymentEmail({
 }: AdminStripePaymentEmailProps) {
   const normalizedAppUrl = appUrl.replace(/\/$/, '')
   const orderUrl = `${normalizedAppUrl}/admin/orders/${orderId}`
-  const logoUrl = `${normalizedAppUrl}/otla-white.png`
+  const logoUrl = `${normalizedAppUrl}/otla-logo-v2.png`
 
   return (
     <Html>
@@ -65,7 +65,7 @@ export function AdminStripePaymentEmail({
 
             <Hr style={hr} />
             <Link href={orderUrl} style={button}>Ver orden</Link>
-            <Text style={footer}>OTLA · Control de pagos</Text>
+            <Text style={footer}>OTLA · Tu espacio de trabajo</Text>
           </Section>
         </Container>
       </Body>
@@ -89,8 +89,7 @@ const container = {
 }
 
 const brandHeader = {
-  backgroundImage: 'linear-gradient(135deg, #6C5CE7 0%, #4A8BFF 100%)',
-  backgroundColor: '#4A8BFF',
+  backgroundColor: '#FFFFFF',
   padding: '28px 24px',
   textAlign: 'center' as const,
 }

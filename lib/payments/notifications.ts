@@ -3,6 +3,9 @@ import { resend } from '@/lib/resend/client'
 import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client'
 import { formatCurrency, getPaymentMethodLabel } from '@/lib/utils'
 import type { Client, Order, Payment } from '@/types'
+import { deliverReceiptOnce } from './delivery'
+import { normalizeWhatsAppPhone } from '@/lib/whatsapp/security'
+import { getDefaultSenderName } from '@/lib/user-settings'
 
 type AdminClient = ReturnType<typeof import('@/lib/supabase/admin').createAdminClient>
 
@@ -23,17 +26,16 @@ export async function notifyPaymentReceipt({
   payment,
   senderName,
 }: NotifyPaymentReceiptInput) {
-  const resolvedSenderName = senderName ?? await getDefaultSenderName(admin)
+  const resolvedSenderName = senderName?.trim() || await getDefaultSenderName()
   const emailEnabled = order.notify_email_enabled ?? true
   const whatsAppEnabled = order.notify_whatsapp_enabled ?? true
   const normalizedAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? ''
   const receiptLink = payment.receipt_token ? `${normalizedAppUrl}/r/${payment.receipt_token}` : undefined
 
-  if (emailEnabled && order.clients.email) {
-    try {
-      await resend.emails.send({
+  await deliverReceiptOnce(admin,payment.id,'email',Boolean(emailEnabled&&order.clients.email),async()=>{
+      const result = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
-        to: order.clients.email,
+        to: order.clients.email!,
         subject: `Recibo de abono — ${order.concept}`,
         react: PaymentReceiptEmail({
           clientName: order.clients.name,
@@ -47,22 +49,44 @@ export async function notifyPaymentReceipt({
           receiptToken: payment.receipt_token,
           senderName: resolvedSenderName,
         }),
-      })
-    } catch (emailError) {
-      console.error('Error enviando correo de abono:', emailError)
-    }
-  }
+      }, {idempotencyKey:`payment-receipt/${payment.id}`})
+      if(result.error) throw new Error('Email delivery failed')
+      return result.data?.id
+  })
 
-  if (whatsAppEnabled && order.clients.phone) {
-    try {
+  await deliverReceiptOnce(admin,payment.id,'whatsapp',Boolean(whatsAppEnabled&&order.clients.phone),async()=>{
       const remaining = Math.max(0, order.total_amount - order.paid_amount)
       const statusLink = `${normalizedAppUrl}/p/${order.token}`
       const contentSid = process.env.TWILIO_PAYMENT_REMINDER_CONTENT_SID
+      const receiptBody = [
+        `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
+        `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
+        `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
+        remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
+        `Consulta tu estado aquí: ${statusLink}`,
+        receiptLink ? `Recibo del abono: ${receiptLink}` : '',
+        `De parte de: ${resolvedSenderName}`,
+      ].filter(Boolean).join('\n')
+      const {data:message,error:messageError} = await admin.from('whatsapp_messages').insert({
+        client_id:order.client_id,direction:'outbound',phone:normalizeWhatsAppPhone(order.clients.phone!),
+        body:receiptBody,kind:'receipt',resource_id:payment.id,idempotency_key:`receipt:${payment.id}`,status:'sending',
+      }).select('id').single()
+      if(messageError) throw new Error('Receipt message could not be registered')
+      const track = async (result: Awaited<ReturnType<typeof sendWhatsAppMessage>>) => {
+        if(result.skipped) throw new Error('WhatsApp is not configured')
+        const {error} = await admin.from('whatsapp_messages').update({provider_sid:result.sid}).eq('id',message.id)
+        if(error) throw new Error('Receipt status could not be registered')
+        const {error:statusError} = await admin.rpc('apply_whatsapp_status',{p_sid:result.sid,p_status:result.status,p_error:null})
+        if(statusError) throw new Error('Receipt status unavailable')
+        return result.sid
+      }
 
+      try {
       if (contentSid) {
-        await sendWhatsAppTemplate({
-          to: order.clients.phone,
+        const result = await sendWhatsAppTemplate({
+          to: order.clients.phone!,
           contentSid,
+          messageId:message.id,
           variables: {
             '1': order.clients.name,
             '2': order.concept,
@@ -73,33 +97,32 @@ export async function notifyPaymentReceipt({
             '7': resolvedSenderName,
           },
         })
+        return await track(result)
       } else {
-        await sendWhatsAppMessage({
-          to: order.clients.phone,
-          body: [
-            `Hola ${order.clients.name}, registramos tu abono de ${formatCurrency(payment.amount)} para ${order.concept}.`,
-            `Método: ${getPaymentMethodLabel(payment.payment_method)}${payment.payment_reference ? ` (${payment.payment_reference})` : ''}.`,
-            `Pagado: ${formatCurrency(order.paid_amount)} de ${formatCurrency(order.total_amount)}.`,
-            remaining > 0 ? `Saldo pendiente: ${formatCurrency(remaining)}.` : 'Tu orden quedó liquidada.',
-            `Consulta tu estado aquí: ${statusLink}`,
-            receiptLink ? `Recibo del abono: ${receiptLink}` : '',
-            `De parte de: ${resolvedSenderName}`,
-          ].filter(Boolean).join('\n'),
+        const result = await sendWhatsAppMessage({
+          to: order.clients.phone!,
+          body: receiptBody,
+          messageId:message.id,
         })
+        return await track(result)
       }
-    } catch (whatsAppError) {
-      console.error('Error enviando WhatsApp de abono:', whatsAppError)
-    }
-  }
+      } catch(error) {
+        await admin.from('whatsapp_messages').update({status:'unknown'}).eq('id',message.id).eq('status','sending')
+        throw error
+      }
+  })
 }
 
-async function getDefaultSenderName(admin: AdminClient) {
-  const { data } = await admin
-    .from('user_settings')
-    .select('display_name')
-    .not('display_name', 'is', null)
-    .limit(1)
-    .maybeSingle()
-
-  return data?.display_name || 'OTLA'
+export async function processPendingPaymentReceipts(admin: AdminClient,limit=25) {
+  const {data,error} = await admin.from('payment_receipt_deliveries').select('payment_id').eq('status','pending').order('updated_at').limit(Math.min(limit,100))
+  if(error) throw new Error('Receipt queue unavailable')
+  let processed=0
+  for(const id of new Set((data||[]).map(row=>row.payment_id))) {
+    const {data:payment} = await admin.from('payments').select('*').eq('id',id).single()
+    if(!payment) continue
+    const {data:order} = await admin.from('orders').select('*,clients(*)').eq('id',payment.order_id).single()
+    if(!order?.clients) continue
+    await notifyPaymentReceipt({admin,payment,order}); processed++
+  }
+  return {processed}
 }

@@ -1,0 +1,40 @@
+-- Local-only fixtures. All mutations roll back.
+begin;
+insert into auth.users(id,email) values('74000000-0000-4000-8000-000000000001','review@fixture.test');
+insert into public.app_admin_users(user_id) values('74000000-0000-4000-8000-000000000001');
+insert into public.clients(id,name) values('74000000-0000-4000-8000-000000000002','Review fixture');
+insert into public.orders(id,client_id,concept,total_amount,subtotal_amount) values('74000000-0000-4000-8000-000000000003','74000000-0000-4000-8000-000000000002','Review fixture order',1000,1000);
+insert into public.payments(id,order_id,amount,concept,payment_method) values('74000000-0000-4000-8000-000000000004','74000000-0000-4000-8000-000000000003',100,'Fixture','transfer');
+set local role service_role;
+do $$ declare stamp timestamptz; rejected boolean; begin
+ select updated_at into stamp from public.payment_receipt_deliveries where payment_id='74000000-0000-4000-8000-000000000004' and channel='email';
+ rejected=false;
+ begin perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','email',stamp,'sent','provider-fixture','Verified fixture reference','74000000-0000-4000-8000-000000000001');
+ exception when others then rejected=true; end;
+ assert rejected,'pending jobs cannot be manually resolved';
+ update public.payment_receipt_deliveries set status='unknown' where payment_id='74000000-0000-4000-8000-000000000004' and channel='email';
+ rejected=false;
+ begin perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','email',stamp,'sent','provider-fixture','Verified fixture reference','74000000-0000-4000-8000-000000000099');
+ exception when insufficient_privilege then rejected=true; end;
+ assert rejected,'unapproved actor must fail';
+ rejected=false;
+ begin perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','email',stamp-interval '1 second','sent','provider-fixture','Verified fixture reference','74000000-0000-4000-8000-000000000001');
+ exception when others then rejected=true; end;
+ assert rejected,'stale review must fail';
+ perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','email',stamp,'sent','provider-fixture','Verified fixture reference','74000000-0000-4000-8000-000000000001');
+ assert (select status from public.payment_receipt_deliveries where payment_id='74000000-0000-4000-8000-000000000004' and channel='email')='sent';
+ assert (select count(*) from public.activity_logs where payment_id='74000000-0000-4000-8000-000000000004' and event_type='receipt_delivery_reconciled')=1,'atomic audit';
+ rejected=false;
+ begin perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','email',stamp,'skipped','','Repeated review should fail','74000000-0000-4000-8000-000000000001');
+ exception when others then rejected=true; end;
+ assert rejected,'repeated resolution must not overwrite confirmed send';
+ update public.payment_receipt_deliveries set status='sending',updated_at=now()-interval '16 minutes' where payment_id='74000000-0000-4000-8000-000000000004' and channel='whatsapp' returning updated_at into stamp;
+ perform public.resolve_receipt_delivery('74000000-0000-4000-8000-000000000004','whatsapp',stamp,'skipped','','Checked provider, no further send requested','74000000-0000-4000-8000-000000000001');
+ assert (select status from public.payment_receipt_deliveries where payment_id='74000000-0000-4000-8000-000000000004' and channel='whatsapp')='skipped';
+end $$;
+reset role;
+do $$ begin
+ assert not has_function_privilege('anon','public.resolve_receipt_delivery(uuid,text,timestamptz,text,text,text,uuid)','execute');
+ assert not has_function_privilege('authenticated','public.resolve_receipt_delivery(uuid,text,timestamptz,text,text,text,uuid)','execute');
+end $$;
+rollback;

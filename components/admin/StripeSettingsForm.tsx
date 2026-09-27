@@ -27,40 +27,40 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
   }
 
   return (
-    <section className="mb-6 overflow-hidden rounded-3xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
-      <div className="bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] px-6 py-7 text-white">
+    <section className="mb-6 overflow-hidden rounded-xl border border-border bg-card">
+      <div className="border-b border-border bg-primary/5 px-5 py-5 text-foreground">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-white/18 ring-1 ring-white/25">
+          <span className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <CreditCard className="size-5" />
           </span>
           <div>
-            <h2 className="text-xl font-bold">Cuenta conectada</h2>
-            <p className="text-sm text-white/70">Configuración activa</p>
+            <h2 className="text-xl font-semibold">Configuración de cobro</h2>
+            <p className="text-sm text-muted-foreground">{settings.enabled ? 'Pagos habilitados' : 'Pagos desactivados'}</p>
           </div>
         </div>
       </div>
 
       <form action={onSubmit} className="grid gap-5 p-6">
-        <div className="rounded-2xl border border-[#E6EAF0] bg-[#F8FAFF] p-4">
+        <div className="rounded-lg border border-border bg-muted/40 p-4">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-[#EAFBF5] text-[#129B70]">
               <ShieldCheck className="size-5" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-[#1A1F36]">Stripe account</p>
-              <p className="text-xs text-[#6B7280]">{settings.stripe_account_id ?? 'Sin account id'}</p>
+              <p className="text-sm font-semibold text-foreground">Cuenta Stripe</p>
+              <p className="text-xs text-muted-foreground">{settings.stripe_account_id ?? 'Sin account id'}</p>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Stripe Account ID" name="stripe_account_id" defaultValue={settings.stripe_account_id ?? ''} placeholder="acct_..." required />
-            <div className="grid gap-2">
-              <Label htmlFor="mode" className="text-[#1A1F36]">Modo</Label>
+            <div className="grid min-w-0 gap-2">
+              <Label htmlFor="mode" className="text-foreground">Modo</Label>
               <select
                 id="mode"
                 name="mode"
                 defaultValue={settings.mode}
-                className="min-h-11 rounded-lg border border-[#D8DEE8] bg-white px-3 text-sm text-[#1A1F36]"
+                className="min-h-11 rounded-lg border border-input bg-white px-3 text-sm text-foreground"
               >
                 <option value="test">Sandbox / test</option>
                 <option value="live">Producción</option>
@@ -69,52 +69,52 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
           </div>
         </div>
 
-        <label className="flex items-start gap-3 rounded-2xl border border-[#E6EAF0] bg-white p-4">
+        <label className="flex items-start gap-3 rounded-lg border border-border bg-white p-4">
           <input
             type="checkbox"
             name="enabled"
             defaultChecked={settings.enabled}
-            className="mt-1 size-4 rounded border-[#D8DEE8] accent-[#6C5CE7]"
+            className="mt-1 size-4 rounded border-input accent-primary"
           />
           <span>
-            <span className="block text-sm font-semibold text-[#1A1F36]">Habilitar pagos con Stripe</span>
+            <span className="block text-sm font-semibold text-foreground">Habilitar pagos con Stripe</span>
           </span>
         </label>
 
-        <div className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
-          <h3 className="mb-3 text-sm font-bold text-[#1A1F36]">Comisión</h3>
+        <div className="rounded-lg border border-border bg-white p-4">
+          <h3 className="mb-3 text-sm font-semibold text-foreground">Comisión</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex items-start gap-3 rounded-xl border border-[#E6EAF0] p-3">
-              <input type="radio" name="commission_payer" value="merchant" defaultChecked={settings.commission_payer === 'merchant'} className="mt-1 size-4 accent-[#6C5CE7]" />
+            <label className="flex items-start gap-3 rounded-xl border border-border p-3">
+              <input type="radio" name="commission_payer" value="merchant" defaultChecked={settings.commission_payer === 'merchant'} className="mt-1 size-4 accent-primary" />
               <span>
-                <span className="block text-sm font-semibold text-[#1A1F36]">Yo absorbo la comisión</span>
-                <span className="block text-xs text-[#6B7280]">El cliente paga exactamente el abono.</span>
+                <span className="block text-sm font-semibold text-foreground">Yo absorbo la comisión</span>
+                <span className="block text-xs text-muted-foreground">El cliente paga exactamente el abono.</span>
               </span>
             </label>
-            <label className="flex items-start gap-3 rounded-xl border border-[#E6EAF0] p-3">
-              <input type="radio" name="commission_payer" value="customer" defaultChecked={settings.commission_payer === 'customer'} className="mt-1 size-4 accent-[#6C5CE7]" />
+            <label className="flex items-start gap-3 rounded-xl border border-border p-3">
+              <input type="radio" name="commission_payer" value="customer" defaultChecked={settings.commission_payer === 'customer'} className="mt-1 size-4 accent-primary" />
               <span>
-                <span className="block text-sm font-semibold text-[#1A1F36]">El cliente paga la comisión</span>
-                <span className="block text-xs text-[#6B7280]">Se suma al cargo de Stripe, pero el abono registrado queda limpio.</span>
+                <span className="block text-sm font-semibold text-foreground">El cliente paga la comisión</span>
+                <span className="block text-xs text-muted-foreground">Se suma al cargo de Stripe, pero el abono registrado queda limpio.</span>
               </span>
             </label>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Field label="Comisión %" name="fee_percent" type="number" step="0.001" min="0" defaultValue={String(settings.fee_percent)} />
             <Field label="Comisión fija MXN" name="fixed_fee_amount" type="number" step="0.01" min="0" defaultValue={String(settings.fixed_fee_amount)} />
             <Field label="IVA sobre comisión %" name="fee_tax_percent" type="number" step="0.001" min="0" defaultValue={String(settings.fee_tax_percent ?? 16)} />
             <Field label="Mínimo global MXN" name="minimum_payment_amount" type="number" step="0.01" min="1" defaultValue={String(settings.minimum_payment_amount)} />
           </div>
 
-          <p className="mt-3 text-xs text-[#6B7280]">
+          <p className="mt-3 text-xs text-muted-foreground">
             Referencia {formatCurrency(5000)}: cargo a tarjeta {formatCurrency(referenceCharge.totalCharged)}
             {settings.commission_payer === 'customer' && ` · comisión estimada ${formatCurrency(referenceCharge.feeAmount)}`}
             {settings.commission_payer === 'merchant' && ` · comisión absorbida estimada ${formatCurrency(referenceCharge.absorbedFee)}`}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#F4B740]/30 bg-[#FFF7E6] p-4 text-sm text-[#7A5600]">
+        <div className="rounded-lg border border-[#F4B740]/30 bg-[#FFF7E6] p-4 text-sm text-[#7A5600]">
           Validar tratamiento fiscal de comisiones antes de usar en producción.
         </div>
 
@@ -122,7 +122,7 @@ export function StripeSettingsForm({ settings }: { settings: StripeSettings }) {
           <Button
             type="submit"
             disabled={pending}
-            className="w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white shadow-sm hover:brightness-105 sm:w-auto"
+            className="min-h-11 w-full bg-primary text-primary-foreground shadow-none hover:bg-primary/90 sm:w-auto"
           >
             {pending ? 'Guardando...' : 'Guardar configuración'}
           </Button>
@@ -152,8 +152,8 @@ function Field({
   min?: string
 }) {
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={name} className="text-[#1A1F36]">{label}</Label>
+    <div className="grid min-w-0 gap-2">
+      <Label htmlFor={name} className="text-foreground">{label}</Label>
       <Input
         id={name}
         name={name}
@@ -163,7 +163,7 @@ function Field({
         defaultValue={defaultValue}
         placeholder={placeholder}
         required={required}
-        className="border-[#D8DEE8] bg-white text-[#1A1F36]"
+        className="min-h-11 min-w-0 border-input bg-background text-foreground"
       />
     </div>
   )

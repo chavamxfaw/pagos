@@ -164,16 +164,16 @@ export function GlobalSearch({ clients, orders }: { clients: Client[]; orders: G
           onFocus={() => setOpen(query.trim().length >= 2)}
           onKeyDown={handleInputKeyDown}
           placeholder="Buscar clientes, órdenes o tags..."
-          className="h-11 rounded-2xl border-[#D8DEE8] bg-white pl-11 pr-16 text-[#1A1F36] shadow-sm"
+          className="h-11 rounded-xl border-[#D8DEE8] bg-white pl-11 pr-16 text-foreground shadow-sm"
         />
-        <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border border-[#E6EAF0] bg-[#F8FAFD] px-2 py-1 text-[11px] font-medium text-[#8A94A6] sm:flex">
+        <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border border-border bg-[#F8FAFD] px-2 py-1 text-[11px] font-medium text-[#8A94A6] sm:flex">
           <Command className="size-3" />
           K
         </div>
       </div>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-[999] max-h-[min(70dvh,460px)] overflow-hidden rounded-2xl border border-[#D8DEE8] bg-white shadow-[0_24px_70px_rgba(26,31,54,0.18)]">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-[999] max-h-[min(70dvh,460px)] overflow-hidden rounded-xl border border-[#D8DEE8] bg-white shadow-[0_24px_70px_rgba(26,31,54,0.18)]">
           {results.length ? (
             <div className="max-h-[min(70dvh,420px)] overflow-y-auto overscroll-contain p-2">
               {clientResults.length > 0 && (
@@ -195,8 +195,8 @@ export function GlobalSearch({ clients, orders }: { clients: Client[]; orders: G
             </div>
           ) : (
             <div className="p-5 text-center">
-              <p className="text-sm font-semibold text-[#1A1F36]">Sin resultados</p>
-              <p className="mt-1 text-sm text-[#6B7280]">Sin coincidencias.</p>
+              <p className="text-sm font-semibold text-foreground">Sin resultados</p>
+              <p className="mt-1 text-sm text-muted-foreground">Sin coincidencias.</p>
             </div>
           )}
         </div>
@@ -233,17 +233,17 @@ function ResultGroup({
               activeResult?.id === result.id && activeResult.type === result.type ? 'bg-[#F0F4FF]' : 'hover:bg-[#F8FAFD]',
             )}
           >
-            <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl', result.type === 'client' ? 'bg-[#EEF2FF] text-[#6C5CE7]' : 'bg-[#FFF7E6] text-[#F4B740]')}>
+            <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl', result.type === 'client' ? 'bg-secondary text-primary' : 'bg-[#FFF7E6] text-[#F4B740]')}>
               {result.type === 'client' ? <UserRound className="size-4" /> : <Package className="size-4" />}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-[#1A1F36]">{result.title}</span>
-              <span className="mt-0.5 block truncate text-xs text-[#6B7280]">{result.subtitle}</span>
+              <span className="block truncate text-sm font-semibold text-foreground">{result.title}</span>
+              <span className="mt-0.5 block truncate text-xs text-muted-foreground">{result.subtitle}</span>
             </span>
             <span className="hidden shrink-0 items-center gap-2 sm:flex">
               {result.status && <StatusBadge status={result.status} />}
               {result.meta && (
-                <Badge className="border-[#E6EAF0] bg-white text-[#6B7280]">
+                <Badge className="border-border bg-white text-muted-foreground">
                   {result.category ? <Tags className="mr-1 size-3" /> : null}
                   {result.meta}
                 </Badge>
@@ -261,9 +261,9 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   const className = {
     completed: 'border-[#2ED39A]/20 bg-[#2ED39A]/10 text-[#129B70]',
     partial: 'border-[#F4B740]/20 bg-[#FFF7E6] text-[#B77900]',
-    pending: 'border-[#D8DEE8] bg-[#E6EAF0] text-[#6B7280]',
+    pending: 'border-[#D8DEE8] bg-[#E6EAF0] text-muted-foreground',
     cancelled: 'border-[#EF4444]/20 bg-[#FEE2E2] text-[#EF4444]',
-    paused: 'border-[#D8DEE8] bg-[#F3F4F6] text-[#6B7280]',
+    paused: 'border-[#D8DEE8] bg-[#F3F4F6] text-muted-foreground',
     disputed: 'border-[#EF4444]/20 bg-[#FEE2E2] text-[#EF4444]',
   }[status]
 

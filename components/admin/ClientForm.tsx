@@ -25,7 +25,7 @@ export function ClientForm({
 
       {/* Sección: Datos personales */}
       <div>
-        <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Datos de contacto</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Datos de contacto</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Nombre completo *" id="name">
             <Input id="name" name="name" defaultValue={defaultValues?.name} placeholder="Juan Pérez" required />
@@ -41,7 +41,7 @@ export function ClientForm({
 
       {/* Sección: Datos fiscales */}
       <div>
-        <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Datos fiscales / empresa</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Datos fiscales / empresa</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Empresa / Razón social" id="company">
             <Input id="company" name="company" defaultValue={defaultValues?.company ?? ''} placeholder="Empresa S.A. de C.V." />
@@ -57,7 +57,7 @@ export function ClientForm({
 
       {/* Notas */}
       <div>
-        <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Notas internas</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Notas internas</p>
         <Textarea
           id="notes"
           name="notes"
@@ -72,7 +72,7 @@ export function ClientForm({
         <p className="text-[#EF4444] text-sm bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-lg px-4 py-2">{state.error}</p>
       )}
 
-      <Button type="submit" disabled={pending} className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto">
+      <Button type="submit" disabled={pending} className="w-full justify-center bg-primary text-white font-semibold shadow-sm hover:bg-primary/90 sm:w-auto">
         {pending ? 'Guardando...' : submitLabel}
       </Button>
     </form>
@@ -89,7 +89,7 @@ function Field({
 }) {
   return (
     <div className={`space-y-1.5 ${className ?? ''}`}>
-      <Label htmlFor={id} className="text-[#6B7280] text-sm">{label}</Label>
+      <Label htmlFor={id} className="text-muted-foreground text-sm">{label}</Label>
       {children}
     </div>
   )

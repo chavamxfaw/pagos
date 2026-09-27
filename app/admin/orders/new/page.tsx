@@ -4,6 +4,8 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { createClient } from '@/lib/supabase/server'
 import { OrderForm } from '@/components/admin/OrderForm'
 import { createOrder } from '@/actions/orders'
+import { requireAdmin } from '@/lib/auth/admin'
+import { failedOrderQueries, OrderQueryError } from '../QueryError'
 
 type State = { error?: string } | null
 
@@ -12,6 +14,7 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
   try {
     const order = await createOrder({
       client_id: formData.get('client_id') as string,
+      crm_project_id: (formData.get('crm_project_id') as string) || null,
       concept: formData.get('concept') as string,
       category: formData.get('category') as never,
       tags: formData.get('tags') as string,
@@ -40,40 +43,48 @@ async function createOrderAction(prevState: State, formData: FormData): Promise<
 export default async function NewOrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string }>
+  searchParams: Promise<{ client?: string; project?: string }>
 }) {
-  const { client: defaultClientId } = await searchParams
+  const { client: defaultClientId, project: defaultProjectId } = await searchParams
+  const user = await requireAdmin()
   const supabase = await createClient()
+  const { data: projects, error: projectsError } = await supabase.from('crm_projects').select('id,title,client_id').eq('owner_user_id', user.id).order('title')
 
-  const { data: clients } = await supabase
+  const { data: clients, error: clientsError } = await supabase
     .from('clients')
     .select('*')
     .order('name')
 
-  const { data: bankAccounts } = await supabase
+  const { data: bankAccounts, error: banksError } = await supabase
     .from('bank_accounts')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
-  const { data: fiscalDocuments } = await supabase
+  const { data: fiscalDocuments, error: fiscalError } = await supabase
     .from('fiscal_documents')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
+  const failures = failedOrderQueries('new', [{ label: 'contactos', error: clientsError }, { label: 'proyectos', error: projectsError }, { label: 'cuentas bancarias', error: banksError }, { label: 'documentos fiscales', error: fiscalError }])
+  const retryParams = new URLSearchParams()
+  if (defaultClientId) retryParams.set('client', defaultClientId)
+  if (defaultProjectId) retryParams.set('project', defaultProjectId)
+  if (failures.length) return <OrderQueryError title="Nueva orden" resources={failures} retryHref={`/admin/orders/new?${retryParams}`} />
+
   if (!clients?.length) {
     return (
       <div className="p-6 md:p-8 max-w-2xl mx-auto">
         <div className="mb-8">
-          <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
+          <Link href="/admin/orders" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
             ← Órdenes
           </Link>
-          <h1 className="text-2xl font-bold text-[#1A1F36] mt-2">Nueva orden</h1>
+          <h1 className="text-2xl font-semibold text-foreground mt-2">Nueva orden</h1>
         </div>
-        <div className="bg-white border border-[#E6EAF0] rounded-xl p-8 text-center">
-          <p className="text-[#6B7280] mb-4">Necesitas al menos un cliente para crear una orden.</p>
-          <Link href="/admin/clients/new" className="text-[#2ED39A] hover:text-[#26BA88]">
+        <div className="bg-card border border-border rounded-xl p-8 text-center">
+          <p className="text-muted-foreground mb-4">Necesitas al menos un cliente para crear una orden.</p>
+          <Link href="/admin/clients/new" className="text-emerald-700 hover:text-emerald-800">
             Crear primer cliente →
           </Link>
         </div>
@@ -84,19 +95,21 @@ export default async function NewOrderPage({
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
       <div className="mb-8">
-        <Link href="/admin/orders" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
+        <Link href="/admin/orders" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
           ← Órdenes
         </Link>
-        <h1 className="text-2xl font-bold text-[#1A1F36] mt-2">Nueva orden</h1>
+        <h1 className="text-2xl font-semibold text-foreground mt-2">Nueva orden</h1>
       </div>
 
-      <div className="bg-white border border-[#E6EAF0] rounded-xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <OrderForm
           action={createOrderAction}
           clients={clients}
           bankAccounts={bankAccounts ?? []}
           fiscalDocuments={fiscalDocuments ?? []}
           defaultClientId={defaultClientId}
+          defaultProjectId={defaultProjectId}
+          projects={projects ?? []}
         />
       </div>
     </div>

@@ -11,7 +11,13 @@ export async function getDisplayName(userId: string, email: string): Promise<str
     .eq('user_id', userId)
     .single()
 
-  return data?.display_name || email
+  return data?.display_name?.trim() || (userId === (process.env.PLATFORM_OWNER_USER_ID || process.env.OTLA_AGENT_OWNER_ID) ? 'Chava Cervantes' : email)
+}
+
+// Automatic messages belong to the configured business owner, never an arbitrary admin.
+export async function getDefaultSenderName(): Promise<string> {
+  const ownerId = process.env.PLATFORM_OWNER_USER_ID || process.env.OTLA_AGENT_OWNER_ID
+  return ownerId ? getDisplayName(ownerId, 'Chava Cervantes') : 'Chava Cervantes'
 }
 
 export async function getUserSettings(userId: string, email: string): Promise<UserSettings> {

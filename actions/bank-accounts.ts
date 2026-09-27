@@ -7,6 +7,8 @@ import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/lib/whatsapp/client
 import { logActivity } from '@/lib/activity'
 import { buildBankInstructionsMessage } from '@/lib/bank-instructions'
 import { formatCurrency } from '@/lib/utils'
+import { getDisplayName } from '@/lib/user-settings'
+import { withSenderTemplate } from '@/lib/whatsapp/template-identity'
 import type { BankAccount, OrderWithClient } from '@/types'
 
 async function requireAuth() {
@@ -82,7 +84,8 @@ export async function deleteBankAccount(bankAccountId: string) {
 }
 
 export async function sendBankInstructions(orderId: string, bankAccountId: string) {
-  await requireAuth()
+  const actor = await requireAuth()
+  const senderName = await getDisplayName(actor.id, actor.email || 'Equipo OTLA')
   const admin = createAdminClient()
 
   const [{ data: order, error: orderError }, { data: bankAccount, error: bankError }] = await Promise.all([
@@ -100,6 +103,7 @@ export async function sendBankInstructions(orderId: string, bankAccountId: strin
 
   if (orderError || !order) throw new Error(orderError?.message ?? 'Orden no encontrada')
   if (bankError || !bankAccount) throw new Error(bankError?.message ?? 'Cuenta bancaria no encontrada')
+  if (!bankAccount.is_active) throw new Error('La cuenta bancaria está desactivada.')
 
   const typedOrder = order as OrderWithClient
   const typedBankAccount = bankAccount as BankAccount
@@ -118,24 +122,21 @@ export async function sendBankInstructions(orderId: string, bankAccountId: strin
     appUrl: process.env.NEXT_PUBLIC_APP_URL!,
   })
 
-  const contentSid = process.env.TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID
-  if (contentSid) {
-    const remaining = Math.max(0, typedOrder.total_amount - typedOrder.paid_amount)
+  const remaining = Math.max(0, typedOrder.total_amount - typedOrder.paid_amount)
+  const selectedTemplate = withSenderTemplate(process.env.TWILIO_PAYMENT_INSTRUCTIONS_CONTENT_SID,
+    process.env.TWILIO_PAYMENT_INSTRUCTIONS_SENDER_CONTENT_SID, {
+      '1': typedOrder.clients.name, '2': typedOrder.concept, '3': formatCurrency(remaining),
+      '4': typedBankAccount.bank_name, '5': typedBankAccount.account_holder,
+      '6': typedBankAccount.clabe ?? typedBankAccount.account_number ?? typedBankAccount.card_number ?? 'No disponible',
+      '7': typedOrder.token,
+    }, senderName, '8')
+  if (selectedTemplate.template) {
     await sendWhatsAppTemplate({
       to: typedOrder.clients.phone,
-      contentSid,
-      variables: {
-        '1': typedOrder.clients.name,
-        '2': typedOrder.concept,
-        '3': formatCurrency(remaining),
-        '4': typedBankAccount.bank_name,
-        '5': typedBankAccount.account_holder,
-        '6': typedBankAccount.clabe ?? typedBankAccount.account_number ?? typedBankAccount.card_number ?? 'No disponible',
-        '7': typedOrder.token,
-      },
+      ...selectedTemplate.template,
     })
   } else {
-    await sendWhatsAppMessage({ to: typedOrder.clients.phone, body: message })
+    await sendWhatsAppMessage({ to: typedOrder.clients.phone, body: `${message}\nDe parte de: ${senderName}` })
   }
 
   await logActivity(admin, {
@@ -145,7 +146,7 @@ export async function sendBankInstructions(orderId: string, bankAccountId: strin
     order_id: orderId,
     event_type: 'bank_instructions_sent',
     message: `Datos bancarios enviados por WhatsApp: ${typedBankAccount.alias}`,
-    metadata: { bank_account_id: bankAccountId },
+    metadata: { bank_account_id: bankAccountId, sender_name: senderName, identity_warning: selectedTemplate.identityWarning },
   })
 
   revalidatePath(`/admin/orders/${orderId}`)

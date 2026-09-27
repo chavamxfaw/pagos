@@ -38,7 +38,7 @@ export default async function PublicOrderPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] px-3 py-4 sm:px-4 sm:py-6 md:py-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:px-4 sm:py-6 md:py-8">
       <div className="mx-auto max-w-4xl">
         <PublicLinkHeader />
 
@@ -46,7 +46,7 @@ export default async function PublicOrderPage({
           <div className="mb-4">
             <Link
               href={clientPortalPath}
-              className="inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-full border border-[#E6EAF0] bg-white px-4 text-center text-sm font-semibold text-[#1A1F36] shadow-sm transition-colors hover:border-[#C8D0DC] hover:bg-[#F8FAFF]"
+              className="inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-center text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-[#C8D0DC] hover:bg-muted/40"
             >
               <ArrowLeft className="size-4" />
               Volver al resumen general
@@ -63,7 +63,7 @@ export default async function PublicOrderPage({
           percent={percent}
         />
 
-        <div className="mb-4 rounded-2xl border border-[#E6EAF0] bg-white p-3 shadow-[0_14px_30px_rgba(26,31,54,0.04)]">
+        <div className="mb-4 rounded-xl border border-border bg-white p-3 ">
           <PublicShareActions
             title={`Estado de cuenta OTLA - ${order.concept}`}
             text={[
@@ -78,10 +78,10 @@ export default async function PublicOrderPage({
         </div>
 
         {isCompleted && (
-          <div className="mb-6 rounded-2xl border border-[#BDF3DE] bg-[#EAFBF5] p-5 text-center shadow-sm">
-            <CheckCircle2 className="mx-auto mb-2 size-8 text-[#2ED39A]" />
-            <h2 className="text-lg font-bold text-[#129B70]">Pago completado</h2>
-            <p className="mt-1 text-sm text-[#129B70]/75">
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center shadow-sm">
+            <CheckCircle2 className="mx-auto mb-2 size-8 text-emerald-700" />
+            <h2 className="text-lg font-semibold text-emerald-700">Pago completado</h2>
+            <p className="mt-1 text-sm text-emerald-700/75">
               Gracias {order.clients.name}, tu saldo está liquidado.
             </p>
           </div>
@@ -95,8 +95,8 @@ export default async function PublicOrderPage({
           stripeSettings={stripeSettings}
         />
 
-        <p className="text-center text-[#A2ABBA] text-xs mt-8">
-          OTLA · Control de pagos
+        <p className="text-center text-muted-foreground text-xs mt-8">
+          OTLA · Tu espacio de trabajo
         </p>
       </div>
     </div>

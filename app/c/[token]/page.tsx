@@ -28,7 +28,7 @@ export default async function PublicClientPage({
   const percent = getProgressPercent(paidAmount, totalAmount)
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] px-3 py-4 sm:px-4 sm:py-6 md:py-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:px-4 sm:py-6 md:py-8">
       <div className="mx-auto max-w-4xl">
         <PublicLinkHeader />
 
@@ -41,7 +41,7 @@ export default async function PublicClientPage({
           percent={percent}
         />
 
-        <div className="mb-4 rounded-2xl border border-[#E6EAF0] bg-white p-3 shadow-[0_14px_30px_rgba(26,31,54,0.04)]">
+        <div className="mb-4 rounded-xl border border-border bg-white p-3 ">
           <PublicShareActions
             title={`Estado de cuenta OTLA - ${portal.client.name}`}
             text={[
@@ -64,13 +64,13 @@ export default async function PublicClientPage({
         <PublicOrdersAccordion orders={completedOrders} title="Órdenes liquidadas" />
 
         {!portal.orders.length && (
-          <div className="rounded-2xl border border-[#E6EAF0] bg-white p-10 text-center">
-            <p className="text-[#6B7280]">No hay órdenes registradas todavía.</p>
+          <div className="rounded-xl border border-border bg-white p-10 text-center">
+            <p className="text-muted-foreground">No hay órdenes registradas todavía.</p>
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-[#A2ABBA]">
-          OTLA · Control de pagos
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          OTLA · Tu espacio de trabajo
         </p>
       </div>
     </div>

@@ -124,25 +124,25 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 rounded-2xl border border-[#E3E8F0] bg-white/90 p-4 shadow-[0_10px_30px_rgba(26,31,54,0.025)] lg:grid-cols-[1fr_240px_auto]">
+      <div className="grid gap-3 rounded-xl border border-[#E3E8F0] bg-white/90 p-4 shadow-[0_10px_30px_rgba(26,31,54,0.025)] lg:grid-cols-[1fr_240px_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8A94A6]" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar por nombre, empresa, correo, teléfono o RFC..."
-            className="h-10 bg-white border-[#E6EAF0] pl-9 text-[#1A1F36]"
+            className="h-10 bg-white border-border pl-9 text-foreground"
           />
         </div>
         <Select value={filter} onValueChange={(value) => setFilter(value as ClientFilter)}>
-          <SelectTrigger className="h-10 w-full bg-white border-[#E6EAF0] text-[#1A1F36] shadow-none">
+          <SelectTrigger className="h-10 w-full bg-white border-border text-foreground shadow-none">
             <SelectValue>{filterLabel}</SelectValue>
           </SelectTrigger>
-          <SelectContent className="bg-white border-[#E6EAF0]">
-            <SelectItem value="all" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Todos</SelectItem>
-            <SelectItem value="active" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Con órdenes activas</SelectItem>
-            <SelectItem value="no_orders" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Sin órdenes</SelectItem>
-            <SelectItem value="portal_active" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Link general activo</SelectItem>
+          <SelectContent className="bg-white border-border">
+            <SelectItem value="all" className="text-foreground focus:bg-[#E6EAF0]">Todos</SelectItem>
+            <SelectItem value="active" className="text-foreground focus:bg-[#E6EAF0]">Con órdenes activas</SelectItem>
+            <SelectItem value="no_orders" className="text-foreground focus:bg-[#E6EAF0]">Sin órdenes</SelectItem>
+            <SelectItem value="portal_active" className="text-foreground focus:bg-[#E6EAF0]">Link general activo</SelectItem>
           </SelectContent>
         </Select>
         <Button
@@ -150,14 +150,14 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
           variant="outline"
           onClick={exportClients}
           disabled={!filteredClients.length}
-          className="h-10 w-full justify-center border-[#E6EAF0] bg-white px-5 text-[#1A1F36] shadow-none hover:bg-[#F8FAFF] lg:w-auto"
+          className="h-10 w-full justify-center border-border bg-white px-5 text-foreground shadow-none hover:bg-muted lg:w-auto"
         >
           <Download className="size-4" />
           Exportar CSV
         </Button>
       </div>
 
-      <p className="text-sm text-[#6B7280]">
+      <p className="text-sm text-muted-foreground">
         {filteredClients.length} de {clients.length} clientes
       </p>
 
@@ -167,17 +167,17 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
           <p className="text-sm">Sin coincidencias.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
+        <div className="overflow-hidden rounded-xl border border-[#E3E8F0] bg-white/90 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
           <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#E6EAF0] bg-[#FBFCFF]">
-                <th className="text-left px-6 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Cliente</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Teléfono</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Órdenes</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">Estado</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Acciones</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden xl:table-cell">Desde</th>
+              <tr className="border-b border-border bg-[#FBFCFF]">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cliente</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Teléfono</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Órdenes</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Estado</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Acciones</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Desde</th>
                 <th className="w-12 px-4 py-4" />
               </tr>
             </thead>
@@ -190,7 +190,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                 return (
                   <tr
                     key={client.id}
-                    className="border-b border-[#E6EAF0] transition-colors last:border-b-0 hover:bg-[#F8FAFF]"
+                    className="border-b border-border transition-colors last:border-b-0 hover:bg-muted"
                   >
                     <td className="px-6 py-5">
                       <Link href={`/admin/clients/${client.id}`} className="flex items-center gap-3">
@@ -198,12 +198,12 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                           {client.name[0]?.toUpperCase()}
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate font-semibold text-[#1A1F36] transition-colors hover:text-[#4A8BFF]">
+                          <span className="block truncate font-semibold text-foreground transition-colors hover:text-primary">
                             {client.name}
                           </span>
-                          <span className="block truncate text-sm text-[#6B7280]">{client.email ?? 'Sin correo'}</span>
+                          <span className="block truncate text-sm text-muted-foreground">{client.email ?? 'Sin correo'}</span>
                           {client.company && (
-                            <span className="mt-1 inline-flex rounded-md bg-[#EEF2F7] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#6B7280]">
+                            <span className="mt-1 inline-flex rounded-md bg-[#EEF2F7] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                               {client.company}
                             </span>
                           )}
@@ -214,12 +214,12 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                       {client.phone ?? '-'}
                     </td>
                     <td className="px-5 py-5">
-                      <span className="font-mono text-sm font-semibold text-[#1A1F36]">{totalOrders}</span>
+                      <span className="font-mono text-sm font-semibold text-foreground">{totalOrders}</span>
                     </td>
                     <td className="px-5 py-5 hidden md:table-cell">
                       <div className="flex flex-wrap items-center gap-2">
                         {totalOrders === 0 && (
-                          <Badge className="border-[#D8DEE8] bg-[#EEF2F7] text-[#6B7280]">
+                          <Badge className="border-[#D8DEE8] bg-[#EEF2F7] text-muted-foreground">
                             Sin órdenes
                           </Badge>
                         )}
@@ -237,7 +237,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                             Link
                           </Badge>
                         ) : (
-                          <Badge className="hidden border-[#E6EAF0] bg-white text-[#8A94A6] lg:inline-flex">
+                          <Badge className="hidden border-border bg-white text-[#8A94A6] lg:inline-flex">
                             Sin link
                           </Badge>
                         )}
@@ -246,7 +246,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
                     <td className="px-5 py-5 hidden lg:table-cell">
                       <Link
                         href={`/admin/orders/new?client=${client.id}`}
-                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-[#D8DEE8] bg-white px-4 text-[#6C5CE7] hover:bg-[#F8FAFF] hover:text-[#4A8BFF]')}
+                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-[#D8DEE8] bg-white px-4 text-primary hover:bg-muted hover:text-primary')}
                       >
                         Nueva orden
                       </Link>
@@ -276,7 +276,7 @@ export function ClientsFilterList({ clients }: { clients: ClientRow[] }) {
 
 function getAvatarTone(name: string) {
   const tones = [
-    'bg-[#ECE8FF] text-[#6C5CE7]',
+    'bg-[#ECE8FF] text-primary',
     'bg-[#E4F2FF] text-[#1F8BEA]',
     'bg-[#DDF8EE] text-[#13A674]',
     'bg-[#FFF0D8] text-[#E48A00]',
@@ -332,7 +332,7 @@ function ClientActionsMenu({
         variant="outline"
         size="icon"
         onClick={onToggle}
-        className="size-9 rounded-xl border-[#E6EAF0] bg-white text-[#8A94A6] hover:bg-[#F8FAFF] hover:text-[#1A1F36]"
+        className="size-9 rounded-xl border-border bg-white text-[#8A94A6] hover:bg-muted hover:text-foreground"
         aria-label={`Acciones para ${client.name}`}
         aria-expanded={isOpen}
       >
@@ -348,7 +348,7 @@ function ClientActionsMenu({
             onClick={onClose}
           />
           <div
-            className="fixed z-50 w-52 overflow-hidden rounded-xl border border-[#E6EAF0] bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]"
+            className="fixed z-50 w-52 overflow-hidden rounded-xl border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(26,31,54,0.16)]"
             style={{ top: menuPosition.top, right: menuPosition.right }}
           >
             <QuickActionLink href={`/admin/clients/${client.id}`} icon={<Eye className="size-4" />} onClick={onClose}>
@@ -372,14 +372,14 @@ function ClientActionsMenu({
                   </button>
                 }
               />
-              <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+              <DialogContent className="bg-white border-border text-foreground sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-[#1A1F36]">Borrar cliente</DialogTitle>
-                  <DialogDescription className="text-[#6B7280]">
+                  <DialogTitle className="text-foreground">Borrar cliente</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     Esto eliminará a {client.name} y también sus órdenes y abonos asociados. Esta acción no se puede deshacer.
                   </DialogDescription>
                 </DialogHeader>
-                <DialogFooter className="border-[#E6EAF0] bg-white/90">
+                <DialogFooter className="border-border bg-white/90">
                   <DialogClose render={<Button type="button" variant="outline" />}>
                     Cancelar
                   </DialogClose>
@@ -418,7 +418,7 @@ function QuickActionLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF] hover:text-[#4A8BFF]"
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
     >
       {icon}
       {children}

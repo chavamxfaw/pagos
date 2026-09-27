@@ -30,13 +30,13 @@ export default function NewClientPage() {
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
       <div className="mb-8">
         <Link href="/admin/clients" className="text-[#6B7280] hover:text-[#1A1F36] text-sm transition-colors">
-          ← Clientes
+          ← Contactos
         </Link>
-        <h1 className="text-2xl font-bold text-[#1A1F36] mt-2">Nuevo cliente</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground mt-2">Nuevo contacto</h1>
       </div>
 
       <div className="bg-white border border-[#E6EAF0] rounded-xl p-6">
-        <ClientForm action={createClientAction} submitLabel="Crear cliente" />
+        <ClientForm action={createClientAction} submitLabel="Crear contacto" />
       </div>
     </div>
   )

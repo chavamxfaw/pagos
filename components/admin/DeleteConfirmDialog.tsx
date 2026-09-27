@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import { useFormStatus } from 'react-dom'
+import { useActionState, useState } from 'react'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 export function DeleteConfirmDialog({
   action,
@@ -27,34 +29,46 @@ export function DeleteConfirmDialog({
   confirmLabel?: string
   triggerLabel?: string
 }) {
+  const [open, setOpen] = useState(false)
+  const [error, submit] = useActionState(async (_previous: string | null, formData: FormData): Promise<string | null> => {
+    try {
+      await action(formData)
+      setOpen(false)
+      return null
+    } catch (failure) {
+      if (isRedirectError(failure)) throw failure
+      return 'No se pudo eliminar. Revisa si tiene registros asociados e inténtalo de nuevo.'
+    }
+  }, null)
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
           <Button
             type="button"
             variant="destructive"
             size="sm"
-            className="w-full justify-center border-red-500/20 text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-red-300 sm:w-auto"
+            className="w-full justify-center border-red-500/20 text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
           >
             <Trash2 />
             {triggerLabel}
           </Button>
         }
       />
-      <DialogContent className="bg-white border-[#E6EAF0] text-[#1A1F36] sm:max-w-md">
+      <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#1A1F36]">{title}</DialogTitle>
-          <DialogDescription className="text-[#6B7280]">
+          <DialogTitle className="text-foreground">{title}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             {description}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="border-[#E6EAF0] bg-white/90">
+        <DialogFooter className="border-border bg-card">
           <DialogClose render={<Button type="button" variant="outline" />}>
             Cancelar
           </DialogClose>
-          <form action={action}>
+          <form action={submit}>
             <DeleteSubmitButton label={confirmLabel} />
+            {error && <p role="alert" className="mt-2 max-w-xs text-sm text-destructive">{error}</p>}
           </form>
         </DialogFooter>
       </DialogContent>
@@ -70,7 +84,7 @@ function DeleteSubmitButton({ label }: { label: string }) {
       type="submit"
       variant="destructive"
       disabled={pending}
-      className="w-full sm:w-auto bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 hover:text-red-300"
+      className="w-full sm:w-auto bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
     >
       {pending ? 'Borrando...' : label}
     </Button>

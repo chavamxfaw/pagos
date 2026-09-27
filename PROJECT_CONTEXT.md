@@ -1,6 +1,12 @@
 # OTLA Pagos - Contexto del proyecto
 
-Ultima actualizacion: 2026-08-03 21:04 CST
+Ultima actualizacion: 2026-09-10 (Monterrey)
+
+## Actualización CRM local — pendiente de publicación
+
+La evolución a Chava Cervantes CRM está implementada localmente. Ver `CRM_IMPLEMENTATION.md` como fuente vigente para nuevas rutas, agenda Google, WhatsApp, OpenClaw, migraciones, pruebas y límites. La descripción posterior conserva contexto histórico del sistema de pagos y no implica que el rediseño ya esté desplegado.
+
+Importante: configurar `OTLA_AGENT_OWNER_ID` antes de publicar; los pagos del agente requieren ahora `Idempotency-Key`. No habilitar otros negocios: el panel maestro es inventario y los recursos financieros históricos aún no tienen aislamiento multi-tenant completo.
 
 Este documento resume el estado funcional, tecnico y operativo de OTLA Pagos para poder retomar el proyecto sin depender del historial del chat.
 

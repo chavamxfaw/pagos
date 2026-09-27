@@ -85,7 +85,7 @@ export function OrderActionsBar({
   }
 
   return (
-    <section className="mb-6 rounded-2xl border border-[#E3E8F0] bg-white/90 p-3 shadow-[0_10px_30px_rgba(26,31,54,0.025)]">
+    <section className="mb-6 rounded-xl border border-border bg-card p-3 shadow-none">
       <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="grid gap-2 min-[520px]:grid-cols-2 lg:grid-cols-[auto_auto_auto]">
           {!isCompleted && (
@@ -106,7 +106,7 @@ export function OrderActionsBar({
             type="button"
             variant="outline"
             onClick={() => setOpen((value) => !value)}
-            className="w-full justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF] sm:w-auto"
+            className="w-full justify-center border-border bg-card text-foreground hover:bg-secondary sm:w-auto"
             aria-expanded={open}
           >
             <MoreHorizontal className="size-4" />
@@ -114,12 +114,12 @@ export function OrderActionsBar({
           </Button>
 
           {open && (
-            <div className="absolute right-0 top-12 z-40 w-64 rounded-2xl border border-[#E3E8F0] bg-white p-2 shadow-[0_18px_45px_rgba(26,31,54,0.14)]">
+            <div className="absolute right-0 top-12 z-40 w-64 rounded-xl border border-border bg-card p-2 shadow-lg">
               <Link
                 href={`/admin/orders/${orderId}/edit`}
                 className={cn(
                   buttonVariants({ variant: 'ghost', size: 'sm' }),
-                  'w-full justify-start gap-2 px-3 text-[#1A1F36] hover:bg-[#F8FAFF]'
+                  'w-full justify-start gap-2 px-3 text-foreground hover:bg-secondary'
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -132,9 +132,9 @@ export function OrderActionsBar({
                   type="button"
                   onClick={sendReminder}
                   disabled={pendingReminder}
-                  className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF] disabled:opacity-60"
+                  className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
                 >
-                  <Send className="size-4 text-[#6C5CE7]" />
+                  <Send className="size-4 text-primary" />
                   {pendingReminder ? 'Enviando...' : 'Enviar recordatorio'}
                 </button>
               )}
@@ -144,15 +144,15 @@ export function OrderActionsBar({
                   type="button"
                   onClick={markCompleted}
                   disabled={pendingComplete}
-                  className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-[#1A1F36] transition-colors hover:bg-[#F8FAFF] disabled:opacity-60"
+                  className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
                 >
-                  <CheckCircle2 className="size-4 text-[#2ED39A]" />
+                  <CheckCircle2 className="size-4 text-emerald-700" />
                   {pendingComplete ? 'Actualizando...' : 'Marcar completada'}
                 </button>
               )}
 
-              <div className="my-1 border-t border-[#E6EAF0]" />
-              <div className="[&_button]:w-full [&_button]:justify-start [&_button]:border-0 [&_button]:bg-transparent [&_button]:px-3 [&_button]:text-sm [&_button]:shadow-none [&_button]:hover:bg-[#EF4444]/10">
+              <div className="my-1 border-t border-border" />
+              <div className="[&_button]:w-full [&_button]:justify-start [&_button]:border-0 [&_button]:bg-transparent [&_button]:px-3 [&_button]:text-sm [&_button]:shadow-none [&_button]:hover:bg-destructive/10">
                 <DeleteConfirmDialog
                   action={deleteOrderAction}
                   title="Borrar orden"

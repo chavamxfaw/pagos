@@ -17,6 +17,8 @@ export function OrderForm({
   bankAccounts = [],
   fiscalDocuments = [],
   defaultClientId,
+  defaultProjectId,
+  projects = [],
   defaultValues,
   submitLabel = 'Crear orden',
 }: {
@@ -25,6 +27,8 @@ export function OrderForm({
   bankAccounts?: BankAccount[]
   fiscalDocuments?: FiscalDocument[]
   defaultClientId?: string
+  defaultProjectId?: string
+  projects?: { id: string; title: string; client_id: string | null }[]
   defaultValues?: Order
   submitLabel?: string
 }) {
@@ -37,6 +41,7 @@ export function OrderForm({
   const initialClientId = defaultValues?.client_id ?? defaultClientId ?? ''
   const today = getTodayDateString()
   const [selectedClientId, setSelectedClientId] = useState(initialClientId)
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId ?? '')
   const [selectedBankAccountId, setSelectedBankAccountId] = useState(defaultValues?.bank_account_id ?? 'none')
   const [category, setCategory] = useState<OrderCategory>(defaultValues?.category ?? 'service')
   const [editableStatus, setEditableStatus] = useState(defaultValues ? getEditableStatus(defaultValues.status) : 'auto')
@@ -86,18 +91,18 @@ export function OrderForm({
   return (
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="client_id" className="text-[#1A1F36]">Cliente *</Label>
+        <Label htmlFor="client_id" className="text-foreground">Cliente *</Label>
         <Select name="client_id" value={selectedClientId} onValueChange={(value) => value && setSelectedClientId(value)} required>
-          <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+          <SelectTrigger className="w-full bg-card border-border text-foreground">
             <span className="truncate text-left">
               {selectedClient
                 ? `${selectedClient.name}${selectedClient.email ? ` — ${selectedClient.email}` : ' — Sin correo'}`
                 : 'Selecciona un cliente...'}
             </span>
           </SelectTrigger>
-          <SelectContent className="bg-white border-[#E6EAF0]">
+          <SelectContent className="bg-card border-border">
             {clients.map((client) => (
-          <SelectItem key={client.id} value={client.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+          <SelectItem key={client.id} value={client.id} className="text-foreground focus:bg-muted">
                 {client.name}{client.email ? ` — ${client.email}` : ' — Sin correo'}
               </SelectItem>
             ))}
@@ -105,19 +110,27 @@ export function OrderForm({
         </Select>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="crm_project_id">Proyecto asociado</Label>
+        <select id="crm_project_id" name="crm_project_id" className="h-11 w-full rounded-xl border border-slate-200 bg-card px-3 text-sm focus-visible:ring-2 focus-visible:ring-blue-500" value={projects.some(project => project.id === selectedProjectId && project.client_id === selectedClientId) ? selectedProjectId : ''} onChange={event => setSelectedProjectId(event.target.value)}>
+          <option value="">Sin proyecto</option>
+          {projects.filter(project => project.client_id === selectedClientId).map(project => <option key={project.id} value={project.id}>{project.title}</option>)}
+        </select>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="issued_at" className="text-[#1A1F36]">Fecha de emisión</Label>
+          <Label htmlFor="issued_at" className="text-foreground">Fecha de emisión</Label>
           <Input
             id="issued_at"
             name="issued_at"
             type="date"
             defaultValue={defaultValues?.issued_at ?? today}
-            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+            className="bg-card border-border text-foreground"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="due_date" className="text-[#1A1F36]">Fecha límite de pago</Label>
+          <Label htmlFor="due_date" className="text-foreground">Fecha límite de pago</Label>
           <Input
             id="due_date"
             name="due_date"
@@ -128,41 +141,41 @@ export function OrderForm({
               setDueDate(nextValue)
               if (!nextValue) setPaymentReminderEnabled(false)
             }}
-            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+            className="bg-card border-border text-foreground"
           />
         </div>
       </div>
 
       {dueDate && (
-        <div className="rounded-xl border border-[#E6EAF0] bg-white p-4">
+        <div className="rounded-xl border border-border bg-card p-4">
           <label className="flex items-start gap-3">
             <input
               type="checkbox"
               name="payment_reminder_enabled"
               checked={paymentReminderEnabled}
               onChange={(event) => setPaymentReminderEnabled(event.target.checked)}
-              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+              className="mt-1 size-4 rounded border-border bg-card accent-primary"
             />
             <span>
-              <span className="block text-sm font-medium text-[#1A1F36]">Activar recordatorio de pago</span>
-              <span className="block text-sm text-[#6B7280]">Se enviará automáticamente al cliente antes del vencimiento.</span>
+              <span className="block text-sm font-medium text-foreground">Activar recordatorio de pago</span>
+              <span className="block text-sm text-muted-foreground">Se enviará automáticamente al cliente antes del vencimiento.</span>
             </span>
           </label>
 
           {paymentReminderEnabled && (
             <div className="mt-4 grid gap-2 sm:max-w-xs">
-              <Label htmlFor="payment_reminder_days_before" className="text-[#1A1F36]">Enviar recordatorio</Label>
+              <Label htmlFor="payment_reminder_days_before" className="text-foreground">Enviar recordatorio</Label>
               <Select
                 name="payment_reminder_days_before"
                 value={paymentReminderDaysBefore}
                 onValueChange={(value) => value && setPaymentReminderDaysBefore(value)}
               >
-                <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+                <SelectTrigger className="w-full bg-card border-border text-foreground">
                   <span className="truncate text-left">{getReminderLabel(Number(paymentReminderDaysBefore))}</span>
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#E6EAF0]">
+                <SelectContent className="bg-card border-border">
                   {reminderDayOptions.map((days) => (
-                    <SelectItem key={days} value={String(days)} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                    <SelectItem key={days} value={String(days)} className="text-foreground focus:bg-muted">
                       {getReminderLabel(days)}
                     </SelectItem>
                   ))}
@@ -173,57 +186,57 @@ export function OrderForm({
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E6EAF0] bg-white p-4">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="mb-4">
-          <p className="text-sm font-semibold text-[#1A1F36]">Notificaciones al cliente</p>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <p className="text-sm font-semibold text-foreground">Notificaciones al cliente</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Controla si esta orden puede mandar avisos automáticos o manuales al cliente.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[#E6EAF0] bg-[#F8FAFF] p-3">
+          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-border bg-secondary p-3">
             <input
               type="checkbox"
               name="notify_email_enabled"
               checked={notifyEmailEnabled}
               onChange={(event) => setNotifyEmailEnabled(event.target.checked)}
-              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+              className="mt-1 size-4 rounded border-border bg-card accent-primary"
             />
             <span>
-              <span className="block text-sm font-medium text-[#1A1F36]">Correo</span>
-              <span className="block text-xs text-[#6B7280]">Recibos y recordatorios si el cliente tiene correo.</span>
+              <span className="block text-sm font-medium text-foreground">Correo</span>
+              <span className="block text-xs text-muted-foreground">Recibos y recordatorios si el cliente tiene correo.</span>
             </span>
           </label>
-          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-[#E6EAF0] bg-[#F8FAFF] p-3">
+          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-border bg-secondary p-3">
             <input
               type="checkbox"
               name="notify_whatsapp_enabled"
               checked={notifyWhatsappEnabled}
               onChange={(event) => setNotifyWhatsappEnabled(event.target.checked)}
-              className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+              className="mt-1 size-4 rounded border-border bg-card accent-primary"
             />
             <span>
-              <span className="block text-sm font-medium text-[#1A1F36]">WhatsApp</span>
-              <span className="block text-xs text-[#6B7280]">Recibos, recordatorios y datos bancarios si hay teléfono.</span>
+              <span className="block text-sm font-medium text-foreground">WhatsApp</span>
+              <span className="block text-xs text-muted-foreground">Recibos, recordatorios y datos bancarios si hay teléfono.</span>
             </span>
           </label>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="bank_account_id" className="text-[#1A1F36]">Datos bancarios para esta orden</Label>
+        <Label htmlFor="bank_account_id" className="text-foreground">Datos bancarios para esta orden</Label>
         <Select name="bank_account_id" value={selectedBankAccountId} onValueChange={(value) => value && setSelectedBankAccountId(value)}>
-          <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+          <SelectTrigger className="w-full bg-card border-border text-foreground">
             <span className="truncate text-left">
               {selectedBankAccount ? `${selectedBankAccount.alias} — ${selectedBankAccount.bank_name}` : 'Sin datos bancarios visibles'}
             </span>
           </SelectTrigger>
-          <SelectContent className="bg-white border-[#E6EAF0]">
-            <SelectItem value="none" className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="none" className="text-foreground focus:bg-muted">
               Sin datos bancarios visibles
             </SelectItem>
             {bankAccounts.map((account) => (
-              <SelectItem key={account.id} value={account.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+              <SelectItem key={account.id} value={account.id} className="text-foreground focus:bg-muted">
                 {account.alias} — {account.bank_name}
               </SelectItem>
             ))}
@@ -233,10 +246,10 @@ export function OrderForm({
 
       <input type="hidden" name="public_sort_order" value={defaultValues?.public_sort_order ?? 100} />
 
-      <div className="grid gap-4 rounded-xl border border-[#E6EAF0] bg-white p-4">
+      <div className="grid gap-4 rounded-xl border border-border bg-card p-4">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="fiscal_document_id" className="text-[#1A1F36]">Constancia fiscal visible</Label>
+            <Label htmlFor="fiscal_document_id" className="text-foreground">Constancia fiscal visible</Label>
             <Select
               name="fiscal_document_id"
               value={selectedFiscalDocumentId}
@@ -246,17 +259,17 @@ export function OrderForm({
                 if (nextValue === 'none') setShowFiscalDocument(false)
               }}
             >
-              <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+              <SelectTrigger className="w-full bg-card border-border text-foreground">
                 <span className="truncate text-left">
                   {selectedFiscalDocument ? selectedFiscalDocument.title : 'No mostrar constancia'}
                 </span>
               </SelectTrigger>
-              <SelectContent className="bg-white border-[#E6EAF0]">
-                <SelectItem value="none" className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="none" className="text-foreground focus:bg-muted">
                   No mostrar constancia
                 </SelectItem>
                 {fiscalDocuments.map((document) => (
-                  <SelectItem key={document.id} value={document.id} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                  <SelectItem key={document.id} value={document.id} className="text-foreground focus:bg-muted">
                     {document.title}
                   </SelectItem>
                 ))}
@@ -272,37 +285,37 @@ export function OrderForm({
             checked={showFiscalDocument}
             disabled={selectedFiscalDocumentId === 'none'}
             onChange={(event) => setShowFiscalDocument(event.target.checked)}
-            className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7] disabled:opacity-50"
+            className="mt-1 size-4 rounded border-border bg-card accent-primary disabled:opacity-50"
           />
           <span>
-            <span className="block text-sm font-medium text-[#1A1F36]">Mostrar link de constancia en el portal del cliente</span>
-            <span className="block text-sm text-[#6B7280]">La constancia se verá en el link general y en el link individual de esta orden.</span>
+            <span className="block text-sm font-medium text-foreground">Mostrar link de constancia en el portal del cliente</span>
+            <span className="block text-sm text-muted-foreground">La constancia se verá en el link general y en el link individual de esta orden.</span>
           </span>
         </label>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="concept" className="text-[#1A1F36]">Concepto *</Label>
+        <Label htmlFor="concept" className="text-foreground">Concepto *</Label>
         <Input
           id="concept"
           name="concept"
           placeholder="Proyecto web, mensualidad enero..."
           required
           defaultValue={defaultValues?.concept ?? ''}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+          className="bg-card border-border text-foreground"
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
         <div className="space-y-2">
-          <Label htmlFor="category" className="text-[#1A1F36]">Categoría</Label>
+          <Label htmlFor="category" className="text-foreground">Categoría</Label>
           <Select name="category" value={category} onValueChange={(value) => value && setCategory(value as OrderCategory)}>
-            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectTrigger className="w-full bg-card border-border text-foreground">
               <span className="truncate text-left">{selectedCategoryLabel}</span>
             </SelectTrigger>
-            <SelectContent className="bg-white border-[#E6EAF0]">
+            <SelectContent className="bg-card border-border">
               {orderCategories.map((item) => (
-                <SelectItem key={item.value} value={item.value} className="text-[#1A1F36] focus:bg-[#E6EAF0]">
+                <SelectItem key={item.value} value={item.value} className="text-foreground focus:bg-muted">
                   {item.label}
                 </SelectItem>
               ))}
@@ -310,7 +323,7 @@ export function OrderForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tags" className="text-[#1A1F36]">Tags</Label>
+          <Label htmlFor="tags" className="text-foreground">Tags</Label>
           <input type="hidden" name="tags" value={tags.join(',')} />
           <TagInput
             tags={tags}
@@ -323,7 +336,7 @@ export function OrderForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount" className="text-[#1A1F36]">
+        <Label htmlFor="amount" className="text-foreground">
           {requiresInvoice && taxMode === 'added' ? 'Subtotal antes de IVA (MXN) *' : 'Monto total (MXN) *'}
         </Label>
         <Input
@@ -336,57 +349,57 @@ export function OrderForm({
           required
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono"
+          className="bg-card border-border text-foreground tabular-nums"
         />
       </div>
 
-      <div className="rounded-xl border border-[#E6EAF0] bg-white p-4 space-y-4">
+      <div className="rounded-xl border border-border bg-card p-4 space-y-4">
         <label className="flex items-start gap-3">
           <input
             type="checkbox"
             name="requires_invoice"
             checked={requiresInvoice}
             onChange={(event) => setRequiresInvoice(event.target.checked)}
-            className="mt-1 size-4 rounded border-[#D8DEE8] bg-white accent-[#6C5CE7]"
+            className="mt-1 size-4 rounded border-border bg-card accent-primary"
           />
           <span>
-            <span className="block text-sm font-medium text-[#1A1F36]">Requiere factura</span>
+            <span className="block text-sm font-medium text-foreground">Requiere factura</span>
           </span>
         </label>
 
         {requiresInvoice && (
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
               <input
                 type="radio"
                 name="tax_mode"
                 value="included"
                 checked={taxMode === 'included'}
                 onChange={() => setTaxMode('included')}
-                className="mt-1 size-4 accent-[#6C5CE7]"
+                className="mt-1 size-4 accent-primary"
               />
               <span>
-                <span className="block text-sm font-medium text-[#1A1F36]">Precio incluye IVA</span>
+                <span className="block text-sm font-medium text-foreground">Precio incluye IVA</span>
               </span>
             </label>
-            <label className="flex items-start gap-3 rounded-lg border border-[#E6EAF0] bg-white p-3">
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
               <input
                 type="radio"
                 name="tax_mode"
                 value="added"
                 checked={taxMode === 'added'}
                 onChange={() => setTaxMode('added')}
-                className="mt-1 size-4 accent-[#6C5CE7]"
+                className="mt-1 size-4 accent-primary"
               />
               <span>
-                <span className="block text-sm font-medium text-[#1A1F36]">Agregar IVA</span>
+                <span className="block text-sm font-medium text-foreground">Agregar IVA</span>
               </span>
             </label>
           </div>
         )}
 
         {taxPreview && (
-          <div className="grid grid-cols-3 gap-3 border-t border-[#E6EAF0] pt-4 text-sm">
+          <div className="grid grid-cols-3 gap-3 border-t border-border pt-4 text-sm">
             <PreviewAmount label="Subtotal" value={taxPreview.subtotal} />
             <PreviewAmount label="IVA" value={taxPreview.tax} />
             <PreviewAmount label="Total" value={taxPreview.total} highlight />
@@ -395,42 +408,42 @@ export function OrderForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-[#1A1F36]">Descripción</Label>
+        <Label htmlFor="description" className="text-foreground">Descripción</Label>
         <Textarea
           id="description"
           name="description"
           placeholder="Detalles adicionales sobre la orden..."
           rows={3}
           defaultValue={defaultValues?.description ?? ''}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none"
+          className="bg-card border-border text-foreground resize-none"
         />
       </div>
 
       {defaultValues && (
         <div className="space-y-2">
-          <Label htmlFor="status" className="text-[#1A1F36]">Estatus operativo</Label>
+          <Label htmlFor="status" className="text-foreground">Estatus operativo</Label>
           <Select name="status" value={editableStatus} onValueChange={(value) => value && setEditableStatus(value)}>
-            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+            <SelectTrigger className="w-full bg-card border-border text-foreground">
               <span className="truncate text-left">{statusLabels[editableStatus] ?? 'Automático por pagos'}</span>
             </SelectTrigger>
-            <SelectContent className="bg-white border-[#E6EAF0]">
-              <SelectItem value="auto" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Automático por pagos</SelectItem>
-              <SelectItem value="paused" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Pausado</SelectItem>
-              <SelectItem value="disputed" className="text-[#1A1F36] focus:bg-[#E6EAF0]">En disputa</SelectItem>
-              <SelectItem value="cancelled" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cancelado</SelectItem>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="auto" className="text-foreground focus:bg-muted">Automático por pagos</SelectItem>
+              <SelectItem value="paused" className="text-foreground focus:bg-muted">Pausado</SelectItem>
+              <SelectItem value="disputed" className="text-foreground focus:bg-muted">En disputa</SelectItem>
+              <SelectItem value="cancelled" className="text-foreground focus:bg-muted">Cancelado</SelectItem>
             </SelectContent>
           </Select>
         </div>
       )}
 
       {state?.error && (
-        <p className="text-[#EF4444] text-sm">{state.error}</p>
+        <p role="alert" className="text-destructive text-sm">{state.error}</p>
       )}
 
       <Button
         type="submit"
         disabled={pending}
-        className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105 sm:w-auto"
+        className="w-full justify-center bg-primary text-primary-foreground font-semibold shadow-none hover:bg-primary/90 sm:w-auto"
       >
         {pending ? 'Guardando...' : submitLabel}
       </Button>
@@ -526,14 +539,14 @@ function TagInput({
   }
 
   return (
-    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-lg border border-[#E6EAF0] bg-white px-3 py-2 focus-within:border-[#6C5CE7] focus-within:ring-3 focus-within:ring-[#6C5CE7]/15">
+    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/15">
       {tags.map((tag) => (
-        <span key={tag} className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-[#6C5CE7]/10 px-2.5 py-1 text-xs font-semibold text-[#6C5CE7]">
+        <span key={tag} className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
           {tag}
           <button
             type="button"
             onClick={() => onRemove(tag)}
-            className="rounded-full text-[#6C5CE7]/70 hover:text-[#EF4444]"
+            className="rounded-full text-primary/70 hover:text-destructive"
             aria-label={`Quitar tag ${tag}`}
           >
             x
@@ -556,7 +569,7 @@ function TagInput({
           if (value.trim()) onAdd(value)
         }}
         placeholder={tags.length ? 'Agregar tag...' : 'urgente, factura, mantenimiento'}
-        className="min-h-7 min-w-[160px] flex-1 border-0 bg-transparent text-sm text-[#1A1F36] outline-none placeholder:text-[#8A94A6]"
+        className="min-h-7 min-w-[160px] flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
       />
     </div>
   )
@@ -573,8 +586,8 @@ function PreviewAmount({
 }) {
   return (
     <div>
-      <p className="mb-1 text-xs uppercase tracking-wider text-[#6B7280]">{label}</p>
-      <p className={`font-mono font-semibold ${highlight ? 'text-[#2ED39A]' : 'text-[#1A1F36]'}`}>
+      <p className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`tabular-nums font-semibold ${highlight ? 'text-emerald-700' : 'text-foreground'}`}>
         {new Intl.NumberFormat('es-MX', {
           style: 'currency',
           currency: 'MXN',

@@ -10,6 +10,7 @@ import { getTodayDateString } from '@/lib/utils'
 import type { Payment } from '@/types'
 
 type State = { error?: string; success?: boolean } | null
+const paymentMethodLabels = { transfer: 'Transferencia', cash: 'Efectivo', card: 'Tarjeta', check: 'Cheque', other: 'Otro' }
 
 export function PaymentForm({
   action,
@@ -40,7 +41,7 @@ export function PaymentForm({
       <input type="hidden" name="order_id" value={orderId} />
 
       <div className="space-y-2">
-        <Label htmlFor="paid_at" className="text-[#1A1F36]">Fecha del abono *</Label>
+        <Label htmlFor="paid_at" className="text-foreground">Fecha del abono *</Label>
         <Input
           id="paid_at"
           name="paid_at"
@@ -48,12 +49,12 @@ export function PaymentForm({
           max={today}
           required
           defaultValue={defaultValues?.paid_at ?? today}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+          className="bg-card border-border text-foreground"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount" className="text-[#1A1F36]">Monto del abono (MXN) *</Label>
+        <Label htmlFor="amount" className="text-foreground">Monto del abono (MXN) *</Label>
         <Input
           id="amount"
           name="amount"
@@ -63,71 +64,67 @@ export function PaymentForm({
           placeholder="0.00"
           required
           defaultValue={defaultValues?.amount ?? ''}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36] font-mono text-lg"
+          className="bg-card border-border text-foreground tabular-nums text-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="concept" className="text-[#1A1F36]">Concepto *</Label>
+        <Label htmlFor="concept" className="text-foreground">Concepto *</Label>
         <Input
           id="concept"
           name="concept"
           placeholder="Primer abono, pago quincenal..."
           required
           defaultValue={defaultValues?.concept ?? ''}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+          className="bg-card border-border text-foreground"
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payment_method" className="text-[#1A1F36]">Método de pago *</Label>
-          <Select name="payment_method" defaultValue={defaultValues?.payment_method ?? 'transfer'} required>
-            <SelectTrigger className="w-full bg-white border-[#E6EAF0] text-[#1A1F36]">
+          <Label htmlFor="payment_method" className="text-foreground">Método de pago *</Label>
+          <Select name="payment_method" defaultValue={defaultValues?.payment_method ?? 'transfer'} items={Object.entries(paymentMethodLabels).map(([value, label]) => ({ value, label }))} required>
+            <SelectTrigger id="payment_method" className="w-full bg-card border-border text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white border-[#E6EAF0]">
-              <SelectItem value="transfer" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Transferencia</SelectItem>
-              <SelectItem value="cash" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Efectivo</SelectItem>
-              <SelectItem value="card" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Tarjeta</SelectItem>
-              <SelectItem value="check" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Cheque</SelectItem>
-              <SelectItem value="other" className="text-[#1A1F36] focus:bg-[#E6EAF0]">Otro</SelectItem>
+            <SelectContent className="bg-card border-border">
+              {Object.entries(paymentMethodLabels).map(([value, label]) => <SelectItem key={value} value={value} className="text-foreground focus:bg-muted">{label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="payment_reference" className="text-[#1A1F36]">Referencia</Label>
+          <Label htmlFor="payment_reference" className="text-foreground">Referencia</Label>
           <Input
             id="payment_reference"
             name="payment_reference"
             placeholder="Folio, banco, últimos 4..."
             defaultValue={defaultValues?.payment_reference ?? ''}
-            className="bg-white border-[#E6EAF0] text-[#1A1F36]"
+            className="bg-card border-border text-foreground"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes" className="text-[#1A1F36]">Notas</Label>
+        <Label htmlFor="notes" className="text-foreground">Notas</Label>
         <Textarea
           id="notes"
           name="notes"
           placeholder="Transferencia, efectivo, referencia..."
           rows={2}
           defaultValue={defaultValues?.notes ?? ''}
-          className="bg-white border-[#E6EAF0] text-[#1A1F36] resize-none"
+          className="bg-card border-border text-foreground resize-none"
         />
       </div>
 
       {state?.error && (
-        <p className="text-[#EF4444] text-sm">{state.error}</p>
+        <p role="alert" className="text-destructive text-sm">{state.error}</p>
       )}
 
       <Button
         type="submit"
         disabled={pending}
-        className="w-full bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] text-white font-semibold shadow-sm hover:brightness-105"
+        className="w-full bg-primary text-primary-foreground font-semibold shadow-none hover:bg-primary/90"
       >
         {pending ? 'Guardando...' : submitLabel}
       </Button>

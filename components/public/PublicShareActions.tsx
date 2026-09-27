@@ -43,7 +43,7 @@ export function PublicShareActions({
       <Button
         type="button"
         onClick={shareSummary}
-        className="w-full justify-center bg-[linear-gradient(135deg,#6C5CE7_0%,#4A8BFF_100%)] font-semibold text-white shadow-sm hover:brightness-105"
+        className="w-full justify-center bg-primary font-semibold text-white shadow-sm hover:brightness-105"
       >
         <Share2 className="size-4" />
         {label}
@@ -52,9 +52,9 @@ export function PublicShareActions({
         type="button"
         variant="outline"
         onClick={copySummary}
-        className="w-full justify-center border-[#D8DEE8] bg-white text-[#1A1F36] hover:bg-[#F8FAFF]"
+        className="w-full justify-center border-border bg-white text-foreground hover:bg-muted/40"
       >
-        {copied ? <Check className="size-4 text-[#2ED39A]" /> : <Copy className="size-4" />}
+        {copied ? <Check className="size-4 text-emerald-700" /> : <Copy className="size-4" />}
         {copied ? 'Copiado' : 'Copiar resumen'}
       </Button>
     </div>
