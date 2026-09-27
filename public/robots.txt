@@ -1,2 +1,4 @@
+# Crawlers must be able to read the global X-Robots-Tag: noindex, nofollow.
+# Disallowing crawling does not prevent a linked URL from being indexed.
 User-agent: *
-Disallow: /
+Allow: /

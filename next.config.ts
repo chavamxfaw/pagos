@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const securityHeaders = [
+      // Personal workspace: apply to pages, API responses and public files alike.
+      {
+        key: 'X-Robots-Tag',
+        value: 'noindex, nofollow',
+      },
       {
         key: 'Content-Security-Policy',
         value: [

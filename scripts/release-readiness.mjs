@@ -7,7 +7,7 @@ if(args.length!==2||args[0]!=='--env-file')throw new Error('Uso: node scripts/re
 const env=parseEnv(readFileSync(args[1],'utf8'))
 const issues=[]
 const required=['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','NEXT_PUBLIC_APP_URL',
- 'RESEND_API_KEY','RESEND_FROM_EMAIL','CRON_SECRET','OTLA_AGENT_API_KEY','OTLA_AGENT_OWNER_ID','PLATFORM_OWNER_USER_ID',
+ 'RESEND_API_KEY','RESEND_FROM_EMAIL','CRON_SECRET','OTLA_AGENT_API_KEY','OTLA_AGENT_OWNER_ID','PLATFORM_OWNER_USER_ID','OTLA_LEGAL_ADDRESS',
  'TWILIO_ACCOUNT_SID','TWILIO_AUTH_TOKEN','TWILIO_WHATSAPP_FROM','TWILIO_PAYMENT_REMINDER_CONTENT_SID']
 for(const name of required)if(!env[name]?.trim())issues.push(`Falta ${name}`)
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

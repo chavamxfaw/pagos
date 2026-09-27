@@ -1,5 +1,6 @@
 'use client'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -86,7 +87,10 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
-
+        <nav aria-label="Información legal" className="mt-6 flex flex-wrap justify-center gap-x-5 text-xs text-muted-foreground">
+          <Link href="/privacidad" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">Privacidad</Link>
+          <Link href="/condiciones" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">Condiciones</Link>
+        </nav>
       </div>
     </div>
   )

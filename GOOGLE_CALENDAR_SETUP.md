@@ -1,5 +1,15 @@
 # Conectar Google Calendar
 
+## Registro de producción (27 de septiembre de 2026)
+
+- Proyecto Google Cloud: `otla-509919`, marca OTLA, cliente web OTLA - Producción.
+- Google Calendar API habilitada. Credencial y clave de cifrado guardadas como variables sensibles exclusivamente de producción en Vercel; no están en este repositorio.
+- Retorno autorizado: `https://pagos.sitios-dev.info/api/calendar/google/callback`.
+- Páginas preparadas: `/`, `/privacidad`, `/condiciones`. Contacto público autorizado: `buenas@chavacervantes.dev`. Responsable: Salvador Cervantes Tijerina.
+- Antes de publicar el aviso definitivo, configurar el domicilio expresamente autorizado mediante `OTLA_LEGAL_ADDRESS`. En su ausencia, las páginas muestran un borrador y el verificador de publicación falla.
+- La creación del cliente NO publica la app OAuth: sigue pendiente completar información de marca, dominio verificado, declarar los tres permisos usados por el código, pasar a producción y atender la verificación que Google requiera. No anunciar OAuth operativo antes de una conexión real validada.
+- Información de tratamiento contrastada con el código: la agenda privada también muestra títulos y horarios de eventos externos; no se limita a consultar free/busy. No afirmar que existe un botón de desconexión si todavía se utiliza revocación desde Google y solicitudes de eliminación por soporte.
+
 La agenda diferencia tres estados: configuración del servidor, base de datos preparada y consentimiento de cada cuenta de Google. Tener variables configuradas no significa que una cuenta ya esté conectada. El botón **Conectar Google** permanece visible y explica por qué está deshabilitado.
 
 ## Preparación
