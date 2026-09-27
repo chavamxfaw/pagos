@@ -8,7 +8,10 @@ ACCESS_VALIDATION_*.md
 UI_QA.md
 CALENDAR_VIEW_QA.md
 LOCAL_PREVIEW.md
-favicon-otla.png
-otla-logo.png
-otla-white.png
-render-otla.png
+/favicon-otla.png
+/otla-logo.png
+/otla-white.png
+/render-otla.png
+supabase/.temp
+supabase/.branches
+*.tsbuildinfo
