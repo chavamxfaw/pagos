@@ -99,3 +99,54 @@
     outline-offset: 3px;
   }
 }
+
+/* Navigation has its own palette so public payment links retain their theme. */
+.otla-navigation {
+  --sidebar: #f8faf9;
+  --sidebar-foreground: #25312e;
+  --sidebar-accent: #e7efeb;
+  --sidebar-accent-foreground: #244d3d;
+  --sidebar-border: #e3e9e6;
+  --muted-foreground: #627069;
+  --ring: #38735b;
+  color: var(--sidebar-foreground);
+  background: var(--sidebar);
+  scrollbar-color: var(--sidebar-border) var(--sidebar);
+}
+.otla-workspace {
+  --background: #ffffff;
+  --foreground: #26332d;
+  --primary: #263b33;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf3ed;
+  --secondary-foreground: #315e43;
+  --muted: #f4f6f5;
+  --muted-foreground: #627069;
+  --accent: #edf3ef;
+  --border: #e6ebe8;
+  --ring: #38735b;
+  --status-overdue: #944337;
+  --status-overdue-bg: #fceee9;
+  --status-pending: #795a20;
+  --status-pending-bg: #fbf3df;
+  --status-success: #315e43;
+  --status-success-bg: #eaf3ed;
+}
+.otla-status-overdue { color: var(--status-overdue); background: var(--status-overdue-bg); }
+.otla-status-pending { color: var(--status-pending); background: var(--status-pending-bg); }
+.otla-status-success { color: var(--status-success); background: var(--status-success-bg); }
+.otla-login {
+  --primary: #263b33;
+  --ring: #38735b;
+}
+.otla-login-art { background: #f4f8f3; }
+
+/* Category markers are wayfinding, not unread/status indicators. */
+.otla-dot-payments { background-color: #438266; }
+.otla-dot-contacts { background-color: #8b6caf; }
+.otla-dot-calendar { background-color: #5783b2; }
+.otla-dot-messages { background-color: #a77936; }
+.otla-navigation ::selection {
+  color: #203d59;
+  background: #acd3ff;
+}

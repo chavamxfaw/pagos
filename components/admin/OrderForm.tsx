@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-import { getTodayDateString } from '@/lib/utils'
+import { formatDateShort, getTodayDateString } from '@/lib/utils'
+import { reminderDate } from '@/lib/reminder-preview'
 import type { BankAccount, Client, FiscalDocument, Order, OrderCategory, OrderStatus } from '@/types'
 
 type State = { error?: string } | null
@@ -41,7 +42,7 @@ export function OrderForm({
   const initialClientId = defaultValues?.client_id ?? defaultClientId ?? ''
   const today = getTodayDateString()
   const [selectedClientId, setSelectedClientId] = useState(initialClientId)
-  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId ?? '')
+  const selectedProjectId = defaultProjectId ?? ''
   const [selectedBankAccountId, setSelectedBankAccountId] = useState(defaultValues?.bank_account_id ?? 'none')
   const [category, setCategory] = useState<OrderCategory>(defaultValues?.category ?? 'service')
   const [editableStatus, setEditableStatus] = useState(defaultValues ? getEditableStatus(defaultValues.status) : 'auto')
@@ -55,6 +56,7 @@ export function OrderForm({
   const [selectedFiscalDocumentId, setSelectedFiscalDocumentId] = useState(defaultValues?.fiscal_document_id ?? 'none')
   const [showFiscalDocument, setShowFiscalDocument] = useState(defaultValues?.public_show_fiscal_document ?? false)
   const selectedClient = clients.find((client) => client.id === selectedClientId)
+  const scheduledReminder = paymentReminderDaysBefore === '' ? null : reminderDate(dueDate, Number(paymentReminderDaysBefore))
   const selectedBankAccount = bankAccounts.find((account) => account.id === selectedBankAccountId)
   const selectedFiscalDocument = fiscalDocuments.find((document) => document.id === selectedFiscalDocumentId)
   const selectedCategoryLabel = orderCategories.find((item) => item.value === category)?.label ?? 'Servicio'
@@ -110,13 +112,8 @@ export function OrderForm({
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="crm_project_id">Proyecto asociado</Label>
-        <select id="crm_project_id" name="crm_project_id" className="h-11 w-full rounded-xl border border-slate-200 bg-card px-3 text-sm focus-visible:ring-2 focus-visible:ring-blue-500" value={projects.some(project => project.id === selectedProjectId && project.client_id === selectedClientId) ? selectedProjectId : ''} onChange={event => setSelectedProjectId(event.target.value)}>
-          <option value="">Sin proyecto</option>
-          {projects.filter(project => project.client_id === selectedClientId).map(project => <option key={project.id} value={project.id}>{project.title}</option>)}
-        </select>
-      </div>
+      {/* Preserve historical relationships without exposing the retired project workflow. */}
+      <input type="hidden" name="crm_project_id" value={projects.some(project => project.id === selectedProjectId && project.client_id === selectedClientId) ? selectedProjectId : ''} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -158,29 +155,34 @@ export function OrderForm({
             />
             <span>
               <span className="block text-sm font-medium text-foreground">Activar recordatorio de pago</span>
-              <span className="block text-sm text-muted-foreground">Se enviará automáticamente al cliente antes del vencimiento.</span>
+              <span className="block text-sm text-muted-foreground">Tú eliges cuántos días antes avisar, o el mismo día del vencimiento.</span>
             </span>
           </label>
 
           {paymentReminderEnabled && (
-            <div className="mt-4 grid gap-2 sm:max-w-xs">
-              <Label htmlFor="payment_reminder_days_before" className="text-foreground">Enviar recordatorio</Label>
-              <Select
+            <div className="mt-4 grid gap-3">
+              <Label htmlFor="payment_reminder_days_before" className="text-foreground">Días antes del vencimiento</Label>
+              <Input
+                id="payment_reminder_days_before"
                 name="payment_reminder_days_before"
+                type="number"
+                min={0}
+                max={30}
+                step={1}
+                required
+                disabled={pending}
                 value={paymentReminderDaysBefore}
-                onValueChange={(value) => value && setPaymentReminderDaysBefore(value)}
-              >
-                <SelectTrigger className="w-full bg-card border-border text-foreground">
-                  <span className="truncate text-left">{getReminderLabel(Number(paymentReminderDaysBefore))}</span>
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  {reminderDayOptions.map((days) => (
-                    <SelectItem key={days} value={String(days)} className="text-foreground focus:bg-muted">
-                      {getReminderLabel(days)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={event => setPaymentReminderDaysBefore(event.target.value)}
+                aria-describedby="reminder-schedule-help"
+                className="max-w-32"
+              />
+              <p id="reminder-schedule-help" className="text-sm text-muted-foreground">De 0 a 30 días. Usa 0 para avisar el día del vencimiento.</p>
+              {scheduledReminder && <p role="status" className="text-sm">
+                Fecha programada: <strong>{formatDateShort(scheduledReminder)}</strong>. Revisión diaria a las 8:00 a. m., hora de Monterrey.
+                {scheduledReminder < today && <span className="mt-1 block text-amber-800">Esta fecha ya pasó. Ajusta el vencimiento o envía un recordatorio manual; no se enviará retroactivamente.</span>}
+              </p>}
+              {!notifyEmailEnabled && !notifyWhatsappEnabled && <p role="status" className="text-sm text-amber-800">Activa al menos un canal en Notificaciones al cliente para poder enviar el aviso.</p>}
+              <p className="text-xs text-muted-foreground">Un aviso por orden, solo si queda saldo y la orden está activa. Los canales se eligen abajo. No cambia hasta guardar.</p>
             </div>
           )}
         </div>
@@ -501,14 +503,6 @@ const statusLabels: Record<string, string> = {
   paused: 'Pausado',
   disputed: 'En disputa',
   cancelled: 'Cancelado',
-}
-
-const reminderDayOptions = [0, 1, 2, 3, 5, 7, 14, 30]
-
-function getReminderLabel(days: number) {
-  if (days === 0) return 'El día del vencimiento'
-  if (days === 1) return '1 día antes'
-  return `${days} días antes`
 }
 
 function TagInput({

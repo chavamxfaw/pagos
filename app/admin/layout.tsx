@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const initials = displayName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase() || email[0].toUpperCase()
 
   return (
-    <div className="flex h-dvh min-w-0 overflow-hidden bg-background text-foreground">
+    <div className="otla-workspace flex h-dvh min-w-0 overflow-hidden bg-background text-foreground">
       <a href="#main-content" className="sr-only fixed left-4 top-4 z-[200] rounded-lg bg-white p-3 focus:not-sr-only">Ir al contenido</a>
       <div className="hidden md:flex">
         <Sidebar userEmail={email} isPlatformOwner={isPlatformOwner} />
@@ -43,11 +43,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="relative z-20 grid min-h-16 shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-b bg-white px-4 py-2 lg:grid-cols-[1fr_minmax(220px,440px)_auto] lg:px-6">
+        <header className="relative z-20 grid min-h-14 shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-b bg-white px-4 py-1 lg:grid-cols-[1fr_minmax(220px,360px)_auto] lg:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <MobileAdminNav userEmail={email} isPlatformOwner={isPlatformOwner} />
             <div className="hidden min-w-0 sm:block">
-              <span className="text-sm text-muted-foreground">Mi negocio</span>
+              <span className="text-xs text-muted-foreground">Mi espacio de trabajo</span>
             </div>
           </div>
 

@@ -10,10 +10,14 @@ test('legal publication requires an explicitly supplied address',()=>{
  assert.equal(legalIdentity({}).name,'Salvador Cervantes Tijerina')
  assert.equal(legalIdentity({}).email,'buenas@chavacervantes.dev')
 })
-test('public homepage does not depend on a database session',()=>{
+test('public homepage renders login without requiring an existing session',()=>{
  const source=readFileSync(new URL('../app/page.tsx',import.meta.url),'utf8')
  assert.doesNotMatch(source,/createClient|redirect\(/)
- assert.match(source,/PublicShell/)
+ assert.match(source,/import LoginPage from '\.\/login\/page'/)
+ assert.match(source,/<LoginPage\s*\/>/)
+ const login=readFileSync(new URL('../app/login/page.tsx',import.meta.url),'utf8')
+ assert.match(login,/signInWithPassword/)
+ for(const path of ['/privacidad','/condiciones']) assert.ok(login.includes(`href="${path}"`))
 })
 test('public navigation exposes both legal documents',()=>{
  const shell=readFileSync(new URL('../components/public-shell.tsx',import.meta.url),'utf8')

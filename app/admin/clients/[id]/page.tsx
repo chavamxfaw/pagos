@@ -146,8 +146,6 @@ export default async function ClientDetailPage({
 
       <nav aria-label="Acciones del contacto" className="mb-6 flex flex-wrap gap-2 border-y py-3 text-sm">
         <Link href={`/admin/messages?client=${id}`} className="rounded-lg px-3 py-2 text-primary hover:bg-muted">WhatsApp y documentos</Link>
-        <Link href={`/admin/crm/opportunities?client=${id}`} className="rounded-lg px-3 py-2 text-primary hover:bg-muted">Ventas</Link>
-        <Link href={`/admin/crm/projects?client=${id}`} className="rounded-lg px-3 py-2 text-primary hover:bg-muted">Proyectos</Link>
         <Link href="/admin/calendar" className="rounded-lg px-3 py-2 text-primary hover:bg-muted">Agenda y enlaces</Link>
       </nav>
 

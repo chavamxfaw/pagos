@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T00:00:00Z",
+  "title": "Design System: OTLA",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Deep workspace green", "tonalRamp": ["oklch(15% 0.03 160)", "oklch(26% 0.03 160)", "oklch(38% 0.03 160)", "oklch(49% 0.03 160)", "oklch(61% 0.03 160)", "oklch(72% 0.03 160)", "oklch(84% 0.03 160)", "oklch(95% 0.03 160)"] },
+      "secondary": { "role": "secondary", "displayName": "Quiet sage", "tonalRamp": ["oklch(15% 0.02 150)", "oklch(26% 0.02 150)", "oklch(38% 0.02 150)", "oklch(49% 0.02 150)", "oklch(61% 0.02 150)", "oklch(72% 0.02 150)", "oklch(84% 0.02 150)", "oklch(95% 0.02 150)"] },
+      "status-overdue": { "role": "tertiary", "displayName": "Overdue coral", "tonalRamp": ["oklch(15% 0.07 32)", "oklch(26% 0.07 32)", "oklch(38% 0.07 32)", "oklch(49% 0.07 32)", "oklch(61% 0.07 32)", "oklch(72% 0.07 32)", "oklch(84% 0.07 32)", "oklch(95% 0.07 32)"] },
+      "status-pending": { "role": "tertiary", "displayName": "Pending amber", "tonalRamp": ["oklch(15% 0.06 80)", "oklch(26% 0.06 80)", "oklch(38% 0.06 80)", "oklch(49% 0.06 80)", "oklch(61% 0.06 80)", "oklch(72% 0.06 80)", "oklch(84% 0.06 80)", "oklch(95% 0.06 80)"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Workspace heading", "purpose": "Compact 20px Tus cobros heading on Inicio." },
+      "login-title": { "displayName": "Login heading", "purpose": "The primary sign-in heading." },
+      "body": { "displayName": "Operational body", "purpose": "Navigation, payment rows, and supporting copy." }
+    },
+    "shadows": [
+      { "name": "card-ring", "value": "0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent)", "purpose": "The shared Card primitive's thin boundary." },
+      { "name": "focus-ring", "value": "0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent)", "purpose": "Keyboard focus on buttons and inputs; supplements the source outline behavior." }
+    ],
+    "motion": [],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main workspace action, shown with workspace token fallbacks.",
+      "html": "<button class=\"ds-primary\">Nuevo cobro</button>",
+      "css": ".ds-primary{min-height:44px;padding:0 12px;border:1px solid transparent;border-radius:10px;background:var(--primary,#263b33);color:var(--primary-foreground,#fff);font:500 14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all 150ms}.ds-primary:hover{background:color-mix(in srgb,var(--primary,#263b33) 90%,transparent)}.ds-primary:focus-visible{outline:2px solid var(--ring,#38735b);outline-offset:3px;box-shadow:0 0 0 3px color-mix(in srgb,var(--ring,#38735b) 50%,transparent)}.ds-primary:active{transform:translateY(1px)}.ds-primary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Outline action",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary workspace action.",
+      "html": "<button class=\"ds-outline\">Nuevo contacto</button>",
+      "css": ".ds-outline{min-height:44px;padding:0 12px;border:1px solid var(--border,#e6ebe8);border-radius:10px;background:var(--background,#fff);color:var(--foreground,#26332d);font:500 14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer}.ds-outline:hover{background:var(--muted,#f4f6f5)}.ds-outline:focus-visible{outline:2px solid var(--ring,#38735b);outline-offset:3px}.ds-outline:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Ghost action",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet contextual action.",
+      "html": "<button class=\"ds-ghost\">Ver pagos</button>",
+      "css": ".ds-ghost{min-height:44px;padding:0 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--foreground,#26332d);font:500 14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer}.ds-ghost:hover{background:var(--muted,#f4f6f5)}.ds-ghost:focus-visible{outline:2px solid var(--ring,#38735b);outline-offset:3px}.ds-ghost:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Text input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled text field with visible keyboard focus.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">Correo electrónico</label><input class=\"ds-input\" id=\"ds-email\" type=\"email\" placeholder=\"tu@correo.com\" autocomplete=\"username\">",
+      "css": ".ds-label{display:block;margin-bottom:8px;font:500 14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--foreground,#26332d)}.ds-input{min-height:44px;max-width:100%;padding:8px 12px;border:1px solid var(--input,#E6EAF0);border-radius:10px;background:transparent;color:var(--foreground,#26332d);font:14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-input::placeholder{color:var(--muted-foreground,#627069)}.ds-input:focus-visible{outline:none;border-color:var(--ring,#38735b);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring,#38735b) 50%,transparent)}.ds-input:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Active navigation",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Current destination in the grouped text panel beside the separate 56px icon rail; 36px desktop target and 44px mobile target.",
+      "html": "<nav aria-label=\"Ejemplo de navegación\"><a class=\"ds-nav\" href=\"#inicio\" aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z\"/><path d=\"M9 21v-8h6v8\"/></svg>Inicio</a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;border-radius:8px;background:var(--sidebar-accent,#e7efeb);color:var(--sidebar-accent-foreground,#244d3d);font:500 13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-decoration:none}.ds-nav svg{width:16px;height:16px}.ds-nav:hover{background:var(--sidebar-accent,#e7efeb)}.ds-nav:focus-visible{outline:2px solid var(--ring,#38735b);outline-offset:2px}@media(min-width:768px){.ds-nav{min-height:36px}}"
+    },
+    {
+      "name": "Overdue chip",
+      "kind": "chip",
+      "refersTo": "status-overdue",
+      "description": "Non-interactive payment status with explicit text.",
+      "html": "<span class=\"ds-overdue\">Vencido</span>",
+      "css": ".ds-overdue{display:inline-flex;align-items:center;height:20px;padding:2px 8px;border:1px solid var(--border,#e6ebe8);border-radius:26px;background:var(--status-overdue-bg,#fceee9);color:var(--status-overdue,#944337);font:500 12px/16px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;white-space:nowrap}"
+    },
+    {
+      "name": "Shared card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Shared container primitive; Inicio also uses flatter divider-based sections.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-card-title\">Resumen</h2><p class=\"ds-card-copy\">Información de tus cobros.</p></section>",
+      "css": ".ds-card{padding:16px;border-radius:14px;background:var(--card,#fff);color:var(--card-foreground,#1A1F36);box-shadow:0 0 0 1px color-mix(in srgb,var(--foreground,#26332d) 10%,transparent);font:14px/20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-card-title{margin:0;font-size:16px;line-height:1.375;font-weight:500}.ds-card-copy{margin:4px 0 0;color:var(--muted-foreground,#627069)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Un espacio de trabajo claro",
+    "overview": "OTLA uses a compact, light workspace: a narrow white icon rail, grouped pale text navigation, a white working canvas, and restrained sage, amber, and coral cues. Payments are the central task on Inicio; supporting appointments, reminders, and dated contact follow-ups sit in an optional context panel. The pinned reference is a compact multi-panel workspace, not a conventional single sidebar or dark navigation dashboard.\n\nThis document records the implemented admin shell, Inicio, shared primitives, and login. It does not claim that all product routes have been redesigned, that the application has been deployed, or that every state has been visually verified. The existing OTLA logo asset remains unchanged.",
+    "keyCharacteristics": [
+      "A narrow icon rail, grouped text navigation, and white working surfaces.",
+      "Compact lists with clear payment amounts, dates, and text statuses.",
+      "Quiet semantic accents and restrained borders.",
+      "Supporting information can be hidden to give the main task more room."
+    ],
+    "rules": [
+      { "name": "The Scoped Palette Rule", "body": "The frontmatter records the `.otla-workspace` and `.otla-navigation` overrides plus relevant inherited primitives. Do not replace the global root palette with these values: public payment links retain the existing blue theme.", "section": "colors" },
+      { "name": "The Status Text Rule", "body": "Pair semantic color with visible status text; color alone does not communicate payment state.", "section": "colors" }
+    ],
+    "dos": [
+      "Do retain the original OTLA logo.",
+      "Do keep payments prominent and supporting context secondary.",
+      "Do use semantic status colors with explicit text labels.",
+      "Do preserve keyboard focus, labeled controls, and responsive wrapping.",
+      "Do keep the admin palette scoped so public payment links retain their theme."
+    ],
+    "donts": [
+      "Don't restore the superseded dark navigation treatment.",
+      "Don't present dated follow-ups as a complete payment or message-delivery history.",
+      "Don't claim the context panel is persistent, resizable, or available on every route.",
+      "Don't describe these documented surfaces as a complete product redesign or deployment."
+    ]
+  }
+}
